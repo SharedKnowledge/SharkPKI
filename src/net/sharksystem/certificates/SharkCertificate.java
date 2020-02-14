@@ -1,5 +1,10 @@
 package net.sharksystem.certificates;
 
+import java.io.IOException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.SignatureException;
 import java.util.Calendar;
 
 public interface SharkCertificate {
@@ -20,4 +25,8 @@ public interface SharkCertificate {
     Calendar getValidSince();
 
     Calendar getValidUntil();
+
+    byte[] asBytes();
+
+    boolean verify(PublicKey publicKeyIssuer) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException;
 }
