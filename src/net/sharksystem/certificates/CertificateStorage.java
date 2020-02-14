@@ -1,5 +1,6 @@
 package net.sharksystem.certificates;
 
+import java.io.IOException;
 import java.util.Collection;
 
 public interface CertificateStorage {
@@ -8,9 +9,11 @@ public interface CertificateStorage {
 
     Collection<SharkCertificate> getCertificatesByOwnerID(int userID);
 
-    ASAPStorageAddress storeCertificate(SharkCertificate sharkCertificate);
+    ASAPStorageAddress storeCertificate(SharkCertificate sharkCertificate) throws IOException;
 
-    void removeCertificate(SharkCertificate sharkCertificate);
+    void removeCertificate(SharkCertificate sharkCertificate, ASAPStorageAddress asapAddress);
 
     int getIdentityAssurances(int userID, PersonCertificateExchangeFailureStorage pcefs);
+
+    ASAPStorageAddress getASAPStorageAddress(byte[] serializedAddress) throws IOException;
 }

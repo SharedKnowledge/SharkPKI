@@ -2,6 +2,7 @@ package net.sharksystem.certificates;
 
 import net.sharksystem.asap.ASAPStorage;
 
+import java.io.*;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -124,33 +125,76 @@ public class ASAPCertificateStorage implements CertificateStorage {
 
     @Override
     public Collection<SharkCertificate> getCertificatesByOwnerID(int userID) {
+        // TODO
         return null;
     }
 
     @Override
-    public ASAPStorageAddress storeCertificate(SharkCertificate sharkCertificate) {
-        return new ASAPStorageAddressImpl();
+    public ASAPStorageAddress storeCertificate(SharkCertificate sharkCertificate) throws IOException {
+        this.asapStorage.add(SharkCertificate.ASAP_CERIFICATE_URI, sharkCertificate.asBytes());
+
+        return new ASAPStorageAddressImpl(
+                this.asapStorage.getFormat(),
+                SharkCertificate.ASAP_CERIFICATE_URI,
+                this.asapStorage.getEra());
     }
 
     @Override
-    public void removeCertificate(SharkCertificate sharkCertificate) {
+    public void removeCertificate(SharkCertificate sharkCertificate, ASAPStorageAddress asapAddress) {
+    }
+
+    public ASAPStorageAddress getASAPStorageAddress(byte[] serializedAddress) throws IOException {
+        return new ASAPStorageAddressImpl(serializedAddress);
     }
 
     private class ASAPStorageAddressImpl implements ASAPStorageAddress {
-        // TODO
+        private final int era;
+        private final CharSequence uri;
+        private final CharSequence format;
+
+        ASAPStorageAddressImpl(CharSequence format, CharSequence uri, int era) {
+            this.format = format;
+            this.uri = uri;
+            this.era = era;
+        }
+
+        ASAPStorageAddressImpl(byte[] serialized) throws IOException {
+            ByteArrayInputStream bais = new ByteArrayInputStream(serialized);
+            DataInputStream dais = new DataInputStream(bais);
+
+            this.format = dais.readUTF();
+            this.uri = dais.readUTF();
+            this.era = dais.readInt();
+        }
+
+        public byte[] asBytes() {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            DataOutputStream daos = new DataOutputStream(baos);
+
+            try {
+                daos.writeUTF(this.format.toString());
+                daos.writeUTF(this.uri.toString());
+                daos.writeInt(this.era);
+                return baos.toByteArray();
+            } catch (IOException e) {
+                // this cannot happen with a byte array stream
+                return null;
+            }
+        }
+
         @Override
         public CharSequence getFormat() {
-            return null;
+            return this.format;
         }
 
         @Override
         public CharSequence getUri() {
-            return null;
+            return this.uri;
         }
 
         @Override
         public int getEra() {
-            return 0;
+            return this.era;
         }
     }
 }
