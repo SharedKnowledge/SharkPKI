@@ -7,7 +7,7 @@ import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.Calendar;
 
-public interface SharkCertificate {
+public interface ASAPCertificate {
     public static final String ASAP_CERIFICATE_URI = "asap/certificate";
 
     /**
@@ -31,4 +31,6 @@ public interface SharkCertificate {
     byte[] asBytes();
 
     boolean verify(PublicKey publicKeyIssuer) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException;
+
+    ASAPStorageAddress getASAPStorageAddress();
 }
