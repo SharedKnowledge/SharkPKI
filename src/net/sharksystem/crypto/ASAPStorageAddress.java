@@ -1,4 +1,4 @@
-package net.sharksystem.certificates;
+package net.sharksystem.crypto;
 
 public interface ASAPStorageAddress {
     CharSequence getFormat();

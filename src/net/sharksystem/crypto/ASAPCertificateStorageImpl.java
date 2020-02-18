@@ -1,129 +1,158 @@
-package net.sharksystem.certificates;
+package net.sharksystem.crypto;
 
+import net.sharksystem.SharkException;
 import net.sharksystem.asap.ASAPChunk;
 import net.sharksystem.asap.ASAPChunkStorage;
 import net.sharksystem.asap.ASAPStorage;
 import net.sharksystem.asap.util.Log;
+import net.sharksystem.persons.OtherPerson;
 
 import java.io.*;
 import java.util.*;
 
 public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
-    public static final String ASAP_CERIFICATE_APP = "asapCertificates";
 
     private final ASAPStorage asapStorage;
     private final int ownerID;
+    private final CharSequence ownerName;
 
-    public ASAPCertificateStorageImpl(ASAPStorage asapStorage, int ownerID) {
+    public ASAPCertificateStorageImpl(ASAPStorage asapStorage, int ownerID, CharSequence ownerName) {
         this.asapStorage = asapStorage;
         this.ownerID = ownerID;
+        this.ownerName = ownerName;
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //                                            identity assurance                                            //
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public int getIdentityAssurances(int userID, PersonCertificateExchangeFailureStorage pcefs) {
+    public int getIdentityAssurances(int userID, PersonCertificateExchangeFailureStorage pcefs)
+            throws SharkException {
+
         Collection<ASAPCertificate> certificates = this.getCertificatesByOwnerID(userID);
         if (certificates == null || certificates.isEmpty()) {
             // we don't know anything about this person
-            return LOWEST_IDENTITY_ASSURANCE_LEVEL;
+            return OtherPerson.LOWEST_IDENTITY_ASSURANCE_LEVEL;
         }
         else {
-        // we have got one or more certificates - find best one
-            // first: is there one certificate issued by owner?
+        // do we have a certificate signed by owner?
             for(ASAPCertificate certificate : certificates) {
-                if (certificate.getSignerID() == userID) {
-                    return HIGHEST_IDENTITY_ASSURANCE_LEVEL;
+                if (certificate.getSignerID() == this.ownerID) {
+                    return OtherPerson.HIGHEST_IDENTITY_ASSURANCE_LEVEL;
                 }
             }
         }
 
-        // we have certificates but nothing issued by owner - let's look for the best one
-        int bestAssurance = LOWEST_IDENTITY_ASSURANCE_LEVEL;
-        // the certificates chain - for each certificate
-        for(ASAPCertificate certificate : certificates) {
-            Set<Integer> idChain = new HashSet<>(); // init chain
-            idChain.add(userID); // we have already found a certificate for this person
+        // we have certificates but nothing issued by owner - we look for a certificated way from owner to userID
+        Set<Integer> idChain = new HashSet<>(); // init chain
 
-            int identityAssurance = this.calculateIdentityAssurance(
-                    idChain, certificate.getSignerID(), -1, pcefs);
+        // find a path and calculate best failure rate of it
+        float identityProbability = this.calculateIdentityProbability(idChain,
+                userID, -1, pcefs);
 
-            // impossible in version 1 - but maybe in another algorithm version
-            if(identityAssurance == HIGHEST_IDENTITY_ASSURANCE_LEVEL) return HIGHEST_IDENTITY_ASSURANCE_LEVEL;
+        if(identityProbability < 0)
+            return OtherPerson.LOWEST_IDENTITY_ASSURANCE_LEVEL;
 
-            bestAssurance = identityAssurance > bestAssurance ? identityAssurance : bestAssurance;
-        }
-
-        return bestAssurance;
+        // scale, cut and return
+        return (int) (identityProbability * 10);
     }
 
     /**
      * Follow chain backward. If it reaches owner.. there will be an assurance level better than
      * worst. If it does not end at owner or even goes in circles - it worst level.
      *
-     * @param idChain                     already visited ids
+     * @param idPath                     already visited ids
      * @param currentPersonID             current id
-     * @param currentAssuranceProbability current assurance so far
+     * @param accumulatedIdentityProbability current failure rate so far (value between 0 and 1)
      * @return what we lool for:
      * YOU - Person A - Person B - ...- current Person - ... - Person in question
      * <p>
      * We go backward in chain to - hopefully reach you
      */
-    private int calculateIdentityAssurance(Set<Integer> idChain, int currentPersonID,
-                               float currentAssuranceProbability, PersonCertificateExchangeFailureStorage pcefs) {
+    private float calculateIdentityProbability(Set<Integer> idPath, int currentPersonID,
+                                               float accumulatedIdentityProbability,
+                                               PersonCertificateExchangeFailureStorage pcefs)
+            throws SharkException {
 
         // finished?
         if (currentPersonID == this.ownerID) {
-            if(currentAssuranceProbability < LOWEST_IDENTITY_ASSURANCE_LEVEL) {
+            if(accumulatedIdentityProbability < 0) {
                 // not yet set
-                return LOWEST_IDENTITY_ASSURANCE_LEVEL;
+                return 0; // no
             } else {
-                return (int) (currentAssuranceProbability * 10); // yes - rescale to 0..10
+                return accumulatedIdentityProbability; // done
             }
         }
 
         // not finished
 
         // are we in a circle?
-        if (idChain.contains(currentPersonID))
-            return LOWEST_IDENTITY_ASSURANCE_LEVEL; // yes - escape
+        if (idPath.contains(currentPersonID)) return 0; // escape circle
+
+        // are we already on the path - if not: no need to calculate anything
+        if(!idPath.isEmpty()) {
+            // convert failure rate number to failure probability something between 0 and 1.
+            float failureProbability = ((float) pcefs.getCertificateExchangeFailure(currentPersonID)) / 10;
+
+            // OK. We have information about this person. Calculate assuranceLevel
+                /*
+                Only the owner is expected to make no failure during certificate exchange. (That's an illusion but
+                we take it.) Any other person makes failure and associates public key with the wrong person.
+
+                The probability of doing so is failureProbability.
+
+                We have a chain of signers here. Each has signed a certificate of an owner who is signer in the
+                next step. Failure accumulate. Assuming four steps. O - A - B - C. O is the owner. O has met A. We assume
+                a failureProb of 0 (it is the owner). O has set a failure prob for A (e.g. pA = 30% = 0,3).
+
+                70% (0,7) of As' certificates are presumably right, 30% (0,3 wrong). A has also signed a certificate for
+                B. That certificate is right with 70% (0,7). Now, B has also signed a certificate for C and als B makes
+                failure, let's assume 40% (0,4). Thus, 60% are right.
+
+                How does it look from Owners perspective? O wants to know how sure it can be of Cs' identity.
+                It can calculate beginning from the end of the chain: 60% of certificates signed by B are right.
+                6 out of 10  are right. 4 out of 10 are wrong.
+                O cannot verify Bs' certificate, though. It only has certificate from A. With a probability of 30%,
+                A has signed a wrong certificate for B. O can calculate. Nearly any third certificate signed by A is
+                wrong. Statistically, a third of those right 6 certificates of B are wrong due to A. O can say:
+
+                4 out of 10 certificates in that signing queue are falsified. O can be sure of Cs' identity with 60%.
+
+                identityAssurance(C) = (1-failure(C) * (1-failure(B))
+                 */
+            if (accumulatedIdentityProbability < 0) {
+                // haven't yet calculated any assurance prob. Set initial value
+                accumulatedIdentityProbability = 1 - failureProbability;
+            } else {
+                accumulatedIdentityProbability *= (1 - failureProbability);
+            }
+        }
 
         // remember this step
-        idChain.add(currentPersonID);
+        idPath.add(currentPersonID);
 
-        // calculate failure rate in percent
-        float failureProbability = pcefs.getCertificateExchangeFailure(currentPersonID) / 10;
-
-        // OK. We have information about this person. Calculate assuranceLevel
-        if (currentAssuranceProbability < LOWEST_IDENTITY_ASSURANCE_LEVEL) {
-            // haven't yet calculated any assurance prob. Set initial value
-            currentAssuranceProbability = 1 - failureProbability;
-        } else {
-            currentAssuranceProbability *= 1 - failureProbability;
-        }
-
-        // is there a next step? Yes, if there is a certificate
+        // is there a next step towards owner? Yes, if there is a certificate owner by the current signer
         Collection<ASAPCertificate> nextCertificates = this.getCertificatesByOwnerID(currentPersonID);
 
-        if(nextCertificates == null || nextCertificates.isEmpty()) return LOWEST_IDENTITY_ASSURANCE_LEVEL;
+        if(nextCertificates == null || nextCertificates.isEmpty())
+            // no certificate - worst failure rate.
+            return 0;
 
-        int bestIdentityAssurance = LOWEST_IDENTITY_ASSURANCE_LEVEL;
+        // next step in depth-first search
+        float bestIdentityProbability = 0;
         for(ASAPCertificate nextCertificate : nextCertificates) {
-            // make a idChain copy
-            Set<Integer> nextIDChain = new HashSet<>();
-            nextIDChain.addAll(idChain);
+            // make a idPath copy
+            Set<Integer> copyIDPath = new HashSet<>();
+            copyIDPath.addAll(idPath);
 
-            int identityAssurance = this.calculateIdentityAssurance(nextIDChain,
-                    nextCertificate.getSignerID(), currentAssuranceProbability, pcefs);
+            float identityProbability = this.calculateIdentityProbability(copyIDPath,
+                    nextCertificate.getSignerID(), accumulatedIdentityProbability, pcefs);
 
-            if(identityAssurance == HIGHEST_IDENTITY_ASSURANCE_LEVEL) return HIGHEST_IDENTITY_ASSURANCE_LEVEL;
-
-            bestIdentityAssurance =
-                    identityAssurance > bestIdentityAssurance ? identityAssurance : bestIdentityAssurance;
+            bestIdentityProbability =
+                    identityProbability > bestIdentityProbability ? identityProbability : bestIdentityProbability;
         }
 
-        return bestIdentityAssurance;
+        return bestIdentityProbability;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -141,7 +170,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
             lastRound = era == thisEra;
 
             try {
-                ASAPChunk chunk = chunkStorage.getChunk(ASAPCertificate.ASAP_CERIFICATE_URI, era);
+                ASAPChunk chunk = chunkStorage.getChunk(ASAPCertificate.ASAP_CERTIFICATE, era);
                 Iterator<byte[]> messagesAsBytes = chunk.getMessagesAsBytes();
                 // create address
                 ASAPStorageAddressImpl asapStorageAddress = new ASAPStorageAddressImpl(era);
@@ -174,7 +203,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
             // next era
             era = this.asapStorage.getNextEra(era);
 
-            Log.writeLog(this, "we do not read from incoming / sender storages - it's a feature");
+            Log.writeLog(this, "info: we do not read from incoming / sender storages - it's a feature");
 
         } while(!lastRound);
     }
@@ -195,12 +224,25 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
     }
 
     @Override
+    public int getOwnerID() {
+        return this.ownerID;
+    }
+
+    @Override
+    public CharSequence getOwnerName() {
+        return this.ownerName;
+    }
+
+    @Override
     public ASAPStorageAddress storeCertificate(ASAPCertificate ASAPCertificate) throws IOException {
-        this.asapStorage.add(ASAPCertificate.ASAP_CERIFICATE_URI, ASAPCertificate.asBytes());
+        this.asapStorage.add(ASAPCertificate.ASAP_CERTIFICATE, ASAPCertificate.asBytes());
+
+        // drop cache
+        this.certificatesByOwnerIDMap = null;
 
         return new ASAPStorageAddressImpl(
                 this.asapStorage.getFormat(),
-                ASAPCertificate.ASAP_CERIFICATE_URI,
+                ASAPCertificate.ASAP_CERTIFICATE,
                 this.asapStorage.getEra());
     }
 
@@ -211,7 +253,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
         }
 
         // drop in memo copies
-        this.certificatesByOwnerIDMap = new HashMap<>();
+        this.certificatesByOwnerIDMap = null;
 
         if(this.asapStorage.getChunkStorage().existsChunk(asapAddress.getUri(), asapAddress.getEra())) {
             ASAPChunkStorage chunkStorage = this.asapStorage.getChunkStorage();
@@ -281,7 +323,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
         }
 
         ASAPStorageAddressImpl(int era) {
-            this(ASAP_CERIFICATE_APP, ASAPCertificate.ASAP_CERIFICATE_URI, era);
+            this(ASAP_CERIFICATE_APP, ASAPCertificate.ASAP_CERTIFICATE, era);
         }
 
         ASAPStorageAddressImpl(byte[] serialized) throws IOException {

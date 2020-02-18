@@ -1,6 +1,5 @@
-package net.sharksystem.certificates;
+package net.sharksystem.crypto;
 
-import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -8,7 +7,7 @@ import java.security.SignatureException;
 import java.util.Calendar;
 
 public interface ASAPCertificate {
-    public static final String ASAP_CERIFICATE_URI = "asap/certificate";
+    public static final String ASAP_CERTIFICATE = "asap/certificate";
 
     /**
      * @return person which public key is matched with its name

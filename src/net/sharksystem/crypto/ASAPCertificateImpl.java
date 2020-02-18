@@ -1,6 +1,4 @@
-package net.sharksystem.certificates;
-
-import net.sharksystem.asap.util.Log;
+package net.sharksystem.crypto;
 
 import java.io.*;
 import java.security.*;
