@@ -2,6 +2,7 @@ package net.sharksystem.crypto;
 
 import net.sharksystem.SharkException;
 import net.sharksystem.asap.ASAPStorage;
+import net.sharksystem.persons.PersonsStorage;
 
 import java.io.IOException;
 import java.security.PublicKey;
@@ -13,15 +14,14 @@ public interface ASAPCertificateStorage {
     Collection<ASAPCertificate> getCertificatesByOwnerID(int userID);
 
     ASAPStorage getASAPStorage();
-    public int getOwnerID();
-    public CharSequence getOwnerName();
-
+    int getOwnerID();
+    CharSequence getOwnerName();
 
     ASAPStorageAddress storeCertificate(ASAPCertificate ASAPCertificate) throws IOException;
 
-    void removeCertificate(ASAPCertificate cert2remove, ASAPStorageAddress asapAddress) throws IOException;
+    void removeCertificate(ASAPCertificate cert2remove) throws IOException;
 
-    int getIdentityAssurances(int userID, PersonCertificateExchangeFailureStorage pcefs) throws SharkException;
+    int getIdentityAssurances(int userID, PersonsStorage personsStorage) throws SharkException;
 
     ASAPStorageAddress getASAPStorageAddress(byte[] serializedAddress) throws IOException;
 }

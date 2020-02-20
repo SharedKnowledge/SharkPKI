@@ -54,6 +54,10 @@ public class PersonsStorageImpl implements PersonsStorage {
         return this.rsaKeyPair.getPublic();
     }
 
+    public PrivateKey getPrivateKey() {
+        return this.rsaKeyPair.getPrivate();
+    }
+
     //////////////////////////////////////////////////////////////////////////////////////////////
     //                           other persons management - in memory                           //
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -104,6 +108,11 @@ public class PersonsStorageImpl implements PersonsStorage {
     public ASAPCertificate addAndSignPerson(int userID, CharSequence userName, PublicKey publicKey)
             throws SharkCryptoException, IOException {
 
+        // try to overwrite owner ?
+        if(userID == this.getOwnerUserID()) {
+            throw new SharkCryptoException("cannot add person with your userID");
+        }
+
         // already in there
         for(PersonValues personValues : this.personsList) {
             if(personValues.getUserID() == userID) {
@@ -111,15 +120,22 @@ public class PersonsStorageImpl implements PersonsStorage {
             }
         }
 
-        // even owner
-        if(userID == this.getOwnerUserID()) {
-            throw new SharkCryptoException("cannot add person with your userID");
-        }
-
+        // ok - add
         PersonValues newPersonValues = new PersonValues(userID, userName);
         this.personsList.add(newPersonValues);
 
-        // sign public key - create certificate and store it.
+        // is there already a certificate?
+        try {
+            Collection<ASAPCertificate> certificates = this.getCertificate(userID);
+            for(ASAPCertificate certTemp : certificates) {
+                if(certTemp.getSignerID() == this.getOwnerUserID()) {
+                    // drop it
+                    this.certificateStorage.removeCertificate(certTemp);
+                }
+            }
+        } catch (SharkException e) {
+            e.printStackTrace();
+        }
 
         ASAPCertificate cert = null;
         try {
@@ -141,6 +157,7 @@ public class PersonsStorageImpl implements PersonsStorage {
 
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException | SharkException e) {
             Log.writeLogErr(this, "cannot create certificate: " + e.getLocalizedMessage());
+            e.printStackTrace();
             throw new SharkCryptoException("cannot create certificate: " + e.getLocalizedMessage());
         }
     }
@@ -163,10 +180,6 @@ public class PersonsStorageImpl implements PersonsStorage {
 
     public Collection<ASAPCertificate> getCertificate(int userID) throws SharkException {
         return this.certificateStorage.getCertificatesByOwnerID(userID);
-    }
-
-    public PrivateKey getPrivateKey() {
-        return this.rsaKeyPair.getPrivate();
     }
 
     public CharSequence getOwnerName() {

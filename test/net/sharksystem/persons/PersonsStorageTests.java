@@ -35,7 +35,7 @@ public class PersonsStorageTests {
     }
 
     @Test
-    public void test1() throws
+    public void identityAssuranceCalculationTest() throws
             IOException, ASAPException, NoSuchAlgorithmException, SignatureException,
             InvalidKeyException, SharkException {
 
@@ -122,5 +122,80 @@ public class PersonsStorageTests {
         System.out.println("david identity assurance on alice side == " + davidIdentityAssurance);
         // there is a way from alice to david now.
         Assert.assertEquals(2, alicePersonsStorage.getIdentityAssurance(davidID));
+    }
+
+    @Test
+    public void certificateVerifyTest1() throws
+            IOException, ASAPException, NoSuchAlgorithmException, SignatureException,
+            InvalidKeyException, SharkException {
+
+        ASAPEngineFS.removeFolder(ROOT_DIRECTORY);
+
+        // setup alice
+        ASAPEngine aliceASAPStorage = ASAPEngineFS.getASAPStorage(
+                "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.ASAP_CERIFICATE_APP);
+        ASAPCertificateStorage asapAliceCertificateStorage =
+                new ASAPCertificateStorageImpl(aliceASAPStorage, ALICE_ID, ALICE_NAME);
+        PersonsStorage alicePersonsStorage = new PersonsStorageImpl(asapAliceCertificateStorage);
+
+        // setup bob
+        ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
+                "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.ASAP_CERIFICATE_APP);
+        ASAPCertificateStorage asapBobCertificateStorage =
+                new ASAPCertificateStorageImpl(aliceASAPStorage, BOB_ID, BOB_NAME);
+        PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
+
+        // simulation - Bob must send its credentials in some way to Alice - assume that happened
+        int bobID = bobPersonsStorage.getOwnerUserID();
+        CharSequence bobName = bobPersonsStorage.getOwnerName();
+        PublicKey bobPublicKey = bobPersonsStorage.getPublicKey();
+
+        PublicKey alicePublicKey = alicePersonsStorage.getPublicKey();
+        PrivateKey alicePrivateKey = alicePersonsStorage.getPrivateKey();
+
+        // alice signs a certificate of bob
+        ASAPCertificate asapCertificate = ASAPCertificateImpl.produceCertificate(
+                alicePersonsStorage.getOwnerUserID(), alicePersonsStorage.getOwnerName(), alicePrivateKey,
+                bobID, bobName, bobPublicKey);
+
+        // verify
+        boolean verified = asapCertificate.verify(alicePublicKey);
+        Assert.assertTrue(verified);
+    }
+
+    @Test
+    public void certificateVerifyTest2() throws
+            IOException, ASAPException, NoSuchAlgorithmException, SignatureException,
+            InvalidKeyException, SharkException {
+
+        ASAPEngineFS.removeFolder(ROOT_DIRECTORY);
+
+        // setup alice
+        ASAPEngine aliceASAPStorage = ASAPEngineFS.getASAPStorage(
+                "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.ASAP_CERIFICATE_APP);
+        ASAPCertificateStorage asapAliceCertificateStorage =
+                new ASAPCertificateStorageImpl(aliceASAPStorage, ALICE_ID, ALICE_NAME);
+        PersonsStorage alicePersonsStorage = new PersonsStorageImpl(asapAliceCertificateStorage);
+
+        // setup bob
+        ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
+                "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.ASAP_CERIFICATE_APP);
+        ASAPCertificateStorage asapBobCertificateStorage =
+                new ASAPCertificateStorageImpl(aliceASAPStorage, BOB_ID, BOB_NAME);
+        PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
+
+        // simulation - Bob must send its credentials in some way to Alice - assume that happened
+        int bobID = bobPersonsStorage.getOwnerUserID();
+        CharSequence bobName = bobPersonsStorage.getOwnerName();
+        PublicKey bobPublicKey = bobPersonsStorage.getPublicKey();
+
+        PublicKey alicePublicKey = alicePersonsStorage.getPublicKey();
+        PrivateKey alicePrivateKey = alicePersonsStorage.getPrivateKey();
+
+        // alice signs a certificate of bob
+        ASAPCertificate asapCertificate = alicePersonsStorage.addAndSignPerson(bobID, bobName, bobPublicKey);
+
+        // verify
+        Assert.assertTrue(asapCertificate.verify(alicePublicKey));
     }
 }

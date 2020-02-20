@@ -6,8 +6,13 @@ import net.sharksystem.asap.ASAPChunkStorage;
 import net.sharksystem.asap.ASAPStorage;
 import net.sharksystem.asap.util.Log;
 import net.sharksystem.persons.OtherPerson;
+import net.sharksystem.persons.PersonsStorage;
 
 import java.io.*;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.SignatureException;
 import java.util.*;
 
 public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
@@ -26,7 +31,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
     //                                            identity assurance                                            //
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public int getIdentityAssurances(int userID, PersonCertificateExchangeFailureStorage pcefs)
+    public int getIdentityAssurances(int userID, PersonsStorage personsStorage)
             throws SharkException {
 
         Collection<ASAPCertificate> certificates = this.getCertificatesByOwnerID(userID);
@@ -36,10 +41,22 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
         }
         else {
         // do we have a certificate signed by owner?
+            boolean found = false;
             for(ASAPCertificate certificate : certificates) {
                 if (certificate.getSignerID() == this.ownerID) {
-                    return OtherPerson.HIGHEST_IDENTITY_ASSURANCE_LEVEL;
+                    // verify certificate
+                    found = true;
+                    try {
+                        if(certificate.verify(personsStorage.getPublicKey())) {
+                            return OtherPerson.HIGHEST_IDENTITY_ASSURANCE_LEVEL;
+                        }
+                    } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+                        Log.writeLog(this, "cannot verify certificate: " + e.getLocalizedMessage());
+                    }
                 }
+            }
+            if(found) {
+                throw new SharkCryptoException("there is a certificate signed by owner but cannot be verified - that's serious");
             }
         }
 
@@ -48,13 +65,31 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
 
         // find a path and calculate best failure rate of it
         float identityProbability = this.calculateIdentityProbability(idChain,
-                userID, -1, pcefs);
+                userID, null, -1, personsStorage);
 
         if(identityProbability < 0)
             return OtherPerson.LOWEST_IDENTITY_ASSURANCE_LEVEL;
 
         // scale, cut and return
         return (int) (identityProbability * 10);
+    }
+
+    private boolean verify(ASAPCertificate cert, PublicKey publicKey) {
+        if(cert == null) return false;
+
+        try {
+            if(cert.verify(publicKey)) {
+                return true;
+            }
+
+            Log.writeLogErr(this,"cannot verify stored certificate - that's serious");
+            Log.writeLog(this,"cannot verify stored certificate - maybe delete??!!");
+
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            Log.writeLogErr(this,"cannot verify stored certificate: " + e.getLocalizedMessage());
+        }
+
+        return false;
     }
 
     /**
@@ -70,12 +105,17 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
      * We go backward in chain to - hopefully reach you
      */
     private float calculateIdentityProbability(Set<Integer> idPath, int currentPersonID,
-                                               float accumulatedIdentityProbability,
-                                               PersonCertificateExchangeFailureStorage pcefs)
-            throws SharkException {
+               ASAPCertificate currentCertificate, float accumulatedIdentityProbability, PersonsStorage personsStorage)
+                    throws SharkException {
 
         // finished?
         if (currentPersonID == this.ownerID) {
+            // we should be able to verify currentCertificate with owners public key
+            if(!this.verify(currentCertificate, personsStorage.getPublicKey())) {
+                return 0; // no certificate - should not happen.
+            }
+
+            // could be verified
             if(accumulatedIdentityProbability < 0) {
                 // not yet set
                 return 0; // no
@@ -90,9 +130,9 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
         if (idPath.contains(currentPersonID)) return 0; // escape circle
 
         // are we already on the path - if not: no need to calculate anything
-        if(!idPath.isEmpty()) {
+        if(currentCertificate == null) {
             // convert failure rate number to failure probability something between 0 and 1.
-            float failureProbability = ((float) pcefs.getCertificateExchangeFailure(currentPersonID)) / 10;
+            float failureProbability = ((float) personsStorage.getCertificateExchangeFailure(currentPersonID)) / 10;
 
             // OK. We have information about this person. Calculate assuranceLevel
                 /*
@@ -132,21 +172,26 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
         idPath.add(currentPersonID);
 
         // is there a next step towards owner? Yes, if there is a certificate owner by the current signer
-        Collection<ASAPCertificate> nextCertificates = this.getCertificatesByOwnerID(currentPersonID);
+        Collection<ASAPCertificate> proceedingCertificates = this.getCertificatesByOwnerID(currentPersonID);
 
-        if(nextCertificates == null || nextCertificates.isEmpty())
+        if(proceedingCertificates == null || proceedingCertificates.isEmpty())
             // no certificate - worst failure rate.
             return 0;
 
         // next step in depth-first search
         float bestIdentityProbability = 0;
-        for(ASAPCertificate nextCertificate : nextCertificates) {
+        for(ASAPCertificate proceedingCertificate : proceedingCertificates) {
+            // we must be able to verify current certificate (if any)
+            if(currentCertificate != null) {
+                if(!this.verify(currentCertificate, proceedingCertificate.getPublicKey())) continue;
+            }
+
             // make a idPath copy
             Set<Integer> copyIDPath = new HashSet<>();
             copyIDPath.addAll(idPath);
 
             float identityProbability = this.calculateIdentityProbability(copyIDPath,
-                    nextCertificate.getSignerID(), accumulatedIdentityProbability, pcefs);
+                    proceedingCertificate.getSignerID(), proceedingCertificate, accumulatedIdentityProbability, personsStorage);
 
             bestIdentityProbability =
                     identityProbability > bestIdentityProbability ? identityProbability : bestIdentityProbability;
@@ -215,7 +260,11 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
             this.readCertificatesFromStorage();
         }
 
-        return this.certificatesByOwnerIDMap.get(userID);
+        Set<ASAPCertificate> asapCertificates = this.certificatesByOwnerIDMap.get(userID);
+        if(asapCertificates == null) {
+            asapCertificates = new HashSet<>();
+        }
+        return asapCertificates;
     }
 
     @Override
@@ -247,9 +296,11 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
     }
 
     @Override
-    public void removeCertificate(ASAPCertificate cert2remove, ASAPStorageAddress asapAddress) throws IOException {
+    public void removeCertificate(ASAPCertificate cert2remove) throws IOException {
+        ASAPStorageAddress asapAddress = cert2remove.getASAPStorageAddress();
         if(asapAddress == null) {
-            Log.writeLog(this, "asap address must not be null");
+            Log.writeLog(this, "asap address must not be null - cannot remove");
+            return;
         }
 
         // drop in memo copies

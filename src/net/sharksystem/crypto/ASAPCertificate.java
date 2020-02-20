@@ -32,4 +32,6 @@ public interface ASAPCertificate {
     boolean verify(PublicKey publicKeyIssuer) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException;
 
     ASAPStorageAddress getASAPStorageAddress();
+
+    PublicKey getPublicKey();
 }

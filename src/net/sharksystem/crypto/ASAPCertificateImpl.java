@@ -17,8 +17,8 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     private int signerID;
     private byte[] signatureBytes;
     private ASAPStorageAddress asapStorageAddress;
-    private Calendar validSince;
-    private Calendar validUntil;
+    private long validSince;
+    private long validUntil;
 
     /**
      * Create fresh certificate for owner and sign it now with signers private key.
@@ -39,9 +39,14 @@ public class ASAPCertificateImpl implements ASAPCertificate {
                                PrivateKey privateKey,
                                int ownerID, CharSequence ownerName,
                                PublicKey publicKey) throws SignatureException,
-            NoSuchAlgorithmException, InvalidKeyException, IOException {
+            NoSuchAlgorithmException, InvalidKeyException {
 
-        ASAPCertificateImpl asapCertificate = new ASAPCertificateImpl(signerID, signerName, ownerID, ownerName, publicKey);
+        Calendar since = Calendar.getInstance();
+        Calendar until = Calendar.getInstance();
+        until.add(Calendar.YEAR, 1);
+
+        ASAPCertificateImpl asapCertificate = new ASAPCertificateImpl(
+                signerID, signerName, ownerID, ownerName, publicKey, since.getTimeInMillis(), until.getTimeInMillis());
         asapCertificate.sign(privateKey);
 
         return asapCertificate;
@@ -50,8 +55,7 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     private ASAPCertificateImpl(int signerID,
                                 CharSequence signerName,
                                 int ownerID, CharSequence ownerName,
-                                PublicKey publicKey) throws IOException,
-            NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+                                PublicKey publicKey, long validSince, long validUntil) {
 
         this.signerID = signerID;
         this.signerName = signerName;
@@ -59,9 +63,9 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         this.ownerName = ownerName;
         this.publicKey = publicKey;
 
-        this.validSince = Calendar.getInstance();
-        this.validUntil = Calendar.getInstance();
-        this.validUntil.add(Calendar.YEAR, DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS);
+        this.validSince = validSince;
+        this.validUntil = validUntil;
+
     }
 
     private void sign(PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
@@ -83,8 +87,8 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         String signerName = dis.readUTF();
         int ownerID = dis.readInt();
         String ownerName = dis.readUTF();
-        long validSinceLong = dis.readLong();
-        long validUntilLong = dis.readLong();
+        long validSince = dis.readLong();
+        long validUntil = dis.readLong();
 
         String algorithm = dis.readUTF();
         int length = dis.readInt();
@@ -100,7 +104,9 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         byte[] signaturBytes = new byte[length];
         dis.read(signaturBytes);
 
-        ASAPCertificateImpl asapCertificate = new ASAPCertificateImpl(signerID, signerName, ownerID, ownerName, pubKey);
+        ASAPCertificateImpl asapCertificate = new ASAPCertificateImpl(
+                signerID, signerName, ownerID, ownerName, pubKey, validSince, validUntil);
+
         asapCertificate.signatureBytes = signaturBytes;
         asapCertificate.asapStorageAddress = asapStorageAddress;
 
@@ -122,8 +128,8 @@ public class ASAPCertificateImpl implements ASAPCertificate {
             dos.writeInt(this.ownerID);
             dos.writeUTF(this.getOwnerName().toString());
 
-            dos.writeLong(this.validSince.getTimeInMillis());
-            dos.writeLong(this.validUntil.getTimeInMillis());
+            dos.writeLong(this.validSince);
+            dos.writeLong(this.validUntil);
 
             // public key serialization
             dos.writeUTF(this.publicKey.getAlgorithm());
@@ -184,9 +190,17 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     @Override
     public int getSignerID() { return this.signerID; }
 
-    @Override
-    public Calendar getValidSince() { return this.validSince; }
+    private Calendar long2Calendar(long timeInMillis) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(timeInMillis);
+        return calendar;
+    }
 
     @Override
-    public Calendar getValidUntil() { return this.validUntil; }
+    public Calendar getValidSince() { return this.long2Calendar(this.validSince); }
+
+    @Override
+    public Calendar getValidUntil() { return this.long2Calendar(this.validUntil); }
+
+    public PublicKey getPublicKey() { return this.publicKey; }
 }
