@@ -31,6 +31,24 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
     //                                            identity assurance                                            //
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    private boolean verify(ASAPCertificate cert, PublicKey publicKey) {
+        if(cert == null) return false;
+
+        try {
+            if(cert.verify(publicKey)) {
+                return true;
+            }
+
+            Log.writeLogErr(this,"cannot verify stored certificate - that's serious");
+            Log.writeLog(this,"cannot verify stored certificate - maybe delete??!!");
+
+        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            Log.writeLogErr(this,"cannot verify stored certificate: " + e.getLocalizedMessage());
+        }
+
+        return false;
+    }
+
     public int getIdentityAssurances(int userID, PersonsStorage personsStorage)
             throws SharkException {
 
@@ -60,36 +78,27 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
             }
         }
 
-        // we have certificates but nothing issued by owner - we look for a certificated way from owner to userID
-        Set<Integer> idChain = new HashSet<>(); // init chain
+        float bestIdentityProbability = 0;
 
-        // find a path and calculate best failure rate of it
-        float identityProbability = this.calculateIdentityProbability(idChain,
-                userID, null, -1, personsStorage);
+        // iterate again
+        for(ASAPCertificate certificate : certificates) {
+            // we have certificates but nothing issued by owner - we look for a certificated way from owner to userID
 
-        if(identityProbability < 0)
-            return OtherPerson.LOWEST_IDENTITY_ASSURANCE_LEVEL;
+            // find a path and calculate best failure rate of it
+            float identityProbability = this.calculateIdentityProbability(new ArrayList<>(), // init chain
+                    userID, certificate, -1, personsStorage);
 
-        // scale, cut and return
-        return (int) (identityProbability * 10);
-    }
-
-    private boolean verify(ASAPCertificate cert, PublicKey publicKey) {
-        if(cert == null) return false;
-
-        try {
-            if(cert.verify(publicKey)) {
-                return true;
-            }
-
-            Log.writeLogErr(this,"cannot verify stored certificate - that's serious");
-            Log.writeLog(this,"cannot verify stored certificate - maybe delete??!!");
-
-        } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-            Log.writeLogErr(this,"cannot verify stored certificate: " + e.getLocalizedMessage());
+            bestIdentityProbability = bestIdentityProbability < identityProbability ?
+                                            identityProbability : bestIdentityProbability;
         }
 
-        return false;
+        // scale, round and return
+        bestIdentityProbability *= 10; //scale
+        int bestIdentityProbabilityInt = (int) bestIdentityProbability; // cut
+        if( (bestIdentityProbability - bestIdentityProbabilityInt) >= 0.5) {
+            bestIdentityProbabilityInt++; // round
+        };
+        return bestIdentityProbabilityInt;
     }
 
     /**
@@ -104,7 +113,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
      * <p>
      * We go backward in chain to - hopefully reach you
      */
-    private float calculateIdentityProbability(Set<Integer> idPath, int currentPersonID,
+    private float calculateIdentityProbability(List<Integer> idPath, int currentPersonID,
                ASAPCertificate currentCertificate, float accumulatedIdentityProbability, PersonsStorage personsStorage)
                     throws SharkException {
 
@@ -129,69 +138,67 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
         // are we in a circle?
         if (idPath.contains(currentPersonID)) return 0; // escape circle
 
-        // are we already on the path - if not: no need to calculate anything
-        if(currentCertificate == null) {
-            // convert failure rate number to failure probability something between 0 and 1.
-            float failureProbability = ((float) personsStorage.getCertificateExchangeFailure(currentPersonID)) / 10;
-
-            // OK. We have information about this person. Calculate assuranceLevel
-                /*
-                Only the owner is expected to make no failure during certificate exchange. (That's an illusion but
-                we take it.) Any other person makes failure and associates public key with the wrong person.
-
-                The probability of doing so is failureProbability.
-
-                We have a chain of signers here. Each has signed a certificate of an owner who is signer in the
-                next step. Failure accumulate. Assuming four steps. O - A - B - C. O is the owner. O has met A. We assume
-                a failureProb of 0 (it is the owner). O has set a failure prob for A (e.g. pA = 30% = 0,3).
-
-                70% (0,7) of As' certificates are presumably right, 30% (0,3 wrong). A has also signed a certificate for
-                B. That certificate is right with 70% (0,7). Now, B has also signed a certificate for C and als B makes
-                failure, let's assume 40% (0,4). Thus, 60% are right.
-
-                How does it look from Owners perspective? O wants to know how sure it can be of Cs' identity.
-                It can calculate beginning from the end of the chain: 60% of certificates signed by B are right.
-                6 out of 10  are right. 4 out of 10 are wrong.
-                O cannot verify Bs' certificate, though. It only has certificate from A. With a probability of 30%,
-                A has signed a wrong certificate for B. O can calculate. Nearly any third certificate signed by A is
-                wrong. Statistically, a third of those right 6 certificates of B are wrong due to A. O can say:
-
-                4 out of 10 certificates in that signing queue are falsified. O can be sure of Cs' identity with 60%.
-
-                identityAssurance(C) = (1-failure(C) * (1-failure(B))
-                 */
-            if (accumulatedIdentityProbability < 0) {
-                // haven't yet calculated any assurance prob. Set initial value
-                accumulatedIdentityProbability = 1 - failureProbability;
-            } else {
-                accumulatedIdentityProbability *= (1 - failureProbability);
-            }
-        }
-
         // remember this step
         idPath.add(currentPersonID);
 
         // is there a next step towards owner? Yes, if there is a certificate owner by the current signer
-        Collection<ASAPCertificate> proceedingCertificates = this.getCertificatesByOwnerID(currentPersonID);
+        int proceedingPersonID = currentCertificate.getSignerID();
+        Collection<ASAPCertificate> proceedingCertificates =
+                this.getCertificatesByOwnerID(proceedingPersonID);
 
         if(proceedingCertificates == null || proceedingCertificates.isEmpty())
-            // no certificate - worst failure rate.
+            // no certificate - cannot verify current certificate.
             return 0;
 
         // next step in depth-first search
         float bestIdentityProbability = 0;
         for(ASAPCertificate proceedingCertificate : proceedingCertificates) {
             // we must be able to verify current certificate (if any)
-            if(currentCertificate != null) {
-                if(!this.verify(currentCertificate, proceedingCertificate.getPublicKey())) continue;
-            }
+            if(!this.verify(currentCertificate, proceedingCertificate.getPublicKey())) continue;
 
             // make a idPath copy
-            Set<Integer> copyIDPath = new HashSet<>();
+            List<Integer> copyIDPath = new ArrayList<>();
             copyIDPath.addAll(idPath);
 
+            // convert failure rate number to failure probability something between 0 and 1.
+            float failureProbability = ((float) personsStorage.getCertificateExchangeFailure(proceedingPersonID)) / 10;
+
+            // OK. We have information about this person. Calculate assuranceLevel
+            /*
+            Only the owner is expected to make no failure during certificate exchange. (That's an illusion but
+            we take it.) Any other person makes failure and associates public key with the wrong person.
+
+            The probability of doing so is failureProbability.
+
+            We have a chain of signers here. Each has signed a certificate of an owner who is signer in the
+            next step. Failure accumulate. Assuming four steps. O - A - B - C. O is the owner. O has met A. We assume
+            a failureProb of 0 (it is the owner). O has set a failure prob for A (e.g. pA = 30% = 0,3).
+
+            70% (0,7) of As' certificates are presumably right, 30% (0,3 wrong). A has also signed a certificate for
+            B. That certificate is right with 70% (0,7). Now, B has also signed a certificate for C and als B makes
+            failure, let's assume 40% (0,4). Thus, 60% are right.
+
+            How does it look from Owners perspective? O wants to know how sure it can be of Cs' identity.
+            It can calculate beginning from the end of the chain: 60% of certificates signed by B are right.
+            6 out of 10  are right. 4 out of 10 are wrong.
+            O cannot verify Bs' certificate, though. It only has certificate from A. With a probability of 30%,
+            A has signed a wrong certificate for B. O can calculate. Nearly any third certificate signed by A is
+            wrong. Statistically, a third of those right 6 certificates of B are wrong due to A. O can say:
+
+            4 out of 10 certificates in that signing queue are falsified. O can be sure of Cs' identity with 60%.
+
+            identityAssurance(C) = (1-failure(C) * (1-failure(B))
+             */
+            if (accumulatedIdentityProbability < 0) {
+                // haven't yet calculated any assurance prob. Set initial value
+                accumulatedIdentityProbability = 1 - failureProbability;
+            } else {
+                accumulatedIdentityProbability *= (1 - failureProbability);
+            }
+
             float identityProbability = this.calculateIdentityProbability(copyIDPath,
-                    proceedingCertificate.getSignerID(), proceedingCertificate, accumulatedIdentityProbability, personsStorage);
+                    proceedingCertificate.getSignerID(), proceedingCertificate, accumulatedIdentityProbability,
+                    personsStorage);
 
             bestIdentityProbability =
                     identityProbability > bestIdentityProbability ? identityProbability : bestIdentityProbability;

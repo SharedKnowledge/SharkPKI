@@ -120,8 +120,8 @@ public class PersonsStorageTests {
         // alice can verify david thanks to bob and clara
         int davidIdentityAssurance = alicePersonsStorage.getIdentityAssurance(davidID);
         System.out.println("david identity assurance on alice side == " + davidIdentityAssurance);
-        // there is a way from alice to david now.
-        Assert.assertEquals(2, alicePersonsStorage.getIdentityAssurance(davidID));
+        // there is a way from alice to david now - iA is 2.5 rounded up to 3
+        Assert.assertEquals(3, alicePersonsStorage.getIdentityAssurance(davidID));
     }
 
     @Test
