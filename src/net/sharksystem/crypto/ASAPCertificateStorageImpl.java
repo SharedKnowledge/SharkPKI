@@ -122,6 +122,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
         if (certificates == null || certificates.isEmpty()) {
             // we don't know anything about this person
             this.userIdentityAssurance.put(userID, this.worstIdentityAssurance);
+            return;
         }
         else {
         // do we have a certificate signed by owner?
@@ -140,7 +141,13 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
                             return; // there is only one direct certificate
                         }
                     } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-                        Log.writeLog(this, "cannot verify certificate: " + e.getLocalizedMessage());
+                        Log.writeLogErr(this, "cannot verify a direct certificate - remove it: "
+                                + e.getLocalizedMessage());
+                        try {
+                            this.removeCertificate(certificate);
+                        } catch (IOException ex) {
+                            Log.writeLog(this, "cannot remove certificate: " + ex.getLocalizedMessage());
+                        }
                     }
                 }
             }
@@ -285,11 +292,16 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
 
     private Map<Integer, Set<ASAPCertificate>> certificatesByOwnerIDMap = null;
 
+    private boolean isExpired(ASAPCertificate cert) {
+        return System.currentTimeMillis() > cert.getValidUntil().getTimeInMillis();
+    }
+
     private void readCertificatesFromStorage() {
         int era = this.asapStorage.getOldestEra();
         int thisEra = this.asapStorage.getEra();
         ASAPChunkStorage chunkStorage = this.asapStorage.getChunkStorage();
         boolean lastRound = false;
+        List<ASAPCertificate> expiredCertificates = new ArrayList<>();
         do {
             lastRound = era == thisEra;
 
@@ -304,17 +316,23 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
                                 ASAPCertificateImpl.produceCertificateFromStorage(
                                         messagesAsBytes.next(), asapStorageAddress);
 
-                        int ownerID = asapCertificate.getOwnerID();
-                        // add to in-memo structure
-                        Set<ASAPCertificate> certSet =
-                                this.certificatesByOwnerIDMap.get(ownerID);
+                        // expired
+                        if(this.isExpired(asapCertificate)) {
+                            // remove
+                            expiredCertificates.add(asapCertificate);
+                        } else {
+                            // valid - keep in memory
+                            int ownerID = asapCertificate.getOwnerID();
+                            // add to in-memo structure
+                            Set<ASAPCertificate> certSet =
+                                    this.certificatesByOwnerIDMap.get(ownerID);
 
-                        if(certSet == null) {
-                            certSet = new HashSet<>();
-                            this.certificatesByOwnerIDMap.put(ownerID, certSet);
+                            if (certSet == null) {
+                                certSet = new HashSet<>();
+                                this.certificatesByOwnerIDMap.put(ownerID, certSet);
+                            }
+                            certSet.add(asapCertificate);
                         }
-                        certSet.add(asapCertificate);
-
                     } catch (Exception e) {
                         Log.writeLog(this, "cannot create certificate: " + e.getLocalizedMessage());
                     }
@@ -330,6 +348,15 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
             Log.writeLog(this, "info: we do not read from incoming / sender storages - it's a feature");
 
         } while(!lastRound);
+
+        // remove expired certificates from asap memory
+        for(ASAPCertificate cert2remove : expiredCertificates) {
+            try {
+                this.removeCertificateFromASAPStorage(cert2remove);
+            } catch (IOException e) {
+                Log.writeLog(this, "cannot remove certificate: " + e.getLocalizedMessage());
+            }
+        }
     }
 
     @Override
@@ -377,15 +404,19 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
 
     @Override
     public void removeCertificate(ASAPCertificate cert2remove) throws IOException {
+        // drop caches
+        this.certificatesByOwnerIDMap = null;
+        this.userIdentityAssurance = null;
+
+        this.removeCertificateFromASAPStorage(cert2remove);
+    }
+
+    private void removeCertificateFromASAPStorage(ASAPCertificate cert2remove) throws IOException {
         ASAPStorageAddress asapAddress = cert2remove.getASAPStorageAddress();
-        if(asapAddress == null) {
+        if (asapAddress == null) {
             Log.writeLog(this, "asap address must not be null - cannot remove");
             return;
         }
-
-        // drop in memo copies
-        this.certificatesByOwnerIDMap = null;
-        this.userIdentityAssurance = null;
 
         if(this.asapStorage.getChunkStorage().existsChunk(asapAddress.getUri(), asapAddress.getEra())) {
             ASAPChunkStorage chunkStorage = this.asapStorage.getChunkStorage();
