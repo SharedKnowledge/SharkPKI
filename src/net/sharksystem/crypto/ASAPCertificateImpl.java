@@ -1,5 +1,7 @@
 package net.sharksystem.crypto;
 
+import net.sharksystem.asap.util.Log;
+
 import java.io.*;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
@@ -43,7 +45,7 @@ public class ASAPCertificateImpl implements ASAPCertificate {
 
         Calendar since = Calendar.getInstance();
         Calendar until = Calendar.getInstance();
-        until.add(Calendar.YEAR, 1);
+        until.add(Calendar.YEAR, DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS);
 
         ASAPCertificateImpl asapCertificate = new ASAPCertificateImpl(
                 signerID, signerName, ownerID, ownerName, publicKey, since.getTimeInMillis(), until.getTimeInMillis());
@@ -65,7 +67,6 @@ public class ASAPCertificateImpl implements ASAPCertificate {
 
         this.validSince = validSince;
         this.validUntil = validUntil;
-
     }
 
     private void sign(PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
@@ -101,13 +102,13 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         PublicKey pubKey = keyFactory.generatePublic(new X509EncodedKeySpec(pubKeyBytes));
 
         length = dis.readInt();
-        byte[] signaturBytes = new byte[length];
-        dis.read(signaturBytes);
+        byte[] signatureBytes = new byte[length];
+        dis.read(signatureBytes);
 
         ASAPCertificateImpl asapCertificate = new ASAPCertificateImpl(
                 signerID, signerName, ownerID, ownerName, pubKey, validSince, validUntil);
 
-        asapCertificate.signatureBytes = signaturBytes;
+        asapCertificate.signatureBytes = signatureBytes;
         asapCertificate.asapStorageAddress = asapStorageAddress;
 
         return asapCertificate;
@@ -154,6 +155,8 @@ public class ASAPCertificateImpl implements ASAPCertificate {
             daos.write(this.signatureBytes);
         } catch (IOException e) {
             // cannot happen - really
+            Log.writeLogErr(this, "could not happen but did while serializing a certificate (ignored): "
+                    + e.getLocalizedMessage());
         }
 
         return baos.toByteArray();
@@ -169,6 +172,7 @@ public class ASAPCertificateImpl implements ASAPCertificate {
             return signature.verify(this.signatureBytes);
         }
         catch(Exception e) {
+            Log.writeLogErr(this, "exception during verification:  " + e.getLocalizedMessage());
             return false;
         }
     }

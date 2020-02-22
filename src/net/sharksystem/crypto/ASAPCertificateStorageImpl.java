@@ -31,6 +31,43 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
     //                                            identity assurance                                            //
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    private class IdentityAssurance {
+        private int value = -1;
+        final List<Integer> path;
+        float floatValue;
+
+        IdentityAssurance(int value, List<Integer> path) {
+            this.value = value;
+            this.path = path;
+        }
+
+        IdentityAssurance(float floatValue, List<Integer> path) {
+            this.floatValue = floatValue;
+            this.path = path;
+        }
+
+        int getValue() {
+            if(this.value < 0) {
+                if(this.floatValue >= 0) {
+                    // scale, round and return
+                    float identityAssuranceFloat = this.floatValue;
+                    identityAssuranceFloat *= 10; //scale
+                    this.value = (int) identityAssuranceFloat; // cut
+                    if( (identityAssuranceFloat - this.value) >= 0.5) {
+                        this.value++; // round
+                    };
+                }
+            }
+
+            return this.value;
+        }
+    }
+
+    private IdentityAssurance worstIdentityAssurance =
+            new IdentityAssurance(OtherPerson.LOWEST_IDENTITY_ASSURANCE_LEVEL, new ArrayList<>());
+
+    private Map<Integer, IdentityAssurance> userIdentityAssurance; // cache
+
     private boolean verify(ASAPCertificate cert, PublicKey publicKey) {
         if(cert == null) return false;
 
@@ -49,13 +86,42 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
         return false;
     }
 
-    public int getIdentityAssurances(int userID, PersonsStorage personsStorage)
-            throws SharkException {
+    private IdentityAssurance getIdentityAssurance(int userID, PersonsStorage personsStorage)
+            throws SharkCryptoException {
+        // general setup?
+        if(this.userIdentityAssurance == null) {
+            this.userIdentityAssurance = new HashMap<>();
+            this.setupIdentityAssurance(userID, personsStorage);
+        }
 
+        IdentityAssurance identityAssurance = this.userIdentityAssurance.get(userID);
+        // setup individual user?
+        if(identityAssurance == null) {
+            // setup
+            this.setupIdentityAssurance(userID, personsStorage);
+            // try again
+            identityAssurance = this.userIdentityAssurance.get(userID);
+        }
+
+        return identityAssurance;
+    }
+
+    @Override
+    public List<Integer> getIdentityAssurancesCertificationPath(int userID, PersonsStorage personsStorage)
+            throws SharkCryptoException {
+
+        return this.getIdentityAssurance(userID, personsStorage).path;
+    }
+
+    public int getIdentityAssurances(int userID, PersonsStorage personsStorage) throws SharkCryptoException {
+        return this.getIdentityAssurance(userID, personsStorage).getValue();
+    }
+
+    private void setupIdentityAssurance(int userID, PersonsStorage personsStorage) throws SharkCryptoException {
         Collection<ASAPCertificate> certificates = this.getCertificatesByOwnerID(userID);
         if (certificates == null || certificates.isEmpty()) {
             // we don't know anything about this person
-            return OtherPerson.LOWEST_IDENTITY_ASSURANCE_LEVEL;
+            this.userIdentityAssurance.put(userID, this.worstIdentityAssurance);
         }
         else {
         // do we have a certificate signed by owner?
@@ -66,7 +132,12 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
                     found = true;
                     try {
                         if(certificate.verify(personsStorage.getPublicKey())) {
-                            return OtherPerson.HIGHEST_IDENTITY_ASSURANCE_LEVEL;
+                            ArrayList<Integer> directPath = new ArrayList<>();
+                            directPath.add(this.ownerID);
+                            this.userIdentityAssurance.put(userID,
+                                    new IdentityAssurance(OtherPerson.HIGHEST_IDENTITY_ASSURANCE_LEVEL, directPath));
+
+                            return; // there is only one direct certificate
                         }
                     } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
                         Log.writeLog(this, "cannot verify certificate: " + e.getLocalizedMessage());
@@ -74,31 +145,29 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
                 }
             }
             if(found) {
-                throw new SharkCryptoException("there is a certificate signed by owner but cannot be verified - that's serious");
+                throw new SharkCryptoException
+                        ("there is a certificate signed by owner but cannot be verified - that's serious");
             }
         }
 
-        float bestIdentityProbability = 0;
+        IdentityAssurance bestIa = null;
 
         // iterate again
         for(ASAPCertificate certificate : certificates) {
             // we have certificates but nothing issued by owner - we look for a certificated way from owner to userID
 
             // find a path and calculate best failure rate of it
-            float identityProbability = this.calculateIdentityProbability(new ArrayList<>(), // init chain
+            IdentityAssurance tmpIa = this.calculateIdentityProbability(new ArrayList<>(), // init chain
                     userID, certificate, -1, personsStorage);
 
-            bestIdentityProbability = bestIdentityProbability < identityProbability ?
-                                            identityProbability : bestIdentityProbability;
+            if(bestIa == null) bestIa = tmpIa; // first round
+            else {
+                bestIa = bestIa.floatValue < tmpIa.floatValue ? // tmp is more likely than best - switch
+                        tmpIa : bestIa;
+            }
         }
 
-        // scale, round and return
-        bestIdentityProbability *= 10; //scale
-        int bestIdentityProbabilityInt = (int) bestIdentityProbability; // cut
-        if( (bestIdentityProbability - bestIdentityProbabilityInt) >= 0.5) {
-            bestIdentityProbabilityInt++; // round
-        };
-        return bestIdentityProbabilityInt;
+        this.userIdentityAssurance.put(userID, bestIa);
     }
 
     /**
@@ -113,30 +182,30 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
      * <p>
      * We go backward in chain to - hopefully reach you
      */
-    private float calculateIdentityProbability(List<Integer> idPath, int currentPersonID,
+    private IdentityAssurance calculateIdentityProbability(List<Integer> idPath, int currentPersonID,
                ASAPCertificate currentCertificate, float accumulatedIdentityProbability, PersonsStorage personsStorage)
-                    throws SharkException {
+    {
 
         // finished?
         if (currentPersonID == this.ownerID) {
             // we should be able to verify currentCertificate with owners public key
             if(!this.verify(currentCertificate, personsStorage.getPublicKey())) {
-                return 0; // no certificate - should not happen.
+                return this.worstIdentityAssurance;
             }
 
             // could be verified
             if(accumulatedIdentityProbability < 0) {
                 // not yet set
-                return 0; // no
+                return new IdentityAssurance(0, idPath); // not yet set
             } else {
-                return accumulatedIdentityProbability; // done
+                return new IdentityAssurance(accumulatedIdentityProbability, idPath);
             }
         }
 
         // not finished
 
         // are we in a circle?
-        if (idPath.contains(currentPersonID)) return 0; // escape circle
+        if (idPath.contains(currentPersonID)) return this.worstIdentityAssurance; // escape circle
 
         // remember this step
         idPath.add(currentPersonID);
@@ -148,10 +217,10 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
 
         if(proceedingCertificates == null || proceedingCertificates.isEmpty())
             // no certificate - cannot verify current certificate.
-            return 0;
+            return this.worstIdentityAssurance;
 
         // next step in depth-first search
-        float bestIdentityProbability = 0;
+        IdentityAssurance bestIa = null;
         for(ASAPCertificate proceedingCertificate : proceedingCertificates) {
             // we must be able to verify current certificate (if any)
             if(!this.verify(currentCertificate, proceedingCertificate.getPublicKey())) continue;
@@ -196,15 +265,18 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
                 accumulatedIdentityProbability *= (1 - failureProbability);
             }
 
-            float identityProbability = this.calculateIdentityProbability(copyIDPath,
+            IdentityAssurance tmpIa = this.calculateIdentityProbability(copyIDPath,
                     proceedingCertificate.getSignerID(), proceedingCertificate, accumulatedIdentityProbability,
                     personsStorage);
 
-            bestIdentityProbability =
-                    identityProbability > bestIdentityProbability ? identityProbability : bestIdentityProbability;
+            if(bestIa == null) bestIa = tmpIa;
+            else {
+                bestIa = bestIa.floatValue < tmpIa.floatValue ? // tmp is more likely than best - switch
+                        tmpIa : bestIa;
+            }
         }
 
-        return bestIdentityProbability;
+        return bestIa;
     }
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -295,6 +367,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
 
         // drop cache
         this.certificatesByOwnerIDMap = null;
+        this.userIdentityAssurance = null;
 
         return new ASAPStorageAddressImpl(
                 this.asapStorage.getFormat(),
@@ -312,6 +385,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
 
         // drop in memo copies
         this.certificatesByOwnerIDMap = null;
+        this.userIdentityAssurance = null;
 
         if(this.asapStorage.getChunkStorage().existsChunk(asapAddress.getUri(), asapAddress.getEra())) {
             ASAPChunkStorage chunkStorage = this.asapStorage.getChunkStorage();
