@@ -10,7 +10,7 @@ import java.security.PublicKey;
 import java.util.Collection;
 
 public interface PersonsStorage {
-    int getOwnerUserID();
+    CharSequence getOwnerUserID();
 
     CharSequence getOwnerName();
 
@@ -18,20 +18,20 @@ public interface PersonsStorage {
 
     PublicKey getPublicKey();
 
-    ASAPCertificate addAndSignPerson(int bobID, CharSequence bobName, PublicKey bobPublicKey)
+    ASAPCertificate addAndSignPerson(CharSequence bobID, CharSequence bobName, PublicKey bobPublicKey)
             throws SharkCryptoException, IOException;
 
     PersonValuesImpl getPersonValuesByPosition(int position) throws SharkException;
 
     int getNumberOfPersons();
 
-    int getIdentityAssurance(int userID) throws SharkException;
+    int getIdentityAssurance(CharSequence userID) throws SharkException;
 
-    Collection<ASAPCertificate> getCertificate(int userID) throws SharkException;
+    Collection<ASAPCertificate> getCertificate(CharSequence userID) throws SharkException;
 
-    void setCertificateExchangeFailure(int personID, int failureRate) throws SharkException;
+    void setCertificateExchangeFailure(CharSequence personID, int failureRate) throws SharkException;
 
-    int getCertificateExchangeFailure(int personID);
+    int getCertificateExchangeFailure(CharSequence personID);
 
     void addCertificate(ASAPCertificate asapCertificate) throws IOException, SharkException;
 }

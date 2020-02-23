@@ -18,13 +18,13 @@ public class PersonsStorageTests {
     private static final String ROOT_DIRECTORY_BOB = "asapStorageRootDirectory/bob/";
     private static final String ROOT_DIRECTORY_CLARA = "asapStorageRootDirectory/clara/";
     private static final String ROOT_DIRECTORY_DAVID = "asapStorageRootDirectory/david/";
-    private static final int ALICE_ID = 42;
+    private static final CharSequence ALICE_ID = "42";
     private static final CharSequence ALICE_NAME = "Alice";
-    private static final int BOB_ID = 43;
+    private static final CharSequence BOB_ID = "43";
     private static final CharSequence BOB_NAME = "Bob";
-    private static final int CLARA_ID = 44;
+    private static final CharSequence CLARA_ID = "44";
     private static final CharSequence CLARA_NAME = "Clara";
-    private static final int DAVID_ID = 45;
+    private static final CharSequence DAVID_ID = "45";
     private static final CharSequence DAVID_NAME = "David";
 
     private void assertCertificateEquals(ASAPCertificate a, ASAPCertificate b) {
@@ -56,7 +56,7 @@ public class PersonsStorageTests {
         PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
 
         // simulation - Bob must send its credentials in some way to Alice - assume that happened
-        int bobID = bobPersonsStorage.getOwnerUserID();
+        CharSequence bobID = bobPersonsStorage.getOwnerUserID();
         CharSequence bobName = bobPersonsStorage.getOwnerName();
         PublicKey bobPublicKey = bobPersonsStorage.getPublicKey();
 
@@ -85,7 +85,7 @@ public class PersonsStorageTests {
         PersonsStorage davidPersonsStorage = new PersonsStorageImpl(asapDavidCertificateStorage);
 
         // clara signs a certificate of david
-        int davidID = davidPersonsStorage.getOwnerUserID();
+        CharSequence davidID = davidPersonsStorage.getOwnerUserID();
         asapCertificate = claraPersonsStorage.addAndSignPerson(
                 davidID,
                 davidPersonsStorage.getOwnerName(),
@@ -103,7 +103,7 @@ public class PersonsStorageTests {
                 alicePersonsStorage.getIdentityAssurance(davidID));
 
         // bob signs a certificate of clara
-        int claraID = claraPersonsStorage.getOwnerUserID();
+        CharSequence claraID = claraPersonsStorage.getOwnerUserID();
         asapCertificate = bobPersonsStorage.addAndSignPerson(
                 claraID,
                 claraPersonsStorage.getOwnerName(),
@@ -146,7 +146,7 @@ public class PersonsStorageTests {
         PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
 
         // simulation - Bob must send its credentials in some way to Alice - assume that happened
-        int bobID = bobPersonsStorage.getOwnerUserID();
+        CharSequence bobID = bobPersonsStorage.getOwnerUserID();
         CharSequence bobName = bobPersonsStorage.getOwnerName();
         PublicKey bobPublicKey = bobPersonsStorage.getPublicKey();
 
@@ -185,7 +185,7 @@ public class PersonsStorageTests {
         PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
 
         // simulation - Bob must send its credentials in some way to Alice - assume that happened
-        int bobID = bobPersonsStorage.getOwnerUserID();
+        CharSequence bobID = bobPersonsStorage.getOwnerUserID();
         CharSequence bobName = bobPersonsStorage.getOwnerName();
         PublicKey bobPublicKey = bobPersonsStorage.getPublicKey();
 

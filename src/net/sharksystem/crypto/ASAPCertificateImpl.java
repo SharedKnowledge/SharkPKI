@@ -14,9 +14,9 @@ public class ASAPCertificateImpl implements ASAPCertificate {
 
     private PublicKey publicKey;
     private CharSequence ownerName;
-    private int ownerID;
+    private CharSequence ownerID;
     private CharSequence signerName;
-    private int signerID;
+    private CharSequence signerID;
     private byte[] signatureBytes;
     private ASAPStorageAddress asapStorageAddress;
     private long validSince;
@@ -36,11 +36,11 @@ public class ASAPCertificateImpl implements ASAPCertificate {
      * @throws InvalidKeyException
      * @throws IOException
      */
-    public static ASAPCertificateImpl produceCertificate(int signerID,
-                               CharSequence signerName,
-                               PrivateKey privateKey,
-                               int ownerID, CharSequence ownerName,
-                               PublicKey publicKey) throws SignatureException,
+    public static ASAPCertificateImpl produceCertificate(CharSequence signerID,
+                                                         CharSequence signerName,
+                                                         PrivateKey privateKey,
+                                                         CharSequence ownerID, CharSequence ownerName,
+                                                         PublicKey publicKey) throws SignatureException,
             NoSuchAlgorithmException, InvalidKeyException {
 
         Calendar since = Calendar.getInstance();
@@ -54,9 +54,9 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         return asapCertificate;
     }
 
-    private ASAPCertificateImpl(int signerID,
+    private ASAPCertificateImpl(CharSequence signerID,
                                 CharSequence signerName,
-                                int ownerID, CharSequence ownerName,
+                                CharSequence ownerID, CharSequence ownerName,
                                 PublicKey publicKey, long validSince, long validUntil) {
 
         this.signerID = signerID;
@@ -83,9 +83,9 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         ByteArrayInputStream bais = new ByteArrayInputStream(serializedMessage);
         DataInputStream dis = new DataInputStream(bais);
 
-        int signerID = dis.readInt();
+        String signerID = dis.readUTF();
         String signerName = dis.readUTF();
-        int ownerID = dis.readInt();
+        String ownerID = dis.readUTF();
         String ownerName = dis.readUTF();
         long validSince = dis.readLong();
         long validUntil = dis.readLong();
@@ -133,9 +133,9 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     private void fillWithAnythingButSignature(DataOutputStream dos) {
         // create byte array that is to be signed
         try {
-            dos.writeInt(this.signerID);
+            dos.writeUTF(this.signerID.toString());
             dos.writeUTF(this.signerName.toString());
-            dos.writeInt(this.ownerID);
+            dos.writeUTF(this.ownerID.toString());
             dos.writeUTF(this.getOwnerName().toString());
 
             dos.writeLong(this.validSince);
@@ -192,7 +192,7 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     }
 
     @Override
-    public int getOwnerID() { return this.ownerID; }
+    public CharSequence getOwnerID() { return this.ownerID; }
 
     @Override
     public CharSequence getOwnerName() { return this.ownerName; }
@@ -201,7 +201,7 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     public CharSequence getSignerName() {  return this.signerName;  }
 
     @Override
-    public int getSignerID() { return this.signerID; }
+    public CharSequence getSignerID() { return this.signerID; }
 
     private Calendar long2Calendar(long timeInMillis) {
         Calendar calendar = Calendar.getInstance();

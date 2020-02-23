@@ -1,6 +1,5 @@
 package net.sharksystem.crypto;
 
-import net.sharksystem.SharkException;
 import net.sharksystem.asap.ASAPChunk;
 import net.sharksystem.asap.ASAPChunkStorage;
 import net.sharksystem.asap.ASAPStorage;
@@ -18,10 +17,10 @@ import java.util.*;
 public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
 
     private final ASAPStorage asapStorage;
-    private final int ownerID;
+    private final CharSequence ownerID;
     private final CharSequence ownerName;
 
-    public ASAPCertificateStorageImpl(ASAPStorage asapStorage, int ownerID, CharSequence ownerName) {
+    public ASAPCertificateStorageImpl(ASAPStorage asapStorage, CharSequence ownerID, CharSequence ownerName) {
         this.asapStorage = asapStorage;
         this.ownerID = ownerID;
         this.ownerName = ownerName;
@@ -33,15 +32,15 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
 
     private class IdentityAssurance {
         private int value = -1;
-        final List<Integer> path;
+        final List<CharSequence> path;
         float floatValue;
 
-        IdentityAssurance(int value, List<Integer> path) {
+        IdentityAssurance(int value, List<CharSequence> path) {
             this.value = value;
             this.path = path;
         }
 
-        IdentityAssurance(float floatValue, List<Integer> path) {
+        IdentityAssurance(float floatValue, List<CharSequence> path) {
             this.floatValue = floatValue;
             this.path = path;
         }
@@ -66,7 +65,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
     private IdentityAssurance worstIdentityAssurance =
             new IdentityAssurance(OtherPerson.LOWEST_IDENTITY_ASSURANCE_LEVEL, new ArrayList<>());
 
-    private Map<Integer, IdentityAssurance> userIdentityAssurance; // cache
+    private Map<CharSequence, IdentityAssurance> userIdentityAssurance; // cache
 
     private boolean verify(ASAPCertificate cert, PublicKey publicKey) {
         if(cert == null) return false;
@@ -86,11 +85,11 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
         return false;
     }
 
-    private IdentityAssurance getIdentityAssurance(int userID, PersonsStorage personsStorage)
+    private IdentityAssurance getIdentityAssurance(CharSequence userID, PersonsStorage personsStorage)
             throws SharkCryptoException {
         // general setup?
         if(this.userIdentityAssurance == null) {
-            this.userIdentityAssurance = new HashMap<>();
+            this.userIdentityAssurance = new HashMap<CharSequence, IdentityAssurance>();
             this.setupIdentityAssurance(userID, personsStorage);
         }
 
@@ -107,17 +106,17 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
     }
 
     @Override
-    public List<Integer> getIdentityAssurancesCertificationPath(int userID, PersonsStorage personsStorage)
+    public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, PersonsStorage personsStorage)
             throws SharkCryptoException {
 
         return this.getIdentityAssurance(userID, personsStorage).path;
     }
 
-    public int getIdentityAssurances(int userID, PersonsStorage personsStorage) throws SharkCryptoException {
+    public int getIdentityAssurances(CharSequence userID, PersonsStorage personsStorage) throws SharkCryptoException {
         return this.getIdentityAssurance(userID, personsStorage).getValue();
     }
 
-    private void setupIdentityAssurance(int userID, PersonsStorage personsStorage) throws SharkCryptoException {
+    private void setupIdentityAssurance(CharSequence userID, PersonsStorage personsStorage) throws SharkCryptoException {
         Collection<ASAPCertificate> certificates = this.getCertificatesByOwnerID(userID);
         if (certificates == null || certificates.isEmpty()) {
             // we don't know anything about this person
@@ -128,12 +127,12 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
         // do we have a certificate signed by owner?
             boolean found = false;
             for(ASAPCertificate certificate : certificates) {
-                if (certificate.getSignerID() == this.ownerID) {
+                if (certificate.getSignerID().toString().equalsIgnoreCase(this.ownerID.toString())) {
                     // verify certificate
                     found = true;
                     try {
                         if(certificate.verify(personsStorage.getPublicKey())) {
-                            ArrayList<Integer> directPath = new ArrayList<>();
+                            ArrayList<CharSequence> directPath = new ArrayList<>();
                             directPath.add(this.ownerID);
                             this.userIdentityAssurance.put(userID,
                                     new IdentityAssurance(OtherPerson.HIGHEST_IDENTITY_ASSURANCE_LEVEL, directPath));
@@ -189,12 +188,12 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
      * <p>
      * We go backward in chain to - hopefully reach you
      */
-    private IdentityAssurance calculateIdentityProbability(List<Integer> idPath, int currentPersonID,
+    private IdentityAssurance calculateIdentityProbability(List<CharSequence> idPath, CharSequence currentPersonID,
                ASAPCertificate currentCertificate, float accumulatedIdentityProbability, PersonsStorage personsStorage)
     {
 
         // finished?
-        if (currentPersonID == this.ownerID) {
+        if (currentPersonID.toString().equalsIgnoreCase(this.ownerID.toString())) {
             // we should be able to verify currentCertificate with owners public key
             if(!this.verify(currentCertificate, personsStorage.getPublicKey())) {
                 return this.worstIdentityAssurance;
@@ -218,7 +217,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
         idPath.add(currentPersonID);
 
         // is there a next step towards owner? Yes, if there is a certificate owner by the current signer
-        int proceedingPersonID = currentCertificate.getSignerID();
+        CharSequence proceedingPersonID = currentCertificate.getSignerID();
         Collection<ASAPCertificate> proceedingCertificates =
                 this.getCertificatesByOwnerID(proceedingPersonID);
 
@@ -233,7 +232,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
             if(!this.verify(currentCertificate, proceedingCertificate.getPublicKey())) continue;
 
             // make a idPath copy
-            List<Integer> copyIDPath = new ArrayList<>();
+            List<CharSequence> copyIDPath = new ArrayList<>();
             copyIDPath.addAll(idPath);
 
             // convert failure rate number to failure probability something between 0 and 1.
@@ -290,7 +289,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
     //                                               ASAP Wrapper                                                //
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private Map<Integer, Set<ASAPCertificate>> certificatesByOwnerIDMap = null;
+    private Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap = null;
 
     private boolean isExpired(ASAPCertificate cert) {
         return System.currentTimeMillis() > cert.getValidUntil().getTimeInMillis();
@@ -322,7 +321,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
                             expiredCertificates.add(asapCertificate);
                         } else {
                             // valid - keep in memory
-                            int ownerID = asapCertificate.getOwnerID();
+                            CharSequence ownerID = asapCertificate.getOwnerID();
                             // add to in-memo structure
                             Set<ASAPCertificate> certSet =
                                     this.certificatesByOwnerIDMap.get(ownerID);
@@ -360,9 +359,9 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
     }
 
     @Override
-    public Collection<ASAPCertificate> getCertificatesByOwnerID(int userID) {
+    public Collection<ASAPCertificate> getCertificatesByOwnerID(CharSequence userID) {
         if(this.certificatesByOwnerIDMap == null) {
-            this.certificatesByOwnerIDMap = new HashMap<>();
+            this.certificatesByOwnerIDMap = new HashMap<CharSequence, Set<ASAPCertificate>>();
             this.readCertificatesFromStorage();
         }
 
@@ -379,7 +378,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
     }
 
     @Override
-    public int getOwnerID() {
+    public CharSequence getOwnerID() {
         return this.ownerID;
     }
 

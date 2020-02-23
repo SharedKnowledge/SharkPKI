@@ -64,9 +64,9 @@ public class PersonsStorageImpl implements PersonsStorage {
 
     private List<PersonValuesImpl> personsList = new ArrayList<>();
 
-    public PersonValuesImpl getPersonValues(int userID) throws SharkException {
+    public PersonValuesImpl getPersonValues(CharSequence userID) throws SharkException {
         for(PersonValuesImpl personValues : this.personsList) {
-            if(personValues.getUserID() == userID) {
+            if(personValues.getUserID().toString().equalsIgnoreCase(userID.toString())) {
                 return personValues;
             }
         }
@@ -88,26 +88,26 @@ public class PersonsStorageImpl implements PersonsStorage {
         return this.personsList.size();
     }
 
-    public int getIdentityAssurance(int userID) throws SharkException {
+    public int getIdentityAssurance(CharSequence userID) throws SharkException {
         return this.getPersonValues(userID).getIdentityAssurance();
     }
 
-    public int getOwnerUserID() {
+    public CharSequence getOwnerUserID() {
         return this.certificateStorage.getOwnerID();
     }
 
     @Override
-    public ASAPCertificate addAndSignPerson(int userID, CharSequence userName, PublicKey publicKey)
+    public ASAPCertificate addAndSignPerson(CharSequence userID, CharSequence userName, PublicKey publicKey)
             throws SharkCryptoException, IOException {
 
         // try to overwrite owner ?
-        if(userID == this.getOwnerUserID()) {
+        if(userID.toString().equalsIgnoreCase(this.getOwnerUserID().toString())) {
             throw new SharkCryptoException("cannot add person with your userID");
         }
 
         // already in there
         for(PersonValuesImpl personValues : this.personsList) {
-            if(personValues.getUserID() == userID) {
+            if(userID.toString().equalsIgnoreCase(personValues.getUserID().toString())) {
                 throw new SharkCryptoException("person with userID already exists: " + userID);
             }
         }
@@ -120,7 +120,7 @@ public class PersonsStorageImpl implements PersonsStorage {
         try {
             Collection<ASAPCertificate> certificates = this.getCertificate(userID);
             for(ASAPCertificate certTemp : certificates) {
-                if(certTemp.getSignerID() == this.getOwnerUserID()) {
+                if(certTemp.getSignerID().toString().equalsIgnoreCase(this.getOwnerUserID().toString())) {
                     // drop it
                     this.certificateStorage.removeCertificate(certTemp);
                 }
@@ -160,7 +160,7 @@ public class PersonsStorageImpl implements PersonsStorage {
         this.certificateStorage.storeCertificate(asapCert);
     }
 
-    public Collection<ASAPCertificate> getCertificate(int userID) throws SharkException {
+    public Collection<ASAPCertificate> getCertificate(CharSequence userID) throws SharkException {
         return this.certificateStorage.getCertificatesByOwnerID(userID);
     }
 
@@ -169,7 +169,7 @@ public class PersonsStorageImpl implements PersonsStorage {
     }
 
     @Override
-    public int getCertificateExchangeFailure(int personID)  {
+    public int getCertificateExchangeFailure(CharSequence personID)  {
         try {
             return this.getPersonValues(personID).getCertificateExchangeFailure();
         } catch (SharkException e) {
@@ -178,7 +178,7 @@ public class PersonsStorageImpl implements PersonsStorage {
         }
     }
 
-    public void setCertificateExchangeFailure(int personID, int failureRate) throws SharkException {
+    public void setCertificateExchangeFailure(CharSequence personID, int failureRate) throws SharkException {
         this.getPersonValues(personID).setCertificateExchangeFailure(failureRate);
     }
 }

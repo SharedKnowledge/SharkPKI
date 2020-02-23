@@ -7,13 +7,13 @@ import net.sharksystem.crypto.SharkCryptoException;
 public class PersonValuesImpl implements PersonValues {
     private static final int IDENTITY_ASSURANCE_NOT_CALCULATED = -1;
 
-    private final int id;
+    private final CharSequence id;
     private final ASAPCertificateStorage certificateStorage;
     private final PersonsStorage personsStorage;
     private CharSequence name;
     private int certificateExchangeFailure;
 
-    public PersonValuesImpl(int id, CharSequence name, ASAPCertificateStorage certificateStorage,
+    public PersonValuesImpl(CharSequence id, CharSequence name, ASAPCertificateStorage certificateStorage,
                             PersonsStorage personsStorage) {
 
         this.id = id;
@@ -24,7 +24,7 @@ public class PersonValuesImpl implements PersonValues {
     }
 
     @Override
-    public int getUserID() { return this.id;}
+    public CharSequence getUserID() { return this.id;}
     @Override
     public CharSequence getName() { return this.name;}
 

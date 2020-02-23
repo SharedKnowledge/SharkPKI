@@ -12,14 +12,14 @@ public interface ASAPCertificate {
     /**
      * @return person which public key is matched with its name
      */
-    int getOwnerID();
+    CharSequence getOwnerID();
 
     CharSequence getOwnerName();
 
     /**
      * @return person who signed this certificate
      */
-    int getSignerID();
+    CharSequence getSignerID();
 
     CharSequence getSignerName();
 
