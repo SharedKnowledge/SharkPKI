@@ -77,9 +77,8 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         this.signatureBytes = signature.sign();
     }
 
-    public static ASAPCertificateImpl produceCertificateFromStorage(
-            byte[] serializedMessage, ASAPStorageAddress asapStorageAddress)
-            throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException, InvalidKeySpecException {
+    public static ASAPCertificateImpl produceCertificateFromBytes(
+            byte[] serializedMessage) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
 
         ByteArrayInputStream bais = new ByteArrayInputStream(serializedMessage);
         DataInputStream dis = new DataInputStream(bais);
@@ -109,6 +108,16 @@ public class ASAPCertificateImpl implements ASAPCertificate {
                 signerID, signerName, ownerID, ownerName, pubKey, validSince, validUntil);
 
         asapCertificate.signatureBytes = signatureBytes;
+
+        return asapCertificate;
+    }
+
+    public static ASAPCertificateImpl produceCertificateFromStorage(
+            byte[] serializedMessage, ASAPStorageAddress asapStorageAddress)
+            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+
+        ASAPCertificateImpl asapCertificate = ASAPCertificateImpl.produceCertificateFromBytes(serializedMessage);
+
         asapCertificate.asapStorageAddress = asapStorageAddress;
 
         return asapCertificate;
