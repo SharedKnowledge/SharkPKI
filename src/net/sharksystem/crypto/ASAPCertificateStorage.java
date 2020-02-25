@@ -12,11 +12,10 @@ public interface ASAPCertificateStorage {
 
     Collection<ASAPCertificate> getCertificatesByOwnerID(CharSequence userID);
 
-    ASAPStorage getASAPStorage();
     CharSequence getOwnerID();
     CharSequence getOwnerName();
 
-    ASAPStorageAddress storeCertificate(ASAPCertificate ASAPCertificate) throws IOException;
+    ASAPStorageAddress storeCertificate(ASAPCertificate asapCertificate) throws IOException;
 
     void removeCertificate(ASAPCertificate cert2remove) throws IOException;
 
