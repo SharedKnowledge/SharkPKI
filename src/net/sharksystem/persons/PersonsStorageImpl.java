@@ -28,8 +28,6 @@ public class PersonsStorageImpl implements PersonsStorage {
                 Log.writeLog(this,"cannot create key pair - fatal");
             }
         }
-
-        Log.writeLog(this, "TODO: re-read certificate from storage when setting up");
     }
 
     public void generateKeyPair() throws SharkException {
@@ -92,7 +90,7 @@ public class PersonsStorageImpl implements PersonsStorage {
         return this.getPersonValues(userID).getIdentityAssurance();
     }
 
-    public CharSequence getOwnerUserID() {
+    public CharSequence getOwnerID() {
         return this.certificateStorage.getOwnerID();
     }
 
@@ -101,7 +99,7 @@ public class PersonsStorageImpl implements PersonsStorage {
             throws SharkCryptoException, IOException {
 
         // try to overwrite owner ?
-        if(userID.toString().equalsIgnoreCase(this.getOwnerUserID().toString())) {
+        if(userID.toString().equalsIgnoreCase(this.getOwnerID().toString())) {
             throw new SharkCryptoException("cannot add person with your userID");
         }
 
@@ -120,7 +118,7 @@ public class PersonsStorageImpl implements PersonsStorage {
         try {
             Collection<ASAPCertificate> certificates = this.getCertificate(userID);
             for(ASAPCertificate certTemp : certificates) {
-                if(certTemp.getSignerID().toString().equalsIgnoreCase(this.getOwnerUserID().toString())) {
+                if(certTemp.getSignerID().toString().equalsIgnoreCase(this.getOwnerID().toString())) {
                     // drop it
                     this.certificateStorage.removeCertificate(certTemp);
                 }
@@ -132,7 +130,7 @@ public class PersonsStorageImpl implements PersonsStorage {
         ASAPCertificate cert = null;
         try {
             cert = ASAPCertificateImpl.produceCertificate(
-                    this.getOwnerUserID(),
+                    this.getOwnerID(),
                     this.getOwnerName(),
                     this.getPrivateKey(),
                     userID,

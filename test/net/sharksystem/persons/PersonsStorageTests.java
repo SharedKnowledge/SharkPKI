@@ -56,7 +56,7 @@ public class PersonsStorageTests {
         PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
 
         // simulation - Bob must send its credentials in some way to Alice - assume that happened
-        CharSequence bobID = bobPersonsStorage.getOwnerUserID();
+        CharSequence bobID = bobPersonsStorage.getOwnerID();
         CharSequence bobName = bobPersonsStorage.getOwnerName();
         PublicKey bobPublicKey = bobPersonsStorage.getPublicKey();
 
@@ -85,7 +85,7 @@ public class PersonsStorageTests {
         PersonsStorage davidPersonsStorage = new PersonsStorageImpl(asapDavidCertificateStorage);
 
         // clara signs a certificate of david
-        CharSequence davidID = davidPersonsStorage.getOwnerUserID();
+        CharSequence davidID = davidPersonsStorage.getOwnerID();
         asapCertificate = claraPersonsStorage.addAndSignPerson(
                 davidID,
                 davidPersonsStorage.getOwnerName(),
@@ -103,7 +103,7 @@ public class PersonsStorageTests {
                 alicePersonsStorage.getIdentityAssurance(davidID));
 
         // bob signs a certificate of clara
-        CharSequence claraID = claraPersonsStorage.getOwnerUserID();
+        CharSequence claraID = claraPersonsStorage.getOwnerID();
         asapCertificate = bobPersonsStorage.addAndSignPerson(
                 claraID,
                 claraPersonsStorage.getOwnerName(),
@@ -146,7 +146,7 @@ public class PersonsStorageTests {
         PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
 
         // simulation - Bob must send its credentials in some way to Alice - assume that happened
-        CharSequence bobID = bobPersonsStorage.getOwnerUserID();
+        CharSequence bobID = bobPersonsStorage.getOwnerID();
         CharSequence bobName = bobPersonsStorage.getOwnerName();
         PublicKey bobPublicKey = bobPersonsStorage.getPublicKey();
 
@@ -155,7 +155,7 @@ public class PersonsStorageTests {
 
         // alice signs a certificate of bob
         ASAPCertificate asapCertificate = ASAPCertificateImpl.produceCertificate(
-                alicePersonsStorage.getOwnerUserID(), alicePersonsStorage.getOwnerName(), alicePrivateKey,
+                alicePersonsStorage.getOwnerID(), alicePersonsStorage.getOwnerName(), alicePrivateKey,
                 bobID, bobName, bobPublicKey);
 
         // verify
@@ -185,7 +185,7 @@ public class PersonsStorageTests {
         PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
 
         // simulation - Bob must send its credentials in some way to Alice - assume that happened
-        CharSequence bobID = bobPersonsStorage.getOwnerUserID();
+        CharSequence bobID = bobPersonsStorage.getOwnerID();
         CharSequence bobName = bobPersonsStorage.getOwnerName();
         PublicKey bobPublicKey = bobPersonsStorage.getPublicKey();
 

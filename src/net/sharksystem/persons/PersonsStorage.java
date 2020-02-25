@@ -10,7 +10,7 @@ import java.security.PublicKey;
 import java.util.Collection;
 
 public interface PersonsStorage {
-    CharSequence getOwnerUserID();
+    CharSequence getOwnerID();
 
     CharSequence getOwnerName();
 
