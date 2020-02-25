@@ -14,7 +14,7 @@ import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.*;
 
-public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
+public class ASAPCertificateStorageImpl extends CertificateStorageImpl implements ASAPCertificateStorage {
 
     private final ASAPStorage asapStorage;
     private final CharSequence ownerID;
@@ -485,7 +485,7 @@ public class ASAPCertificateStorageImpl implements ASAPCertificateStorage {
         }
 
         ASAPStorageAddressImpl(int era) {
-            this(ASAP_CERIFICATE_APP, ASAPCertificate.ASAP_CERTIFICATE, era);
+            this(APP_NAME, ASAPCertificate.ASAP_CERTIFICATE, era);
         }
 
         ASAPStorageAddressImpl(byte[] serialized) throws IOException {

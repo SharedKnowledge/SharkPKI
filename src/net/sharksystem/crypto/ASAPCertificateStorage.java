@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 public interface ASAPCertificateStorage {
-    String ASAP_CERIFICATE_APP = "asapCertificates";
+    String APP_NAME = "asapCertificates";
 
     Collection<ASAPCertificate> getCertificatesByOwnerID(CharSequence userID);
 

@@ -36,12 +36,13 @@ public class ASAPCertificateImpl implements ASAPCertificate {
      * @throws InvalidKeyException
      * @throws IOException
      */
-    public static ASAPCertificateImpl produceCertificate(CharSequence signerID,
-                                                         CharSequence signerName,
-                                                         PrivateKey privateKey,
-                                                         CharSequence ownerID, CharSequence ownerName,
-                                                         PublicKey publicKey) throws SignatureException,
-            NoSuchAlgorithmException, InvalidKeyException {
+    public static ASAPCertificateImpl produceCertificate(
+            CharSequence signerID,
+            CharSequence signerName,
+            PrivateKey privateKey,
+            CharSequence ownerID, CharSequence ownerName,
+            PublicKey publicKey)
+                throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
 
         Calendar since = Calendar.getInstance();
         Calendar until = Calendar.getInstance();
