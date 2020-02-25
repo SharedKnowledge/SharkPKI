@@ -12,6 +12,8 @@ public interface ASAPCertificateStorage {
 
     Collection<ASAPCertificate> getCertificatesByOwnerID(CharSequence userID);
 
+    Collection<ASAPCertificate> getCertificatesBySignerID(CharSequence userID);
+
     CharSequence getOwnerID();
     CharSequence getOwnerName();
 

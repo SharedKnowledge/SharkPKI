@@ -90,6 +90,13 @@ public class PersonsStorageImpl implements PersonsStorage {
         return this.getPersonValues(userID).getIdentityAssurance();
     }
 
+    public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID)
+            throws SharkCryptoException {
+
+        return this.certificateStorage.
+                getIdentityAssurancesCertificationPath(userID, this);
+    }
+
     public CharSequence getOwnerID() {
         return this.certificateStorage.getOwnerID();
     }
@@ -116,7 +123,7 @@ public class PersonsStorageImpl implements PersonsStorage {
 
         // is there already a certificate?
         try {
-            Collection<ASAPCertificate> certificates = this.getCertificate(userID);
+            Collection<ASAPCertificate> certificates = this.getCertificateByOwner(userID);
             for(ASAPCertificate certTemp : certificates) {
                 if(certTemp.getSignerID().toString().equalsIgnoreCase(this.getOwnerID().toString())) {
                     // drop it
@@ -158,8 +165,12 @@ public class PersonsStorageImpl implements PersonsStorage {
         this.certificateStorage.storeCertificate(asapCert);
     }
 
-    public Collection<ASAPCertificate> getCertificate(CharSequence userID) throws SharkException {
+    public Collection<ASAPCertificate> getCertificateByOwner(CharSequence userID) throws SharkException {
         return this.certificateStorage.getCertificatesByOwnerID(userID);
+    }
+
+    public Collection<ASAPCertificate> getCertificateBySigner(CharSequence userID) throws SharkException {
+        return this.certificateStorage.getCertificatesBySignerID(userID);
     }
 
     public CharSequence getOwnerName() {

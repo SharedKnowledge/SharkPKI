@@ -15,15 +15,15 @@ public class InMemoHelperTests {
         InMemoPersonsStorageImpl personsStorage = new InMemoPersonsStorageImpl("AliceID", "Alice");
         personsStorage.fillWithExampleData();
 
-        Collection<ASAPCertificate> certificate = personsStorage.getCertificate(InMemoPersonsStorageImpl.BOB_ID);
+        Collection<ASAPCertificate> certificate = personsStorage.getCertificateByOwner(InMemoPersonsStorageImpl.BOB_ID);
         Assert.assertNotNull(certificate);
         Assert.assertFalse(certificate.isEmpty());
 
-        certificate = personsStorage.getCertificate(InMemoPersonsStorageImpl.CLARA_ID);
+        certificate = personsStorage.getCertificateByOwner(InMemoPersonsStorageImpl.CLARA_ID);
         Assert.assertNotNull(certificate);
         Assert.assertFalse(certificate.isEmpty());
 
-        certificate = personsStorage.getCertificate(InMemoPersonsStorageImpl.DAVID_ID);
+        certificate = personsStorage.getCertificateByOwner(InMemoPersonsStorageImpl.DAVID_ID);
         Assert.assertNotNull(certificate);
         Assert.assertFalse(certificate.isEmpty());
 

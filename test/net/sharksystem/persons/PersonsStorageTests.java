@@ -94,7 +94,7 @@ public class PersonsStorageTests {
         // add to alice certification storage
         alicePersonsStorage.addCertificate(asapCertificate);
 
-        Collection<ASAPCertificate> davidCerts = alicePersonsStorage.getCertificate(davidID);
+        Collection<ASAPCertificate> davidCerts = alicePersonsStorage.getCertificateByOwner(davidID);
         Assert.assertNotNull(davidCerts);
         Assert.assertEquals(1, davidCerts.size());
 

@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Collection;
+import java.util.List;
 
 public interface PersonsStorage {
     CharSequence getOwnerID();
@@ -27,7 +28,11 @@ public interface PersonsStorage {
 
     int getIdentityAssurance(CharSequence userID) throws SharkException;
 
-    Collection<ASAPCertificate> getCertificate(CharSequence userID) throws SharkException;
+    List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID)
+            throws SharkCryptoException;
+
+    Collection<ASAPCertificate> getCertificateByOwner(CharSequence userID) throws SharkException;
+    Collection<ASAPCertificate> getCertificateBySigner(CharSequence userID) throws SharkException;
 
     void setCertificateExchangeFailure(CharSequence personID, int failureRate) throws SharkException;
 

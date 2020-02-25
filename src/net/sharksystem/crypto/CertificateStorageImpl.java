@@ -50,6 +50,19 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         return asapCertificates;
     }
 
+    public Collection<ASAPCertificate> getCertificatesBySignerID(CharSequence userID) {
+        Set<ASAPCertificate> certSetSigner = new HashSet<>();
+        for(Set<ASAPCertificate> certSet : this.certificatesByOwnerIDMap.values()) {
+            for(ASAPCertificate cert : certSet) {
+                if(cert.getSignerID().toString().equalsIgnoreCase(userID.toString())) {
+                    certSetSigner.add(cert);
+                }
+            }
+        }
+
+        return certSetSigner;
+    }
+
     @Override
     public void removeCertificate(ASAPCertificate cert2remove) throws IOException {
         // drop caches
