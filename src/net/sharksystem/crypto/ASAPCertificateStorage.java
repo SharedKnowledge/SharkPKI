@@ -21,6 +21,10 @@ public interface ASAPCertificateStorage {
 
     void removeCertificate(ASAPCertificate cert2remove) throws IOException;
 
+    void syncIdentityAssurance();
+
+    void syncCertificates();
+
     int getIdentityAssurances(CharSequence userID, PersonsStorage personsStorage) throws SharkCryptoException;
 
     List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, PersonsStorage personsStorage)

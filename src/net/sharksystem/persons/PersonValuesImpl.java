@@ -44,10 +44,10 @@ public class PersonValuesImpl implements PersonValues {
     }
 
     @Override
-    public int getCertificateExchangeFailure() { return this.certificateExchangeFailure;}
+    public int getSigningFailureRate() { return this.certificateExchangeFailure;}
 
     @Override
-    public void setCertificateExchangeFailure(int failureRate) {
+    public void setSigningFailureRate(int failureRate) {
         this.certificateExchangeFailure = failureRate;
     }
 }

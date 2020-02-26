@@ -37,22 +37,22 @@ public interface OtherPerson extends Person {
      */
     int getIdentityAssuranceLevel();
 
-    int YOUR_EXCHANGE_FAILURE_RATE = 0; // 0 failure
-    int BEST_CERTIFICATE_EXCHANGE_FAILURE_RATE = 1; // 10% assumed
-    int WORST_CERTIFICATE_EXCHANGE_FAILURE_RATE = 10; // 100% fully unreliable
+    int YOUR_SIGNING_FAILURE_RATE = 0; // 0% failure - you are perfect of course
+    int BEST_SIGNING_FAILURE_RATE = 1; // 10% assumed
+    int WORST_SIGNING_FAILURE_RATE = 10; // 100% fully unreliable
     /**
-     * A positive integer value between 1 and 10 that describes how often a person accepts a wrong
-     * certificate.
-     *
-     * Certificates are transmitted between persons. Humans make mistakes. We must deal with a failure
-     * rate. Each participant in the Shark Network has to estimate how often others accept wrong
-     * certificates. That's no blaming. We can have good friends who are - unfortunately - are
-     * no very careful with certificates. They are still friends but their issued certificates
-     * should be handled with care.
-     *
-     * The other way around. There could be people we actually do not like but who take great
-     * care in certificate exchange. You don't have to spent your holidays with them but give
-     * them credit.
+     * Signing failure defines the failure rate when creating new certificates.
+     * <br/>
+     * Certificates are created. Often, it is a quick act with a deep impact, though.
+     * We are humans. We make mistakes. In SharkNet, we accept that fact and work with it.
+     * First: We assume, that owner work flawless. That's important. We want user to be fully
+     * aware of their actions and implications. Allowing user to rank down their own reliability
+     * would allow them to get out of their responsibility. We will not allow that.
+     * <br/>
+     * Second: Each other person makes failure. There is no perfect guy in my peer group. Same reason:
+     * Users must deal with uncertainty. The must recognize failure and be aware of attacks.
+     * And they need an incentive to directly meet others and not trust lengthy certificates chains.
+     * <br/>
      *
      * The best number is 1 which assumes that 10% of issued certificates are wrong. Number of 10 means:
      * 100% - any certificate is wrong. That is the worst number.

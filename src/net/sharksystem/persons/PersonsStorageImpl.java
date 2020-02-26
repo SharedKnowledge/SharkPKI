@@ -118,7 +118,8 @@ public class PersonsStorageImpl implements PersonsStorage {
         }
 
         // ok - add
-        PersonValuesImpl newPersonValues = new PersonValuesImpl(userID, userName, this.certificateStorage, this);
+        PersonValuesImpl newPersonValues =
+                new PersonValuesImpl(userID, userName, this.certificateStorage, this);
         this.personsList.add(newPersonValues);
 
         // is there already a certificate?
@@ -178,16 +179,25 @@ public class PersonsStorageImpl implements PersonsStorage {
     }
 
     @Override
-    public int getCertificateExchangeFailure(CharSequence personID)  {
+    public int getSigningFailureRate(CharSequence personID)  {
+        if(personID.toString().equalsIgnoreCase(this.getOwnerID().toString())) {
+            return OtherPerson.YOUR_SIGNING_FAILURE_RATE;
+        }
+
         try {
-            return this.getPersonValues(personID).getCertificateExchangeFailure();
+            return this.getPersonValues(personID).getSigningFailureRate();
         } catch (SharkException e) {
             // fix that problem by assuming worst failure rate
-            return OtherPerson.WORST_CERTIFICATE_EXCHANGE_FAILURE_RATE;
+            return OtherPerson.WORST_SIGNING_FAILURE_RATE;
         }
     }
 
-    public void setCertificateExchangeFailure(CharSequence personID, int failureRate) throws SharkException {
-        this.getPersonValues(personID).setCertificateExchangeFailure(failureRate);
+    public void setSigningFailureRate(CharSequence personID, int failureRate) throws SharkException {
+        if(failureRate < OtherPerson.BEST_SIGNING_FAILURE_RATE
+                || failureRate > OtherPerson.WORST_SIGNING_FAILURE_RATE)
+            throw new SharkCryptoException("failure rate you are trying to set is out of defined range");
+
+        this.getPersonValues(personID).setSigningFailureRate(failureRate);
+        this.certificateStorage.syncIdentityAssurance();
     }
 }

@@ -11,7 +11,7 @@ public interface PersonValues {
 
     int getIdentityAssurance();
 
-    int getCertificateExchangeFailure();
+    int getSigningFailureRate();
 
-    void setCertificateExchangeFailure(int failureRate);
+    void setSigningFailureRate(int failureRate);
 }

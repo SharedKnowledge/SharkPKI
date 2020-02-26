@@ -22,6 +22,10 @@ public interface PersonsStorage {
     ASAPCertificate addAndSignPerson(CharSequence bobID, CharSequence bobName, PublicKey bobPublicKey)
             throws SharkCryptoException, IOException;
 
+    void setSigningFailureRate(CharSequence personID, int failureRate) throws SharkException;
+
+    int getSigningFailureRate(CharSequence personID);
+
     PersonValuesImpl getPersonValuesByPosition(int position) throws SharkException;
 
     int getNumberOfPersons();
@@ -33,10 +37,6 @@ public interface PersonsStorage {
 
     Collection<ASAPCertificate> getCertificateByOwner(CharSequence userID) throws SharkException;
     Collection<ASAPCertificate> getCertificateBySigner(CharSequence userID) throws SharkException;
-
-    void setCertificateExchangeFailure(CharSequence personID, int failureRate) throws SharkException;
-
-    int getCertificateExchangeFailure(CharSequence personID);
 
     void addCertificate(ASAPCertificate asapCertificate) throws IOException, SharkException;
 }

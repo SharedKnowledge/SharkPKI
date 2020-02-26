@@ -4,61 +4,64 @@ import net.sharksystem.SharkException;
 import net.sharksystem.crypto.ASAPCertificate;
 import net.sharksystem.crypto.ASAPCertificateStorage;
 import net.sharksystem.crypto.InMemoCertificateStorageImpl;
-import net.sharksystem.crypto.SharkCryptoException;
 
 import java.io.IOException;
 
 public class InMemoPersonsStorageImpl extends PersonsStorageImpl {
-    public static final CharSequence ALICE_ID = "42";
-    public static final CharSequence ALICE_NAME = "Alice";
-    public static final CharSequence BOB_ID = "43";
-    public static final CharSequence BOB_NAME = "Bob";
-    public static final CharSequence CLARA_ID = "44";
-    public static final CharSequence CLARA_NAME = "Clara";
-    public static final CharSequence DAVID_ID = "45";
-    public static final CharSequence DAVID_NAME = "David";
+    public static final CharSequence FRANCIS_ID = "1000";
+    public static final CharSequence FRANCIS_NAME = "Francis";
+    public static final CharSequence GLORIA_ID = "1001";
+    public static final CharSequence GLORIA_NAME = "Gloria";
+    public static final CharSequence HASSAN_ID = "1002";
+    public static final CharSequence HASSAN_NAME = "Hassan";
+    public static final CharSequence IRIS_ID = "1003";
+    public static final CharSequence IRIS_NAME = "Iris";
 
     public InMemoPersonsStorageImpl(CharSequence ownerID, CharSequence ownerName) {
         super(new InMemoCertificateStorageImpl(ownerID, ownerName));
     }
 
     public void fillWithExampleData() throws SharkException, IOException {
-        // fill with example data - usually we assume Alice to be owner and build that chain...
         ASAPCertificateStorage certificateStorage;
-        PersonsStorage aliceStorage, bobStorage = null, claraStorage = null, davidStorage;
+        PersonsStorage francisStorage = null, gloriaStorage = null, hassanStorage = null, irisStorage;
 
-        // Alice
-        if(!this.getOwnerID().toString().equalsIgnoreCase(ALICE_ID.toString())) {
-            certificateStorage = new InMemoCertificateStorageImpl(ALICE_ID, ALICE_NAME);
-            aliceStorage = new PersonsStorageImpl(certificateStorage);
-            this.addAndSignPerson(ALICE_ID, ALICE_NAME, aliceStorage.getPublicKey());
+        // Owner signs Francis ia(F): 10
+        if(!this.getOwnerID().toString().equalsIgnoreCase(FRANCIS_ID.toString())) {
+            certificateStorage = new InMemoCertificateStorageImpl(FRANCIS_ID, FRANCIS_NAME);
+            francisStorage = new PersonsStorageImpl(certificateStorage);
+            this.addAndSignPerson(FRANCIS_ID, FRANCIS_NAME, francisStorage.getPublicKey());
         }
 
-        // Bob
-        if(!this.getOwnerID().toString().equalsIgnoreCase(BOB_ID.toString())) {
-            certificateStorage = new InMemoCertificateStorageImpl(BOB_ID, BOB_NAME);
-            bobStorage = new PersonsStorageImpl(certificateStorage);
-            this.addAndSignPerson(BOB_ID, BOB_NAME, bobStorage.getPublicKey());
-        }
-
-        // Clara
-        if(!this.getOwnerID().toString().equalsIgnoreCase(CLARA_ID.toString())) {
-            certificateStorage = new InMemoCertificateStorageImpl(CLARA_ID, CLARA_NAME);
-            claraStorage = new PersonsStorageImpl(certificateStorage);
-            if(bobStorage != null) {
+        // Francis signs Gloria: cef(f) = 0.5 ia(g) = 5.0
+        if(!this.getOwnerID().toString().equalsIgnoreCase(GLORIA_ID.toString())) {
+            certificateStorage = new InMemoCertificateStorageImpl(GLORIA_ID, GLORIA_NAME);
+            gloriaStorage = new PersonsStorageImpl(certificateStorage);
+            if(francisStorage != null) {
                 ASAPCertificate asapCertificate =
-                        bobStorage.addAndSignPerson(CLARA_ID, CLARA_NAME, claraStorage.getPublicKey());
+                        francisStorage.addAndSignPerson(
+                                GLORIA_ID, GLORIA_NAME, gloriaStorage.getPublicKey());
                 this.addCertificate(asapCertificate);
             }
         }
 
-        // David
-        if(!this.getOwnerID().toString().equalsIgnoreCase(DAVID_ID.toString())) {
-            certificateStorage = new InMemoCertificateStorageImpl(DAVID_ID, DAVID_NAME);
-            davidStorage = new PersonsStorageImpl(certificateStorage);
-            if(claraStorage != null) {
+        // Gloria signs Hassan: cef(g) = 0.5 ia(h) = 2.5 == 3
+        if(!this.getOwnerID().toString().equalsIgnoreCase(HASSAN_ID.toString())) {
+            certificateStorage = new InMemoCertificateStorageImpl(HASSAN_ID, HASSAN_NAME);
+            hassanStorage = new PersonsStorageImpl(certificateStorage);
+            if(gloriaStorage != null) {
                 ASAPCertificate asapCertificate =
-                    claraStorage.addAndSignPerson(DAVID_ID, DAVID_NAME, davidStorage.getPublicKey());
+                        gloriaStorage.addAndSignPerson(HASSAN_ID, HASSAN_NAME, hassanStorage.getPublicKey());
+                this.addCertificate(asapCertificate);
+            }
+        }
+
+        // Hassan signs Iris: cef(h) = 0.5: ia(i) = 1.25 == 1
+        if(!this.getOwnerID().toString().equalsIgnoreCase(IRIS_ID.toString())) {
+            certificateStorage = new InMemoCertificateStorageImpl(IRIS_ID, IRIS_NAME);
+            irisStorage = new PersonsStorageImpl(certificateStorage);
+            if(hassanStorage != null) {
+                ASAPCertificate asapCertificate =
+                    hassanStorage.addAndSignPerson(IRIS_ID, IRIS_NAME, irisStorage.getPublicKey());
                 this.addCertificate(asapCertificate);
             }
         }

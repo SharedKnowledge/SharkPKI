@@ -36,6 +36,14 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         return System.currentTimeMillis() > cert.getValidUntil().getTimeInMillis();
     }
 
+    public void syncIdentityAssurance() {
+        this.userIdentityAssurance = null;
+    }
+
+    public void syncCertificates() {
+        this.certificatesByOwnerIDMap = null;
+    }
+
     @Override
     public Collection<ASAPCertificate> getCertificatesByOwnerID(CharSequence userID) {
         if(this.certificatesByOwnerIDMap == null) {
@@ -170,7 +178,6 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     @Override
     public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, PersonsStorage personsStorage)
             throws SharkCryptoException {
-
         return this.getIdentityAssurance(userID, personsStorage).path;
     }
 
@@ -220,6 +227,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
 
         IdentityAssurance bestIa = null;
 
+        // no direct cert from owner:
         // iterate again
         for(ASAPCertificate certificate : certificates) {
             // we have certificates but nothing issued by owner - we look for a certificated way from owner to userID
@@ -250,12 +258,19 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
      * <p>
      * We go backward in chain to - hopefully reach you
      */
-    private IdentityAssurance calculateIdentityProbability(List<CharSequence> idPath, CharSequence currentPersonID,
-                                                           ASAPCertificate currentCertificate, float accumulatedIdentityProbability, PersonsStorage personsStorage)
+    private IdentityAssurance calculateIdentityProbability(
+            List<CharSequence> idPath, CharSequence currentPersonID,
+            ASAPCertificate currentCertificate, float accumulatedIdentityProbability,
+            PersonsStorage personsStorage)
     {
+        // are we in a circle?
+        if (idPath.contains(currentPersonID)) return this.worstIdentityAssurance; // escape circle
 
-        // finished?
-        if (currentPersonID.toString().equalsIgnoreCase(this.ownerID.toString())) {
+        // remember this step
+        idPath.add(currentPersonID);
+
+        // if we have a certificate that is signed by app owner - we are done here.
+        if (currentCertificate.getSignerID().toString().equalsIgnoreCase(this.ownerID.toString())) {
             // we should be able to verify currentCertificate with owners public key
             if(!this.verify(currentCertificate, personsStorage.getPublicKey())) {
                 return this.worstIdentityAssurance;
@@ -271,12 +286,6 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         }
 
         // not finished
-
-        // are we in a circle?
-        if (idPath.contains(currentPersonID)) return this.worstIdentityAssurance; // escape circle
-
-        // remember this step
-        idPath.add(currentPersonID);
 
         // is there a next step towards owner? Yes, if there is a certificate owner by the current signer
         CharSequence proceedingPersonID = currentCertificate.getSignerID();
@@ -298,11 +307,11 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
             copyIDPath.addAll(idPath);
 
             // convert failure rate number to failure probability something between 0 and 1.
-            float failureProbability = ((float) personsStorage.getCertificateExchangeFailure(proceedingPersonID)) / 10;
+            float failureProbability = ((float) personsStorage.getSigningFailureRate(proceedingPersonID)) / 10;
 
             // OK. We have information about this person. Calculate assuranceLevel
             /*
-            Only the owner is expected to make no failure during certificate exchange. (That's an illusion but
+            Only the owner is expected to make no failure when signing certificates. (That's an illusion but
             we take it.) Any other person makes failure and associates public key with the wrong person.
 
             The probability of doing so is failureProbability.
@@ -334,7 +343,9 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
             }
 
             IdentityAssurance tmpIa = this.calculateIdentityProbability(copyIDPath,
-                    proceedingCertificate.getSignerID(), proceedingCertificate, accumulatedIdentityProbability,
+                    proceedingCertificate.getOwnerID(),
+                    proceedingCertificate,
+                    accumulatedIdentityProbability,
                     personsStorage);
 
             if(bestIa == null) bestIa = tmpIa;
