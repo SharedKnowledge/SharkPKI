@@ -5,7 +5,6 @@ import net.sharksystem.asap.util.Log;
 import java.io.*;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.Calendar;
 
 public class ASAPCertificateImpl implements ASAPCertificate {
@@ -91,6 +90,9 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         long validSince = dis.readLong();
         long validUntil = dis.readLong();
 
+        // read public key
+        PublicKey pubKey = KeyHelper.readPublicKeyFromStream(dis);
+        /*
         String algorithm = dis.readUTF();
         int length = dis.readInt();
         byte[] pubKeyBytes = new byte[length];
@@ -100,8 +102,9 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         KeyFactory keyFactory = null;
         keyFactory = KeyFactory.getInstance(algorithm);
         PublicKey pubKey = keyFactory.generatePublic(new X509EncodedKeySpec(pubKeyBytes));
+         */
 
-        length = dis.readInt();
+        int length = dis.readInt();
         byte[] signatureBytes = new byte[length];
         dis.read(signatureBytes);
 
@@ -143,11 +146,15 @@ public class ASAPCertificateImpl implements ASAPCertificate {
             dos.writeLong(this.validUntil);
 
             // public key serialization
+            KeyHelper.writePublicKeyToStream(this.publicKey, dos);
+
+            /*
             dos.writeUTF(this.publicKey.getAlgorithm());
             byte[] pubKeyBytes = this.publicKey.getEncoded();
 
             dos.writeInt(pubKeyBytes.length);
             dos.write(pubKeyBytes);
+             */
         }
         catch (IOException ioe) {
             // cannot happen - really
@@ -204,17 +211,17 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     @Override
     public CharSequence getSignerID() { return this.signerID; }
 
-    private Calendar long2Calendar(long timeInMillis) {
+    public static Calendar long2Calendar(long timeInMillis) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(timeInMillis);
         return calendar;
     }
 
     @Override
-    public Calendar getValidSince() { return this.long2Calendar(this.validSince); }
+    public Calendar getValidSince() { return long2Calendar(this.validSince); }
 
     @Override
-    public Calendar getValidUntil() { return this.long2Calendar(this.validUntil); }
+    public Calendar getValidUntil() { return long2Calendar(this.validUntil); }
 
     public PublicKey getPublicKey() { return this.publicKey; }
 }

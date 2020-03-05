@@ -272,8 +272,14 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         // if we have a certificate that is signed by app owner - we are done here.
         if (currentCertificate.getSignerID().toString().equalsIgnoreCase(this.ownerID.toString())) {
             // we should be able to verify currentCertificate with owners public key
-            if(!this.verify(currentCertificate, personsStorage.getPublicKey())) {
-                return this.worstIdentityAssurance;
+            PublicKey publicKey = null;
+            try {
+                publicKey = personsStorage.getPublicKey();
+                if(!this.verify(currentCertificate, publicKey)) {
+                    return this.worstIdentityAssurance;
+                }
+            } catch (SharkCryptoException e) {
+                return this.worstIdentityAssurance; // no key at all
             }
 
             // could be verified

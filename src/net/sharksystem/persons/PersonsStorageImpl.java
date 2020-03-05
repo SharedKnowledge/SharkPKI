@@ -2,35 +2,46 @@ package net.sharksystem.persons;
 
 import net.sharksystem.SharkException;
 import net.sharksystem.asap.util.Log;
-import net.sharksystem.crypto.ASAPCertificate;
-import net.sharksystem.crypto.ASAPCertificateImpl;
-import net.sharksystem.crypto.ASAPCertificateStorage;
-import net.sharksystem.crypto.SharkCryptoException;
+import net.sharksystem.crypto.*;
 
 import java.io.IOException;
 import java.security.*;
 import java.util.*;
 
+import static net.sharksystem.crypto.ASAPCertificateImpl.DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS;
+
 public class PersonsStorageImpl implements PersonsStorage {
     private final ASAPCertificateStorage certificateStorage;
-    private KeyPair rsaKeyPair = null;
+    private final ASAPKeyStorage asapKeyStorage;
 
-    public PersonsStorageImpl(ASAPCertificateStorage certificateStorage) {
-        this.certificateStorage = certificateStorage;
-        this.setup();
+    public PersonsStorageImpl(ASAPCertificateStorage certificateStorage) throws SharkException {
+        this(certificateStorage, new InMemoASAPKeyStorage());
     }
 
-    protected void setup() {
-        if(this.rsaKeyPair == null) {
-            try {
+    public PersonsStorageImpl(ASAPCertificateStorage certificateStorage,
+                              ASAPKeyStorage asapKeyStorage) throws SharkException {
+        this.certificateStorage = certificateStorage;
+        this.asapKeyStorage = asapKeyStorage;
+
+        Calendar createCal = null;
+        try {
+            long creationTime = this.asapKeyStorage.getCreationTime(); // throws exception if not set
+
+            // check expiration time
+            createCal = ASAPCertificateImpl.long2Calendar(creationTime);
+            createCal.add(Calendar.YEAR, DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS);
+            if(createCal.getTimeInMillis() > System.currentTimeMillis()) {
+                Log.writeLog(this, "local key pair expired - reset");
                 this.generateKeyPair();
-            } catch (Exception e) {
-                Log.writeLog(this,"cannot create key pair - fatal");
             }
+        } catch (SharkCryptoException e) {
+            Log.writeLog(this, "failure receiving keys: " + e.getLocalizedMessage());
+            this.generateKeyPair();
         }
     }
 
     public void generateKeyPair() throws SharkException {
+        Log.writeLog(this, "create key pair");
         KeyPairGenerator keyGen = null;
         try {
             keyGen = KeyPairGenerator.getInstance("RSA");
@@ -41,19 +52,21 @@ public class PersonsStorageImpl implements PersonsStorage {
         SecureRandom secRandom = new SecureRandom();
         try {
             keyGen.initialize(2048, secRandom);
-            this.rsaKeyPair = keyGen.generateKeyPair();
+            KeyPair rsaKeyPair = keyGen.generateKeyPair();
+            this.asapKeyStorage.storePrivateKey(rsaKeyPair.getPrivate());
+            this.asapKeyStorage.storePublicKey(rsaKeyPair.getPublic());
         }
         catch(RuntimeException re) {
             throw new SharkException(re.getLocalizedMessage());
         }
     }
 
-    public PublicKey getPublicKey() {
-        return this.rsaKeyPair.getPublic();
+    public PublicKey getPublicKey() throws SharkCryptoException {
+        return this.asapKeyStorage.retrievePublicKey();
     }
 
-    public PrivateKey getPrivateKey() {
-        return this.rsaKeyPair.getPrivate();
+    public PrivateKey getPrivateKey() throws SharkCryptoException {
+        return this.asapKeyStorage.retrievePrivateKey();
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////

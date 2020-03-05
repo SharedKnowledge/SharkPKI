@@ -15,9 +15,9 @@ public interface PersonsStorage {
 
     CharSequence getOwnerName();
 
-    PrivateKey getPrivateKey();
+    PrivateKey getPrivateKey() throws SharkCryptoException;
 
-    PublicKey getPublicKey();
+    PublicKey getPublicKey() throws SharkCryptoException;
 
     ASAPCertificate addAndSignPerson(CharSequence bobID, CharSequence bobName, PublicKey bobPublicKey)
             throws SharkCryptoException, IOException;
