@@ -34,7 +34,7 @@ public class KeyHelper {
         return (PublicKey) key;
     }
 
-    public static PrivateKey readPrivateKeyFromStream(DataInputStream dis, boolean createPublicKey)
+    public static PrivateKey readPrivateKeyFromStream(DataInputStream dis)
             throws NoSuchAlgorithmException, IOException, InvalidKeySpecException {
         Key key = readKeyFromStream(dis, false);
         return (PrivateKey) key;
