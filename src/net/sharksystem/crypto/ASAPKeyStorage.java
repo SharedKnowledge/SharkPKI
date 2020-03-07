@@ -1,14 +1,14 @@
 package net.sharksystem.crypto;
 
+import net.sharksystem.SharkException;
+
 import java.security.PrivateKey;
 import java.security.PublicKey;
 
 public interface ASAPKeyStorage {
-    void storePrivateKey(PrivateKey privateKey);
-    void storePublicKey(PublicKey publicKey);
-    void setCreationTime(long timeInMillis);
+    void generateKeyPair() throws SharkException;
 
-    PrivateKey retrievePrivateKey() throws SharkCryptoException;
-    PublicKey retrievePublicKey() throws SharkCryptoException;
+    PrivateKey getPrivateKey() throws SharkCryptoException;
+    PublicKey getPublicKey() throws SharkCryptoException;
     long getCreationTime() throws SharkCryptoException;
 }

@@ -32,41 +32,20 @@ public class PersonsStorageImpl implements PersonsStorage {
             createCal.add(Calendar.YEAR, DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS);
             if(createCal.getTimeInMillis() > System.currentTimeMillis()) {
                 Log.writeLog(this, "local key pair expired - reset");
-                this.generateKeyPair();
+                this.asapKeyStorage.generateKeyPair();
             }
         } catch (SharkCryptoException e) {
             Log.writeLog(this, "failure receiving keys: " + e.getLocalizedMessage());
-            this.generateKeyPair();
-        }
-    }
-
-    public void generateKeyPair() throws SharkException {
-        Log.writeLog(this, "create key pair");
-        KeyPairGenerator keyGen = null;
-        try {
-            keyGen = KeyPairGenerator.getInstance("RSA");
-        } catch (NoSuchAlgorithmException e) {
-            throw new SharkException(e.getLocalizedMessage());
-        }
-
-        SecureRandom secRandom = new SecureRandom();
-        try {
-            keyGen.initialize(2048, secRandom);
-            KeyPair rsaKeyPair = keyGen.generateKeyPair();
-            this.asapKeyStorage.storePrivateKey(rsaKeyPair.getPrivate());
-            this.asapKeyStorage.storePublicKey(rsaKeyPair.getPublic());
-        }
-        catch(RuntimeException re) {
-            throw new SharkException(re.getLocalizedMessage());
+            this.asapKeyStorage.generateKeyPair();
         }
     }
 
     public PublicKey getPublicKey() throws SharkCryptoException {
-        return this.asapKeyStorage.retrievePublicKey();
+        return this.asapKeyStorage.getPublicKey();
     }
 
     public PrivateKey getPrivateKey() throws SharkCryptoException {
-        return this.asapKeyStorage.retrievePrivateKey();
+        return this.asapKeyStorage.getPrivateKey();
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////
