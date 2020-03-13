@@ -41,7 +41,8 @@ public class ASAPCertificateImpl implements ASAPCertificate {
             PrivateKey privateKey,
             CharSequence ownerID, CharSequence ownerName,
             PublicKey publicKey,
-            long validSince)
+            long validSince,
+            CharSequence signingAlgorithm)
                 throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
 
         long now = System.currentTimeMillis();
@@ -65,7 +66,8 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         Log.writeLog(ASAPCertificateImpl.class, "publicKey: " + publicKey);
 
         ASAPCertificateImpl asapCertificate = new ASAPCertificateImpl(
-                signerID, signerName, ownerID, ownerName, publicKey, validSince, until.getTimeInMillis());
+                signerID, signerName, ownerID, ownerName, publicKey, validSince,
+                until.getTimeInMillis(), signingAlgorithm);
 
         asapCertificate.sign(privateKey);
 
@@ -75,8 +77,8 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     private ASAPCertificateImpl(CharSequence signerID,
                                 CharSequence signerName,
                                 CharSequence ownerID, CharSequence ownerName,
-                                PublicKey publicKey, long validSince, long validUntil) {
-
+                                PublicKey publicKey, long validSince, long validUntil,
+                                CharSequence signingAlgorithm) {
         this.signerID = signerID;
         this.signerName = signerName;
         this.ownerID = ownerID;
@@ -85,18 +87,47 @@ public class ASAPCertificateImpl implements ASAPCertificate {
 
         this.validSince = validSince;
         this.validUntil = validUntil;
+
+        this.signingAlgorithm = signingAlgorithm.toString();
     }
+
+    private String signingAlgorithm;
 
     private void sign(PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         // create signature
-        Signature signature = Signature.getInstance(DEFAULT_SIGNATURE_METHOD);
+//        Signature signature = Signature.getInstance(DEFAULT_SIGNATURE_METHOD);
+        Signature signature = Signature.getInstance(this.signingAlgorithm);
+        Log.writeLog(this, "got signature object: " + signature);
         signature.initSign(privateKey, new SecureRandom()); // TODO: should use a seed
+        Log.writeLog(this, "initialized signature object for signing");
         signature.update(this.getAnythingButSignatur());
+        Log.writeLog(this, "updated signature object");
         this.signatureBytes = signature.sign();
+        Log.writeLog(this, "got signature");
+    }
+
+    @Override
+    public boolean verify(PublicKey publicKeyIssuer) throws NoSuchAlgorithmException {
+//        Signature signature = Signature.getInstance(DEFAULT_SIGNATURE_METHOD);
+        Signature signature = Signature.getInstance(this.signingAlgorithm);
+        Log.writeLog(this, "got signature object: " + signature);
+
+        try {
+            signature.initVerify(publicKeyIssuer);
+            Log.writeLog(this, "got signature object for verifying: " + signature);
+            signature.update(this.getAnythingButSignatur());
+            Log.writeLog(this, "updated signature object");
+            return signature.verify(this.signatureBytes);
+        }
+        catch(Exception e) {
+            Log.writeLogErr(this, "exception during verification:  " + e.getLocalizedMessage());
+            return false;
+        }
     }
 
     public static ASAPCertificateImpl produceCertificateFromBytes(
-            byte[] serializedMessage) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+            byte[] serializedMessage)
+                throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
 
         ByteArrayInputStream bais = new ByteArrayInputStream(serializedMessage);
         DataInputStream dis = new DataInputStream(bais);
@@ -107,27 +138,17 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         String ownerName = dis.readUTF();
         long validSince = dis.readLong();
         long validUntil = dis.readLong();
+        String signingAlgorithm = dis.readUTF();
 
         // read public key
         PublicKey pubKey = KeyHelper.readPublicKeyFromStream(dis);
-        /*
-        String algorithm = dis.readUTF();
-        int length = dis.readInt();
-        byte[] pubKeyBytes = new byte[length];
-        dis.read(pubKeyBytes);
-
-        // decode public key
-        KeyFactory keyFactory = null;
-        keyFactory = KeyFactory.getInstance(algorithm);
-        PublicKey pubKey = keyFactory.generatePublic(new X509EncodedKeySpec(pubKeyBytes));
-         */
 
         int length = dis.readInt();
         byte[] signatureBytes = new byte[length];
         dis.read(signatureBytes);
 
         ASAPCertificateImpl asapCertificate = new ASAPCertificateImpl(
-                signerID, signerName, ownerID, ownerName, pubKey, validSince, validUntil);
+                signerID, signerName, ownerID, ownerName, pubKey, validSince, validUntil, signingAlgorithm);
 
         asapCertificate.signatureBytes = signatureBytes;
 
@@ -162,6 +183,7 @@ public class ASAPCertificateImpl implements ASAPCertificate {
 
             dos.writeLong(this.validSince);
             dos.writeLong(this.validUntil);
+            dos.writeUTF(this.signingAlgorithm);
 
             // public key serialization
             KeyHelper.writePublicKeyToStream(this.publicKey, dos);
@@ -195,21 +217,6 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         }
 
         return baos.toByteArray();
-    }
-
-    @Override
-    public boolean verify(PublicKey publicKeyIssuer) throws NoSuchAlgorithmException {
-        Signature signature = Signature.getInstance(DEFAULT_SIGNATURE_METHOD);
-
-        try {
-            signature.initVerify(publicKeyIssuer);
-            signature.update(this.getAnythingButSignatur());
-            return signature.verify(this.signatureBytes);
-        }
-        catch(Exception e) {
-            Log.writeLogErr(this, "exception during verification:  " + e.getLocalizedMessage());
-            return false;
-        }
     }
 
     @Override

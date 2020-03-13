@@ -161,7 +161,7 @@ public class PersonsStorageTests {
         // alice signs a certificate of bob
         ASAPCertificate asapCertificate = ASAPCertificateImpl.produceCertificate(
                 alicePersonsStorage.getOwnerID(), alicePersonsStorage.getOwnerName(), alicePrivateKey,
-                bobID, bobName, bobPublicKey, now);
+                bobID, bobName, bobPublicKey, now, ASAPCertificateImpl.DEFAULT_SIGNATURE_METHOD);
 
         // verify
         boolean verified = asapCertificate.verify(alicePublicKey);

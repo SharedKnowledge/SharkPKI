@@ -9,19 +9,22 @@ import java.security.*;
 import java.util.*;
 
 import static net.sharksystem.crypto.ASAPCertificateImpl.DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS;
+import static net.sharksystem.crypto.ASAPCertificateImpl.DEFAULT_SIGNATURE_METHOD;
 
 public class PersonsStorageImpl implements PersonsStorage {
     private final ASAPCertificateStorage certificateStorage;
     private final ASAPKeyStorage asapKeyStorage;
+    private final String signingAlgorithm;
 
     public PersonsStorageImpl(ASAPCertificateStorage certificateStorage) throws SharkException {
-        this(certificateStorage, new InMemoASAPKeyStorage());
+        this(certificateStorage, new InMemoASAPKeyStorage(), DEFAULT_SIGNATURE_METHOD);
     }
 
     public PersonsStorageImpl(ASAPCertificateStorage certificateStorage,
-                              ASAPKeyStorage asapKeyStorage) throws SharkException {
+                              ASAPKeyStorage asapKeyStorage, String signingAlgorithm) throws SharkException {
         this.certificateStorage = certificateStorage;
         this.asapKeyStorage = asapKeyStorage;
+        this.signingAlgorithm = signingAlgorithm;
 
         Calendar createCal = null;
         try {
@@ -142,7 +145,8 @@ public class PersonsStorageImpl implements PersonsStorage {
                     userID,
                     userName,
                     publicKey,
-                    validSince);
+                    validSince,
+                    this.signingAlgorithm);
 
             // make it persistent
             this.certificateStorage.storeCertificate(cert);

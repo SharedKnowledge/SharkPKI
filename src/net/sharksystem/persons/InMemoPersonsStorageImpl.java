@@ -1,12 +1,11 @@
 package net.sharksystem.persons;
 
 import net.sharksystem.SharkException;
-import net.sharksystem.crypto.ASAPCertificate;
-import net.sharksystem.crypto.ASAPCertificateStorage;
-import net.sharksystem.crypto.InMemoASAPKeyStorage;
-import net.sharksystem.crypto.InMemoCertificateStorageImpl;
+import net.sharksystem.crypto.*;
 
 import java.io.IOException;
+
+import static net.sharksystem.crypto.ASAPCertificateImpl.DEFAULT_SIGNATURE_METHOD;
 
 public class InMemoPersonsStorageImpl extends PersonsStorageImpl {
     public static final CharSequence FRANCIS_ID = "1000";
@@ -19,7 +18,10 @@ public class InMemoPersonsStorageImpl extends PersonsStorageImpl {
     public static final CharSequence IRIS_NAME = "Iris";
 
     public InMemoPersonsStorageImpl(CharSequence ownerID, CharSequence ownerName) throws SharkException {
-        super(new InMemoCertificateStorageImpl(ownerID, ownerName), new InMemoASAPKeyStorage());
+        super(
+            new InMemoCertificateStorageImpl(ownerID, ownerName),
+            new InMemoASAPKeyStorage(),
+            DEFAULT_SIGNATURE_METHOD);
     }
 
     public void fillWithExampleData() throws SharkException, IOException {
