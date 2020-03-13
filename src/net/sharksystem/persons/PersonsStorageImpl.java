@@ -48,6 +48,11 @@ public class PersonsStorageImpl implements PersonsStorage {
         return this.asapKeyStorage.getPrivateKey();
     }
 
+    public long getKeysCreationTime() throws SharkCryptoException {
+        return this.asapKeyStorage.getCreationTime();
+    }
+
+
     //////////////////////////////////////////////////////////////////////////////////////////////
     //                           other persons management - in memory                           //
     //////////////////////////////////////////////////////////////////////////////////////////////
