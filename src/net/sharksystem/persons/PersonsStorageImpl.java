@@ -99,7 +99,8 @@ public class PersonsStorageImpl implements PersonsStorage {
     }
 
     @Override
-    public ASAPCertificate addAndSignPerson(CharSequence userID, CharSequence userName, PublicKey publicKey)
+    public ASAPCertificate addAndSignPerson(
+            CharSequence userID, CharSequence userName, PublicKey publicKey, long validSince)
             throws SharkCryptoException, IOException {
 
         // try to overwrite owner ?
@@ -140,7 +141,8 @@ public class PersonsStorageImpl implements PersonsStorage {
                     this.getPrivateKey(),
                     userID,
                     userName,
-                    publicKey);
+                    publicKey,
+                    validSince);
 
             // make it persistent
             this.certificateStorage.storeCertificate(cert);

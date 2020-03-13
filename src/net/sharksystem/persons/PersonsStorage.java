@@ -24,7 +24,7 @@ public interface PersonsStorage {
      */
     long getKeysCreationTime() throws SharkCryptoException;
 
-    ASAPCertificate addAndSignPerson(CharSequence bobID, CharSequence bobName, PublicKey bobPublicKey)
+    ASAPCertificate addAndSignPerson(CharSequence userID, CharSequence userName, PublicKey publicKey, long validSince)
             throws SharkCryptoException, IOException;
 
     void setSigningFailureRate(CharSequence personID, int failureRate) throws SharkException;

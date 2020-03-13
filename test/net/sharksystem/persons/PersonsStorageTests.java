@@ -7,6 +7,7 @@ import net.sharksystem.asap.ASAPException;
 import net.sharksystem.crypto.*;
 import org.junit.Assert;
 import org.junit.Test;
+import org.omg.CORBA.SystemException;
 
 import java.io.IOException;
 import java.security.*;
@@ -41,6 +42,8 @@ public class PersonsStorageTests {
 
         ASAPEngineFS.removeFolder(ROOT_DIRECTORY);
 
+        long now = System.currentTimeMillis();
+
         // setup alice
         ASAPEngine aliceASAPStorage = ASAPEngineFS.getASAPStorage(
                 "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.APP_NAME);
@@ -61,7 +64,7 @@ public class PersonsStorageTests {
         PublicKey bobPublicKey = bobPersonsStorage.getPublicKey();
 
         // alice signs a certificate of bob
-        ASAPCertificate asapCertificate = alicePersonsStorage.addAndSignPerson(bobID, bobName, bobPublicKey);
+        ASAPCertificate asapCertificate = alicePersonsStorage.addAndSignPerson(bobID, bobName, bobPublicKey, now);
 
         // Alice could (and should) send it back to Bob - not tested here
         byte[] bytes = asapCertificate.asBytes();
@@ -89,7 +92,7 @@ public class PersonsStorageTests {
         asapCertificate = claraPersonsStorage.addAndSignPerson(
                 davidID,
                 davidPersonsStorage.getOwnerName(),
-                davidPersonsStorage.getPublicKey());
+                davidPersonsStorage.getPublicKey(), now);
 
         // add to alice certification storage
         alicePersonsStorage.addCertificate(asapCertificate);
@@ -107,7 +110,7 @@ public class PersonsStorageTests {
         asapCertificate = bobPersonsStorage.addAndSignPerson(
                 claraID,
                 claraPersonsStorage.getOwnerName(),
-                claraPersonsStorage.getPublicKey());
+                claraPersonsStorage.getPublicKey(), now);
 
         // add to alice certification storage
         alicePersonsStorage.addCertificate(asapCertificate);
@@ -130,6 +133,8 @@ public class PersonsStorageTests {
             InvalidKeyException, SharkException {
 
         ASAPEngineFS.removeFolder(ROOT_DIRECTORY);
+
+        long now = System.currentTimeMillis();
 
         // setup alice
         ASAPEngine aliceASAPStorage = ASAPEngineFS.getASAPStorage(
@@ -156,7 +161,7 @@ public class PersonsStorageTests {
         // alice signs a certificate of bob
         ASAPCertificate asapCertificate = ASAPCertificateImpl.produceCertificate(
                 alicePersonsStorage.getOwnerID(), alicePersonsStorage.getOwnerName(), alicePrivateKey,
-                bobID, bobName, bobPublicKey);
+                bobID, bobName, bobPublicKey, now);
 
         // verify
         boolean verified = asapCertificate.verify(alicePublicKey);
@@ -169,6 +174,8 @@ public class PersonsStorageTests {
             InvalidKeyException, SharkException {
 
         ASAPEngineFS.removeFolder(ROOT_DIRECTORY);
+
+        long now = System.currentTimeMillis();
 
         // setup alice
         ASAPEngine aliceASAPStorage = ASAPEngineFS.getASAPStorage(
@@ -193,7 +200,7 @@ public class PersonsStorageTests {
         PrivateKey alicePrivateKey = alicePersonsStorage.getPrivateKey();
 
         // alice signs a certificate of bob
-        ASAPCertificate asapCertificate = alicePersonsStorage.addAndSignPerson(bobID, bobName, bobPublicKey);
+        ASAPCertificate asapCertificate = alicePersonsStorage.addAndSignPerson(bobID, bobName, bobPublicKey, now);
 
         // verify
         Assert.assertTrue(asapCertificate.verify(alicePublicKey));

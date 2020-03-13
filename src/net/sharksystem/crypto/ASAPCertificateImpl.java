@@ -40,15 +40,33 @@ public class ASAPCertificateImpl implements ASAPCertificate {
             CharSequence signerName,
             PrivateKey privateKey,
             CharSequence ownerID, CharSequence ownerName,
-            PublicKey publicKey)
+            PublicKey publicKey,
+            long validSince)
                 throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
 
+        long now = System.currentTimeMillis();
+        if(validSince > now) {
+            Log.writeLog(ASAPCertificateImpl.class, "valid since cannot be in future - set to now");
+            validSince = now;
+        }
+
         Calendar since = Calendar.getInstance();
+        since.setTimeInMillis(validSince);
+
         Calendar until = Calendar.getInstance();
+        until.setTimeInMillis(validSince);
         until.add(Calendar.YEAR, DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS);
 
+        Log.writeLog(ASAPCertificateImpl.class, "signerID: " + signerID);
+        Log.writeLog(ASAPCertificateImpl.class, "signerName: " + signerName);
+        Log.writeLog(ASAPCertificateImpl.class, "privateKey: " + privateKey);
+        Log.writeLog(ASAPCertificateImpl.class, "ownerID: " + ownerID);
+        Log.writeLog(ASAPCertificateImpl.class, "ownerName: " + ownerName);
+        Log.writeLog(ASAPCertificateImpl.class, "publicKey: " + publicKey);
+
         ASAPCertificateImpl asapCertificate = new ASAPCertificateImpl(
-                signerID, signerName, ownerID, ownerName, publicKey, since.getTimeInMillis(), until.getTimeInMillis());
+                signerID, signerName, ownerID, ownerName, publicKey, validSince, until.getTimeInMillis());
+
         asapCertificate.sign(privateKey);
 
         return asapCertificate;

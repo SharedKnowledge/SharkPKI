@@ -26,11 +26,13 @@ public class InMemoPersonsStorageImpl extends PersonsStorageImpl {
         ASAPCertificateStorage certificateStorage;
         PersonsStorage francisStorage = null, gloriaStorage = null, hassanStorage = null, irisStorage;
 
+        long now = System.currentTimeMillis();
+
         // Owner signs Francis ia(F): 10
         if(!this.getOwnerID().toString().equalsIgnoreCase(FRANCIS_ID.toString())) {
             certificateStorage = new InMemoCertificateStorageImpl(FRANCIS_ID, FRANCIS_NAME);
             francisStorage = new PersonsStorageImpl(certificateStorage);
-            this.addAndSignPerson(FRANCIS_ID, FRANCIS_NAME, francisStorage.getPublicKey());
+            this.addAndSignPerson(FRANCIS_ID, FRANCIS_NAME, francisStorage.getPublicKey(), now);
         }
 
         // Francis signs Gloria: cef(f) = 0.5 ia(g) = 5.0
@@ -40,7 +42,7 @@ public class InMemoPersonsStorageImpl extends PersonsStorageImpl {
             if(francisStorage != null) {
                 ASAPCertificate asapCertificate =
                         francisStorage.addAndSignPerson(
-                                GLORIA_ID, GLORIA_NAME, gloriaStorage.getPublicKey());
+                                GLORIA_ID, GLORIA_NAME, gloriaStorage.getPublicKey(), now);
                 this.addCertificate(asapCertificate);
             }
         }
@@ -51,7 +53,7 @@ public class InMemoPersonsStorageImpl extends PersonsStorageImpl {
             hassanStorage = new PersonsStorageImpl(certificateStorage);
             if(gloriaStorage != null) {
                 ASAPCertificate asapCertificate =
-                        gloriaStorage.addAndSignPerson(HASSAN_ID, HASSAN_NAME, hassanStorage.getPublicKey());
+                        gloriaStorage.addAndSignPerson(HASSAN_ID, HASSAN_NAME, hassanStorage.getPublicKey(), now);
                 this.addCertificate(asapCertificate);
             }
         }
@@ -62,7 +64,7 @@ public class InMemoPersonsStorageImpl extends PersonsStorageImpl {
             irisStorage = new PersonsStorageImpl(certificateStorage);
             if(hassanStorage != null) {
                 ASAPCertificate asapCertificate =
-                    hassanStorage.addAndSignPerson(IRIS_ID, IRIS_NAME, irisStorage.getPublicKey());
+                    hassanStorage.addAndSignPerson(IRIS_ID, IRIS_NAME, irisStorage.getPublicKey(), now);
                 this.addCertificate(asapCertificate);
             }
         }
