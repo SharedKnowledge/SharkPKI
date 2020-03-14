@@ -208,6 +208,14 @@ public class PersonsStorageImpl implements PersonsStorage {
     //                                             persistence                                                    //
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * called from person values
+     */
+    void save() {
+        // nothing - should be overwritten
+        Log.writeLog(this, "save() schould be overwritten by inheriting classes");
+    }
+
     @Override
     public void store(OutputStream os) throws IOException {
         if(os == null) throw new IOException("cannot write in null stream");

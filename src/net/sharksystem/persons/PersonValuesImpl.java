@@ -14,10 +14,10 @@ public class PersonValuesImpl implements PersonValues {
     private int signingFailureRate;
 
     private final ASAPCertificateStorage certificateStorage;
-    private final PersonsStorage personsStorage;
+    private final PersonsStorageImpl personsStorage;
 
     public PersonValuesImpl(CharSequence id, CharSequence name, ASAPCertificateStorage certificateStorage,
-                            PersonsStorage personsStorage) {
+                            PersonsStorageImpl personsStorage) {
 
         this.id = id;
         this.name = name;
@@ -61,6 +61,7 @@ public class PersonValuesImpl implements PersonValues {
     @Override
     public void setName(CharSequence name) {
         this.name = name;
+        this.personsStorage.save();
     }
 
     @Override
@@ -79,5 +80,6 @@ public class PersonValuesImpl implements PersonValues {
     @Override
     public void setSigningFailureRate(int failureRate) {
         this.signingFailureRate = failureRate;
+        this.personsStorage.save();
     }
 }
