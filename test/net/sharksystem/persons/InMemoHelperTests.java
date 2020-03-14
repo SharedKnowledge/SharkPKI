@@ -5,7 +5,10 @@ import net.sharksystem.crypto.ASAPCertificate;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
@@ -113,5 +116,29 @@ public class InMemoHelperTests {
 
         path = personsStorage.getIdentityAssurancesCertificationPath(InMemoPersonsStorageImpl.IRIS_ID);
         System.out.println(path);
+
+        // test persistence
+
+        // simulate storage
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        int expectedSize = personsStorage.getNumberOfPersons();
+        personsStorage.store(baos);
+
+        // extract persistent storage
+        byte[] persistentStorage = baos.toByteArray();
+
+        // setup input
+        InputStream is = new ByteArrayInputStream(persistentStorage);
+        PersonsStorage freshPersonsStorage = new InMemoPersonsStorageImpl(ALICE_ID, ALICE_NAME);
+
+        // load
+        freshPersonsStorage.load(is);
+
+        // test
+        Assert.assertEquals(expectedSize, freshPersonsStorage.getNumberOfPersons());
+        freshPersonsStorage.getIdentityAssurance(InMemoPersonsStorageImpl.FRANCIS_ID);
+        freshPersonsStorage.getIdentityAssurance(InMemoPersonsStorageImpl.GLORIA_ID);
+        freshPersonsStorage.getIdentityAssurance(InMemoPersonsStorageImpl.HASSAN_ID);
+        freshPersonsStorage.getIdentityAssurance(InMemoPersonsStorageImpl.IRIS_ID);
     }
 }

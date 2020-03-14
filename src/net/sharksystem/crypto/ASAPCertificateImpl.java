@@ -20,6 +20,7 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     private ASAPStorageAddress asapStorageAddress;
     private long validSince;
     private long validUntil;
+    private String signingAlgorithm;
 
     /**
      * Create fresh certificate for owner and sign it now with signers private key.
@@ -91,7 +92,9 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         this.signingAlgorithm = signingAlgorithm.toString();
     }
 
-    private String signingAlgorithm;
+    void setASAPStorageAddress(ASAPStorageAddress asapStorageAddress) {
+        this.asapStorageAddress = asapStorageAddress;
+    }
 
     private void sign(PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         // create signature

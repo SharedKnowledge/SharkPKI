@@ -4,14 +4,17 @@ import net.sharksystem.asap.util.Log;
 import net.sharksystem.crypto.ASAPCertificateStorage;
 import net.sharksystem.crypto.SharkCryptoException;
 
-public class PersonValuesImpl implements PersonValues {
-    private static final int IDENTITY_ASSURANCE_NOT_CALCULATED = -1;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
+public class PersonValuesImpl implements PersonValues {
     private final CharSequence id;
+    private CharSequence name;
+    private int signingFailureRate;
+
     private final ASAPCertificateStorage certificateStorage;
     private final PersonsStorage personsStorage;
-    private CharSequence name;
-    private int certificateExchangeFailure;
 
     public PersonValuesImpl(CharSequence id, CharSequence name, ASAPCertificateStorage certificateStorage,
                             PersonsStorage personsStorage) {
@@ -20,7 +23,34 @@ public class PersonValuesImpl implements PersonValues {
         this.name = name;
         this.certificateStorage = certificateStorage;
         this.personsStorage = personsStorage;
-        this.certificateExchangeFailure = DEFAULT_CERTIFICATE_EXCHANGE_FAILURE;
+        this.signingFailureRate = DEFAULT_SIGNING_FAILURE_RATE;
+    }
+
+    /**
+     * Create object from data stream
+     * @param dis
+     * @param certificateStorage
+     * @param personsStorage
+     */
+    PersonValuesImpl(DataInputStream dis, ASAPCertificateStorage certificateStorage, PersonsStorageImpl personsStorage)
+            throws IOException {
+
+        this.certificateStorage = certificateStorage;
+        this.personsStorage = personsStorage;
+
+        this.id = dis.readUTF();
+        this.name = dis.readUTF();
+        this.signingFailureRate = dis.readInt();
+    }
+
+    /**
+     * Write object to data stream
+     * @param dos
+     */
+    public void writePersonValues(DataOutputStream dos) throws IOException {
+        dos.writeUTF(this.id.toString());
+        dos.writeUTF(this.name.toString());
+        dos.writeInt(this.signingFailureRate);
     }
 
     @Override
@@ -44,10 +74,10 @@ public class PersonValuesImpl implements PersonValues {
     }
 
     @Override
-    public int getSigningFailureRate() { return this.certificateExchangeFailure;}
+    public int getSigningFailureRate() { return this.signingFailureRate;}
 
     @Override
     public void setSigningFailureRate(int failureRate) {
-        this.certificateExchangeFailure = failureRate;
+        this.signingFailureRate = failureRate;
     }
 }

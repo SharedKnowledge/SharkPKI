@@ -85,13 +85,21 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
     }
 
     @Override
-    public ASAPStorageAddress storeCertificateInStorage(ASAPCertificate ASAPCertificate) throws IOException {
-        this.asapStorage.add(ASAPCertificate.ASAP_CERTIFICATE, ASAPCertificate.asBytes());
+    public ASAPStorageAddress storeCertificateInStorage(ASAPCertificate asapCertificate) throws IOException {
+        this.asapStorage.add(asapCertificate.ASAP_CERTIFICATE, asapCertificate.asBytes());
 
-        return new ASAPStorageAddressImpl(
+        ASAPStorageAddressImpl asapStorageAddress = new ASAPStorageAddressImpl(
                 this.asapStorage.getFormat(),
-                ASAPCertificate.ASAP_CERTIFICATE,
+                asapCertificate.ASAP_CERTIFICATE,
                 this.asapStorage.getEra());
+
+        // remember location
+        if(asapCertificate instanceof ASAPCertificateImpl) {
+            ASAPCertificateImpl asapCertImp = (ASAPCertificateImpl) asapCertificate;
+            asapCertImp.setASAPStorageAddress(asapStorageAddress);
+        }
+
+        return asapStorageAddress;
     }
 
     protected void removeCertificateFromStorage(ASAPCertificate cert2remove) throws IOException {
@@ -152,5 +160,4 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
             }
         }
     }
-
 }

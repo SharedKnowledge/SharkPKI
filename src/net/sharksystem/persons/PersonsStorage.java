@@ -5,6 +5,8 @@ import net.sharksystem.crypto.ASAPCertificate;
 import net.sharksystem.crypto.SharkCryptoException;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Collection;
@@ -44,4 +46,7 @@ public interface PersonsStorage {
     Collection<ASAPCertificate> getCertificateBySigner(CharSequence userID) throws SharkException;
 
     void addCertificate(ASAPCertificate asapCertificate) throws IOException, SharkException;
+
+    void store(OutputStream os) throws IOException;
+    void load(InputStream os) throws IOException;
 }
