@@ -58,6 +58,7 @@ public interface ASAPCertificateStorage {
     ASAPStorageAddress storeCertificate(ASAPCertificate asapCertificate) throws IOException;
 
     void removeCertificate(ASAPCertificate cert2remove) throws IOException;
+    void removeCertificate(Collection<ASAPCertificate> certs2remove) throws IOException;
 
     /**
      * recalculate identity assurance based on present and valid certificates

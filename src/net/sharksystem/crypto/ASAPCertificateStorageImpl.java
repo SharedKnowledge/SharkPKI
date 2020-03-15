@@ -1,8 +1,7 @@
 package net.sharksystem.crypto;
 
-import net.sharksystem.asap.ASAPChunk;
-import net.sharksystem.asap.ASAPChunkStorage;
-import net.sharksystem.asap.ASAPStorage;
+import net.sharksystem.asap.*;
+import net.sharksystem.asap.apps.ASAPMessages;
 import net.sharksystem.asap.util.Log;
 
 import java.io.*;
@@ -25,6 +24,35 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
     //                                               ASAP Wrapper                                                //
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    private void addCertificate2InMemo(byte[] message, ASAPStorageAddressImpl asapStorageAddress,
+                                       Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap,
+                                       List<ASAPCertificate> expiredCertificates) {
+
+        try {
+            ASAPCertificateImpl asapCertificate =
+                    ASAPCertificateImpl.produceCertificateFromStorage(message, asapStorageAddress);
+
+            // expired
+            if(this.isExpired(asapCertificate)) {
+                // set on delete list - if any
+                if(expiredCertificates != null) expiredCertificates.add(asapCertificate);
+            } else {
+                // valid - keep in memory
+                CharSequence ownerID = asapCertificate.getSubjectID();
+                // add to in-memo structure
+                Set<ASAPCertificate> certSet = certificatesByOwnerIDMap.get(ownerID);
+
+                if (certSet == null) {
+                    certSet = new HashSet<>();
+                    certificatesByOwnerIDMap.put(ownerID, certSet);
+                }
+                certSet.add(asapCertificate);
+            }
+        } catch (Exception e) {
+            Log.writeLog(this, "cannot create certificate: " + e.getLocalizedMessage());
+        }
+    }
+
     protected void readCertificatesFromStorage(Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap) {
         int era = this.asapStorage.getOldestEra();
         int thisEra = this.asapStorage.getEra();
@@ -35,36 +63,14 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
             lastRound = era == thisEra;
 
             try {
-                ASAPChunk chunk = chunkStorage.getChunk(ASAPCertificate.ASAP_CERTIFICATE, era);
+                ASAPChunk chunk = chunkStorage.getChunk(ASAPCertificate.ASAP_CERTIFICATE_URI, era);
                 Iterator<byte[]> messagesAsBytes = chunk.getMessagesAsBytes();
                 // create address
                 ASAPStorageAddressImpl asapStorageAddress = new ASAPStorageAddressImpl(era);
                 while(messagesAsBytes.hasNext()) {
-                    try {
-                        ASAPCertificateImpl asapCertificate =
-                                ASAPCertificateImpl.produceCertificateFromStorage(
-                                        messagesAsBytes.next(), asapStorageAddress);
-
-                        // expired
-                        if(this.isExpired(asapCertificate)) {
-                            // remove
-                            expiredCertificates.add(asapCertificate);
-                        } else {
-                            // valid - keep in memory
-                            CharSequence ownerID = asapCertificate.getSubjectID();
-                            // add to in-memo structure
-                            Set<ASAPCertificate> certSet =
-                                    certificatesByOwnerIDMap.get(ownerID);
-
-                            if (certSet == null) {
-                                certSet = new HashSet<>();
-                                certificatesByOwnerIDMap.put(ownerID, certSet);
-                            }
-                            certSet.add(asapCertificate);
-                        }
-                    } catch (Exception e) {
-                        Log.writeLog(this, "cannot create certificate: " + e.getLocalizedMessage());
-                    }
+                    this.addCertificate2InMemo(
+                            messagesAsBytes.next(), asapStorageAddress,
+                            certificatesByOwnerIDMap, expiredCertificates);
                 }
             } catch (IOException e) {
                 Log.writeLog(this, "exception when read certificates from asap storage: "
@@ -73,28 +79,77 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
 
             // next era
             era = this.asapStorage.getNextEra(era);
-
-            Log.writeLog(this, "info: we do not read from incoming / sender storages - it's a feature");
-
         } while(!lastRound);
 
-        // remove expired certificates from asap memory
-        for(ASAPCertificate cert2remove : expiredCertificates) {
-            try {
-                this.removeCertificateFromStorage(cert2remove);
-            } catch (IOException e) {
-                Log.writeLog(this, "cannot remove certificate: " + e.getLocalizedMessage());
+       // remove expired certificates from asap memory
+        try {
+            this.removeCertificatesFromStorage(expiredCertificates);
+        } catch (IOException e) {
+            Log.writeLog(this, "cannot remove certificate: " + e.getLocalizedMessage());
+        }
+
+        // read received certificates
+        this.readReceivedCertificates(certificatesByOwnerIDMap, this.asapStorage.getOldestEra());
+    }
+
+    protected void readReceivedCertificates(
+            Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap, int sinceEra) {
+
+        int era = sinceEra;
+        int thisEra = this.asapStorage.getEra();
+
+        ASAPChunkStorage chunkStorage = this.asapStorage.getChunkStorage();
+        try {
+            List<CharSequence> senderList = this.asapStorage.getSender();
+            // at least one sender - get access to owner channel
+            ASAPChannel ownerCertificateChannel = this.asapStorage.getChannel(ASAPCertificate.ASAP_CERTIFICATE_URI);
+            ASAPStorageAddressImpl asapStorageAddress = new ASAPStorageAddressImpl(thisEra);
+
+            for(CharSequence sender : senderList) {
+                Log.writeLog(this, "read certificates received from " + sender);
+                ASAPStorage incomingStorage = this.asapStorage.getExistingIncomingStorage(sender);
+                Log.writeLog(this, "got existing asap storage " + sender);
+                ASAPChunkStorage incomingChunkStorage = incomingStorage.getChunkStorage();
+                Log.writeLog(this, "got chunk storage " + sender);
+                ASAPMessages incomingChunkCache =
+                        incomingChunkStorage.getASAPChunkCache(ASAPCertificate.ASAP_CERTIFICATE_URI, sinceEra, thisEra);
+                Log.writeLog(this, "got chunk cache from " + sender + " of "
+                        + ASAPCertificate.ASAP_CERTIFICATE_URI);
+
+                Iterator<byte[]> messages = incomingChunkCache.getMessages();
+                Log.writeLog(this, "iterate messages");
+                while(messages.hasNext()) {
+                    byte[] message = messages.next();
+                    // write into owners channel
+                    Log.writeLog(this, "copy message in owners channel");
+                    ownerCertificateChannel.addMessage(message);
+
+                    // deserialize
+                    Log.writeLog(this, "add to internal certificate list");
+
+                    // nothing is done of certificate is expired - that's what we need here
+                    this.addCertificate2InMemo(message, asapStorageAddress,
+                            certificatesByOwnerIDMap, null);
+                }
+
+                // delete
+                Log.writeLog(this, "remove channel in incoming storage");
+                incomingStorage.removeChannel(ASAPCertificate.ASAP_CERTIFICATE_URI);
             }
+        } catch (IOException | ASAPException e) {
+            Log.writeLog(this, "exception when looking for received certificates - give up: "
+                    + e.getLocalizedMessage());
+            return;
         }
     }
 
     @Override
     public ASAPStorageAddress storeCertificateInStorage(ASAPCertificate asapCertificate) throws IOException {
-        this.asapStorage.add(asapCertificate.ASAP_CERTIFICATE, asapCertificate.asBytes());
+        this.asapStorage.add(asapCertificate.ASAP_CERTIFICATE_URI, asapCertificate.asBytes());
 
         ASAPStorageAddressImpl asapStorageAddress = new ASAPStorageAddressImpl(
                 this.asapStorage.getFormat(),
-                asapCertificate.ASAP_CERTIFICATE,
+                asapCertificate.ASAP_CERTIFICATE_URI,
                 this.asapStorage.getEra());
 
         // remember location

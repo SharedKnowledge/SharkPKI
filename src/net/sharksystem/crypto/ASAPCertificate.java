@@ -7,7 +7,7 @@ import java.security.SignatureException;
 import java.util.Calendar;
 
 public interface ASAPCertificate {
-    public static final String ASAP_CERTIFICATE = "asap/certificate";
+    public static final String ASAP_CERTIFICATE_URI = "asap/certificate";
 
     /**
      * @return person which public key is matched with its name

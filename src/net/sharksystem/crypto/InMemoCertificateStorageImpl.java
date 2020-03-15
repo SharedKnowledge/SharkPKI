@@ -1,14 +1,9 @@
 package net.sharksystem.crypto;
 
 import net.sharksystem.asap.ASAP;
-import net.sharksystem.asap.ASAPEngine;
-import net.sharksystem.asap.ASAPStorage;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class InMemoCertificateStorageImpl extends CertificateStorageImpl {
     Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap = new HashMap<>();
@@ -30,7 +25,7 @@ public class InMemoCertificateStorageImpl extends CertificateStorageImpl {
 
         return new ASAPStorageAddressImpl(
                 ASAPCertificateStorage.APP_NAME,
-                ASAPCertificate.ASAP_CERTIFICATE,
+                ASAPCertificate.ASAP_CERTIFICATE_URI,
                 42); // era? always 42 - it's just for testing
     }
 
@@ -49,6 +44,12 @@ public class InMemoCertificateStorageImpl extends CertificateStorageImpl {
         for(CharSequence ownerName : this.certificatesByOwnerIDMap.keySet()) {
             map2Fill.put(ownerName, this.certificatesByOwnerIDMap.get(ownerName));
         }
+    }
+
+    @Override
+    protected void readReceivedCertificates(
+            Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap, int sinceEra) {
+        return;
     }
 
     @Override

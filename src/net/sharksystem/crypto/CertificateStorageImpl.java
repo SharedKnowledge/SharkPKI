@@ -83,6 +83,8 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     }
 
     public Collection<ASAPCertificate> getCertificatesSinceEra(int sinceEra) {
+        // sync with external changes
+        this.readReceivedCertificates(this.certificatesByOwnerIDMap, sinceEra);
         // create a set of all eras after since era including since era
         Set<Integer> eraSpace = new HashSet<>();
 
@@ -114,11 +116,21 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
 
     @Override
     public void removeCertificate(ASAPCertificate cert2remove) throws IOException {
+        List<ASAPCertificate> certs2remove = new ArrayList<>();
+        certs2remove.add(cert2remove);
+        this.removeCertificate(certs2remove);
+    }
+
+    public void removeCertificate(Collection<ASAPCertificate> certs2remove) throws IOException {
         // drop caches
         this.certificatesByOwnerIDMap = null;
         this.userIdentityAssurance = null;
 
-        this.removeCertificateFromStorage(cert2remove);
+        try {
+            this.removeCertificatesFromStorage(certs2remove);
+        } catch (IOException e) {
+            Log.writeLog(this, "cannot remove certificate: " + e.getLocalizedMessage());
+        }
     }
 
     @Override
@@ -133,9 +145,20 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     protected abstract ASAPStorageAddress storeCertificateInStorage(ASAPCertificate cert2store)
             throws IOException;
 
+    protected void removeCertificatesFromStorage(Collection<ASAPCertificate> certs2remove) throws IOException {
+        if(certs2remove == null) return;
+
+        for(ASAPCertificate cert2remove : certs2remove) {
+            this.removeCertificateFromStorage(cert2remove);
+        }
+    }
+
     protected abstract void removeCertificateFromStorage(ASAPCertificate cert2remove) throws IOException;
 
     protected abstract void readCertificatesFromStorage(Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap);
+
+    protected abstract void readReceivedCertificates(
+            Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap, int sinceEra);
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //                                            identity assurance                                            //
@@ -421,7 +444,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         }
 
         ASAPStorageAddressImpl(int era) {
-            this(APP_NAME, ASAPCertificate.ASAP_CERTIFICATE, era);
+            this(ASAPCertificateStorage.APP_NAME, ASAPCertificate.ASAP_CERTIFICATE_URI, era);
         }
 
         ASAPStorageAddressImpl(byte[] serialized) throws IOException {
