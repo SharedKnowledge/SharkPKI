@@ -182,7 +182,7 @@ public class ASAPCertificateImpl implements ASAPCertificate {
             dos.writeUTF(this.signerID.toString());
             dos.writeUTF(this.signerName.toString());
             dos.writeUTF(this.ownerID.toString());
-            dos.writeUTF(this.getOwnerName().toString());
+            dos.writeUTF(this.getSubjectName().toString());
 
             dos.writeLong(this.validSince);
             dos.writeLong(this.validUntil);
@@ -228,16 +228,16 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     }
 
     @Override
-    public CharSequence getOwnerID() { return this.ownerID; }
+    public CharSequence getSubjectID() { return this.ownerID; }
 
     @Override
-    public CharSequence getOwnerName() { return this.ownerName; }
+    public CharSequence getSubjectName() { return this.ownerName; }
 
     @Override
-    public CharSequence getSignerName() {  return this.signerName;  }
+    public CharSequence getIssuerName() {  return this.signerName;  }
 
     @Override
-    public CharSequence getSignerID() { return this.signerID; }
+    public CharSequence getIssuerID() { return this.signerID; }
 
     public static Calendar long2Calendar(long timeInMillis) {
         Calendar calendar = Calendar.getInstance();

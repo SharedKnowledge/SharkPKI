@@ -1,5 +1,6 @@
 package net.sharksystem.crypto;
 
+import net.sharksystem.asap.ASAP;
 import net.sharksystem.asap.util.Log;
 import net.sharksystem.persons.OtherPerson;
 import net.sharksystem.persons.PersonsStorage;
@@ -14,6 +15,8 @@ import java.util.*;
 public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     private final CharSequence ownerID;
     private final CharSequence ownerName;
+
+    private Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap = null;
 
     public CertificateStorageImpl(CharSequence ownerID, CharSequence ownerName) {
         this.ownerID = ownerID;
@@ -30,8 +33,6 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         return this.ownerName;
     }
 
-    private Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap = null;
-
     boolean isExpired(ASAPCertificate cert) {
         return System.currentTimeMillis() > cert.getValidUntil().getTimeInMillis();
     }
@@ -44,10 +45,14 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         this.certificatesByOwnerIDMap = null;
     }
 
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //                                       getter on certificate map                                         //
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     @Override
-    public Collection<ASAPCertificate> getCertificatesByOwnerID(CharSequence userID) {
+    public Collection<ASAPCertificate> getCertificatesBySubjectID(CharSequence userID) {
         if(this.certificatesByOwnerIDMap == null) {
-            this.certificatesByOwnerIDMap = new HashMap<CharSequence, Set<ASAPCertificate>>();
+            this.certificatesByOwnerIDMap = new HashMap<>();
             this.readCertificatesFromStorage(this.certificatesByOwnerIDMap);
         }
 
@@ -58,18 +63,54 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         return asapCertificates;
     }
 
-    public Collection<ASAPCertificate> getCertificatesBySignerID(CharSequence userID) {
-        Set<ASAPCertificate> certSetSigner = new HashSet<>();
+    @Override
+    public Collection<ASAPCertificate> getCertificatesForOwnerSubject() {
+        return this.getCertificatesBySubjectID(this.getOwnerID());
+    }
+
+    @Override
+    public Collection<ASAPCertificate> getCertificatesByIssuerID(CharSequence userID) {
+        Set<ASAPCertificate> certSetIssuer = new HashSet<>();
         for(Set<ASAPCertificate> certSet : this.certificatesByOwnerIDMap.values()) {
             for(ASAPCertificate cert : certSet) {
-                if(cert.getSignerID().toString().equalsIgnoreCase(userID.toString())) {
-                    certSetSigner.add(cert);
+                if(cert.getIssuerID().toString().equalsIgnoreCase(userID.toString())) {
+                    certSetIssuer.add(cert);
                 }
             }
         }
 
-        return certSetSigner;
+        return certSetIssuer;
     }
+
+    public Collection<ASAPCertificate> getCertificatesSinceEra(int sinceEra) {
+        // create a set of all eras after since era including since era
+        Set<Integer> eraSpace = new HashSet<>();
+
+        // iterate
+        int currentEra = sinceEra;
+        int nextEra = sinceEra;
+        do {
+            currentEra = nextEra; // does nothing in first loop
+            eraSpace.add(currentEra);
+            nextEra = ASAP.nextEra(currentEra);
+        } while(currentEra != this.getEra());
+
+        Set<ASAPCertificate> certSetEra = new HashSet<>();
+        for(Set<ASAPCertificate> certSet : this.certificatesByOwnerIDMap.values()) {
+            for(ASAPCertificate cert : certSet) {
+                if(eraSpace.contains(cert.getASAPStorageAddress().getEra())) {
+                    // contains? Integer object or Integer value used?
+                    certSetEra.add(cert);
+                }
+            }
+        }
+
+        return certSetEra;
+    }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //                                             data management                                             //
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
     public void removeCertificate(ASAPCertificate cert2remove) throws IOException {
@@ -186,7 +227,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     }
 
     private void setupIdentityAssurance(CharSequence userID, PersonsStorage personsStorage) throws SharkCryptoException {
-        Collection<ASAPCertificate> certificates = this.getCertificatesByOwnerID(userID);
+        Collection<ASAPCertificate> certificates = this.getCertificatesBySubjectID(userID);
         if (certificates == null || certificates.isEmpty()) {
             // we don't know anything about this person
             this.userIdentityAssurance.put(userID, this.worstIdentityAssurance);
@@ -196,7 +237,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
             // do we have a certificate signed by owner?
             boolean found = false;
             for(ASAPCertificate certificate : certificates) {
-                if (certificate.getSignerID().toString().equalsIgnoreCase(this.ownerID.toString())) {
+                if (certificate.getIssuerID().toString().equalsIgnoreCase(this.ownerID.toString())) {
                     // verify certificate
                     found = true;
                     try {
@@ -270,7 +311,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         idPath.add(currentPersonID);
 
         // if we have a certificate that is signed by app owner - we are done here.
-        if (currentCertificate.getSignerID().toString().equalsIgnoreCase(this.ownerID.toString())) {
+        if (currentCertificate.getIssuerID().toString().equalsIgnoreCase(this.ownerID.toString())) {
             // we should be able to verify currentCertificate with owners public key
             PublicKey publicKey = null;
             try {
@@ -294,9 +335,9 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         // not finished
 
         // is there a next step towards owner? Yes, if there is a certificate owner by the current signer
-        CharSequence proceedingPersonID = currentCertificate.getSignerID();
+        CharSequence proceedingPersonID = currentCertificate.getIssuerID();
         Collection<ASAPCertificate> proceedingCertificates =
-                this.getCertificatesByOwnerID(proceedingPersonID);
+                this.getCertificatesBySubjectID(proceedingPersonID);
 
         if(proceedingCertificates == null || proceedingCertificates.isEmpty())
             // no certificate - cannot verify current certificate.
@@ -349,7 +390,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
             }
 
             IdentityAssurance tmpIa = this.calculateIdentityProbability(copyIDPath,
-                    proceedingCertificate.getOwnerID(),
+                    proceedingCertificate.getSubjectID(),
                     proceedingCertificate,
                     accumulatedIdentityProbability,
                     personsStorage);

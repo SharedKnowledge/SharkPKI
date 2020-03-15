@@ -7,7 +7,6 @@ import net.sharksystem.asap.ASAPException;
 import net.sharksystem.crypto.*;
 import org.junit.Assert;
 import org.junit.Test;
-import org.omg.CORBA.SystemException;
 
 import java.io.IOException;
 import java.security.*;
@@ -29,10 +28,10 @@ public class PersonsStorageTests {
     private static final CharSequence DAVID_NAME = "David";
 
     private void assertCertificateEquals(ASAPCertificate a, ASAPCertificate b) {
-        Assert.assertEquals(a.getSignerID(), b.getSignerID());
-        Assert.assertEquals(a.getOwnerID(), b.getOwnerID());
-        Assert.assertEquals(a.getOwnerName(), b.getOwnerName());
-        Assert.assertEquals(a.getSignerName(), b.getSignerName());
+        Assert.assertEquals(a.getIssuerID(), b.getIssuerID());
+        Assert.assertEquals(a.getSubjectID(), b.getSubjectID());
+        Assert.assertEquals(a.getSubjectName(), b.getSubjectName());
+        Assert.assertEquals(a.getIssuerName(), b.getIssuerName());
     }
 
     @Test

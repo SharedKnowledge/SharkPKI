@@ -94,14 +94,14 @@ public class InMemoHelperTests {
                 personsStorage.getCertificateByOwner(InMemoPersonsStorageImpl.FRANCIS_ID);
 
         Assert.assertEquals(1, francisOwnerCerts.size());
-        Assert.assertTrue(francisOwnerCerts.iterator().next().getSignerID().toString()
+        Assert.assertTrue(francisOwnerCerts.iterator().next().getIssuerID().toString()
                 .equalsIgnoreCase(ALICE_ID));
 
         Collection<ASAPCertificate> francisSignerCerts =
                 personsStorage.getCertificateBySigner(InMemoPersonsStorageImpl.FRANCIS_ID);
 
         Assert.assertEquals(1, francisSignerCerts.size());
-        Assert.assertTrue(francisSignerCerts.iterator().next().getOwnerID().toString()
+        Assert.assertTrue(francisSignerCerts.iterator().next().getSubjectID().toString()
                 .equalsIgnoreCase(InMemoPersonsStorageImpl.GLORIA_ID.toString()));
 
         List<CharSequence> path =

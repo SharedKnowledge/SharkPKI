@@ -17,6 +17,10 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
         this.asapStorage = asapStorage;
     }
 
+    public int getEra() {
+        return this.asapStorage.getEra();
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //                                               ASAP Wrapper                                                //
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +51,7 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
                             expiredCertificates.add(asapCertificate);
                         } else {
                             // valid - keep in memory
-                            CharSequence ownerID = asapCertificate.getOwnerID();
+                            CharSequence ownerID = asapCertificate.getSubjectID();
                             // add to in-memo structure
                             Set<ASAPCertificate> certSet =
                                     certificatesByOwnerIDMap.get(ownerID);
@@ -131,8 +135,8 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
                                 ASAPCertificateImpl.produceCertificateFromStorage(messageBytes, asapAddress);
 
                         // to be dropped?
-                        if (asapCertificate.getOwnerID() == cert2remove.getOwnerID()
-                                && asapCertificate.getSignerID() == cert2remove.getSignerID()) {
+                        if (asapCertificate.getSubjectID() == cert2remove.getSubjectID()
+                                && asapCertificate.getIssuerID() == cert2remove.getIssuerID()) {
                             found= true;
                             continue;
                         }

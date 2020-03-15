@@ -1,5 +1,9 @@
 package net.sharksystem.crypto;
 
+import net.sharksystem.asap.ASAP;
+import net.sharksystem.asap.ASAPEngine;
+import net.sharksystem.asap.ASAPStorage;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,7 +19,7 @@ public class InMemoCertificateStorageImpl extends CertificateStorageImpl {
 
     @Override
     protected ASAPStorageAddress storeCertificateInStorage(ASAPCertificate cert2store) throws IOException {
-        CharSequence ownerID = cert2store.getOwnerID();
+        CharSequence ownerID = cert2store.getSubjectID();
         Set<ASAPCertificate> certificates = this.certificatesByOwnerIDMap.get(ownerID);
         if(certificates == null) {
             certificates = new HashSet<>();
@@ -32,7 +36,7 @@ public class InMemoCertificateStorageImpl extends CertificateStorageImpl {
 
     @Override
     protected void removeCertificateFromStorage(ASAPCertificate cert2remove) throws IOException {
-        CharSequence ownerID = cert2remove.getOwnerID();
+        CharSequence ownerID = cert2remove.getSubjectID();
         Set<ASAPCertificate> certificates = this.certificatesByOwnerIDMap.get(ownerID);
         if(certificates != null) {
             certificates.remove(cert2remove);
@@ -45,5 +49,10 @@ public class InMemoCertificateStorageImpl extends CertificateStorageImpl {
         for(CharSequence ownerName : this.certificatesByOwnerIDMap.keySet()) {
             map2Fill.put(ownerName, this.certificatesByOwnerIDMap.get(ownerName));
         }
+    }
+
+    @Override
+    public int getEra() {
+        return ASAP.INITIAL_ERA;
     }
 }

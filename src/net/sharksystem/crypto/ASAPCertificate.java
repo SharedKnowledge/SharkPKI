@@ -12,16 +12,16 @@ public interface ASAPCertificate {
     /**
      * @return person which public key is matched with its name
      */
-    CharSequence getOwnerID();
+    CharSequence getSubjectID();
 
-    CharSequence getOwnerName();
+    CharSequence getSubjectName();
 
     /**
      * @return person who signed this certificate
      */
-    CharSequence getSignerID();
+    CharSequence getIssuerID();
 
-    CharSequence getSignerName();
+    CharSequence getIssuerName();
 
     Calendar getValidSince();
 

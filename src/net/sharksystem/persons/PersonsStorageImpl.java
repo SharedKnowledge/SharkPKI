@@ -126,7 +126,7 @@ public class PersonsStorageImpl implements PersonsStorage {
         try {
             Collection<ASAPCertificate> certificates = this.getCertificateByOwner(userID);
             for (ASAPCertificate certTemp : certificates) {
-                if (certTemp.getSignerID().toString().equalsIgnoreCase(this.getOwnerID().toString())) {
+                if (certTemp.getIssuerID().toString().equalsIgnoreCase(this.getOwnerID().toString())) {
                     // drop it
                     this.certificateStorage.removeCertificate(certTemp);
                 }
@@ -162,7 +162,7 @@ public class PersonsStorageImpl implements PersonsStorage {
     @Override
     public void addCertificate(ASAPCertificate asapCert) throws IOException, SharkException {
         PersonValuesImpl newPersonValues =
-                new PersonValuesImpl(asapCert.getOwnerID(), asapCert.getOwnerName(),
+                new PersonValuesImpl(asapCert.getSubjectID(), asapCert.getSubjectName(),
                         this.certificateStorage, this);
         this.personsList.add(newPersonValues);
 
@@ -170,11 +170,11 @@ public class PersonsStorageImpl implements PersonsStorage {
     }
 
     public Collection<ASAPCertificate> getCertificateByOwner(CharSequence userID) throws SharkException {
-        return this.certificateStorage.getCertificatesByOwnerID(userID);
+        return this.certificateStorage.getCertificatesBySubjectID(userID);
     }
 
     public Collection<ASAPCertificate> getCertificateBySigner(CharSequence userID) throws SharkException {
-        return this.certificateStorage.getCertificatesBySignerID(userID);
+        return this.certificateStorage.getCertificatesByIssuerID(userID);
     }
 
     public CharSequence getOwnerName() {
