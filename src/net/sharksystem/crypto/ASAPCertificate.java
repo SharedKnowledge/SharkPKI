@@ -34,4 +34,6 @@ public interface ASAPCertificate {
     ASAPStorageAddress getASAPStorageAddress();
 
     PublicKey getPublicKey();
+
+    boolean isIdentical(ASAPCertificate asapCertificate);
 }

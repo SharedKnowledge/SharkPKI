@@ -37,8 +37,7 @@ public class ASAPCertificateImpl implements ASAPCertificate {
      * @throws IOException
      */
     public static ASAPCertificateImpl produceCertificate(
-            CharSequence signerID,
-            CharSequence signerName,
+            CharSequence signerID, CharSequence signerName,
             PrivateKey privateKey,
             CharSequence ownerID, CharSequence ownerName,
             PublicKey publicKey,
@@ -158,7 +157,7 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         return asapCertificate;
     }
 
-    public static ASAPCertificateImpl produceCertificateFromStorage(
+    public static ASAPCertificateImpl produceCertificateFromByteArray(
             byte[] serializedMessage, ASAPStorageAddress asapStorageAddress)
             throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
 
@@ -252,4 +251,14 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     public Calendar getValidUntil() { return long2Calendar(this.validUntil); }
 
     public PublicKey getPublicKey() { return this.publicKey; }
+
+    @Override
+    public boolean isIdentical(ASAPCertificate cert) {
+        return this.getSubjectID().toString().equalsIgnoreCase(cert.getSubjectID().toString())
+                && this.getIssuerID().toString().equalsIgnoreCase(cert.getIssuerID().toString())
+                && this.getValidSince().getTimeInMillis() == cert.getValidSince().getTimeInMillis()
+                && this.getValidUntil().getTimeInMillis() == cert.getValidUntil().getTimeInMillis()
+                && this.getPublicKey().toString().equalsIgnoreCase(cert.getPublicKey().toString()
+        );
+    }
 }

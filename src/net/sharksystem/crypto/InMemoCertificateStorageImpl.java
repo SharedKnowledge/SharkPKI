@@ -47,9 +47,9 @@ public class InMemoCertificateStorageImpl extends CertificateStorageImpl {
     }
 
     @Override
-    protected void readReceivedCertificates(
-            Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap, int sinceEra) {
-        return;
+    protected Collection<ASAPCertificate> readReceivedCertificates(
+            Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap) {
+        return new ArrayList<>();
     }
 
     @Override

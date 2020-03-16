@@ -32,10 +32,9 @@ public interface ASAPCertificateStorage {
     Collection<ASAPCertificate> getCertificatesForOwnerSubject();
 
     /**
-     * @param sinceEra
-     * @return collection of certificates retrieved since given era (regardless of issuer and subject)
+     * @return collection of certificates retrieved since certificate storage was set up
      */
-    Collection<ASAPCertificate> getCertificatesSinceEra(int sinceEra);
+    Collection<ASAPCertificate> getNewReceivedCertificates();
 
     /**
      *

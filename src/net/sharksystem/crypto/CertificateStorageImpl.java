@@ -82,32 +82,15 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         return certSetIssuer;
     }
 
-    public Collection<ASAPCertificate> getCertificatesSinceEra(int sinceEra) {
+    public Collection<ASAPCertificate> getNewReceivedCertificates() {
         // sync with external changes
-        this.readReceivedCertificates(this.certificatesByOwnerIDMap, sinceEra);
-        // create a set of all eras after since era including since era
-        Set<Integer> eraSpace = new HashSet<>();
-
-        // iterate
-        int currentEra = sinceEra;
-        int nextEra = sinceEra;
-        do {
-            currentEra = nextEra; // does nothing in first loop
-            eraSpace.add(currentEra);
-            nextEra = ASAP.nextEra(currentEra);
-        } while(currentEra != this.getEra());
-
-        Set<ASAPCertificate> certSetEra = new HashSet<>();
-        for(Set<ASAPCertificate> certSet : this.certificatesByOwnerIDMap.values()) {
-            for(ASAPCertificate cert : certSet) {
-                if(eraSpace.contains(cert.getASAPStorageAddress().getEra())) {
-                    // contains? Integer object or Integer value used?
-                    certSetEra.add(cert);
-                }
-            }
+        Collection<ASAPCertificate> newCerts = this.readReceivedCertificates(this.certificatesByOwnerIDMap);
+        if(!newCerts.isEmpty()) {
+            // reset identity assurance - is most likely changed
+            this.userIdentityAssurance = null;
         }
 
-        return certSetEra;
+        return newCerts;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,8 +140,8 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
 
     protected abstract void readCertificatesFromStorage(Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap);
 
-    protected abstract void readReceivedCertificates(
-            Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap, int sinceEra);
+    protected abstract Collection<ASAPCertificate>
+        readReceivedCertificates(Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap);
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //                                            identity assurance                                            //

@@ -124,7 +124,7 @@ public class PersonsStorageImpl implements PersonsStorage {
 
         // is there already a certificate?
         try {
-            Collection<ASAPCertificate> certificates = this.getCertificateByOwner(userID);
+            Collection<ASAPCertificate> certificates = this.getCertificateBySubject(userID);
             for (ASAPCertificate certTemp : certificates) {
                 if (certTemp.getIssuerID().toString().equalsIgnoreCase(this.getOwnerID().toString())) {
                     // drop it
@@ -164,17 +164,52 @@ public class PersonsStorageImpl implements PersonsStorage {
         PersonValuesImpl newPersonValues =
                 new PersonValuesImpl(asapCert.getSubjectID(), asapCert.getSubjectName(),
                         this.certificateStorage, this);
+
         this.personsList.add(newPersonValues);
 
         this.certificateStorage.storeCertificate(asapCert);
     }
 
-    public Collection<ASAPCertificate> getCertificateByOwner(CharSequence userID) throws SharkException {
+    @Override
+    public boolean syncNewReceivedCertificates() {
+        Collection<ASAPCertificate> newReceivedCertificates = this.certificateStorage.getNewReceivedCertificates();
+
+        boolean changed = false;
+        // check whether to add a new person
+        for(ASAPCertificate newCert : newReceivedCertificates) {
+            if(!newCert.getSubjectID().toString().equalsIgnoreCase(this.getOwnerID().toString())) {
+                // a new cert received
+                Log.writeLog(this, "read new cert");
+
+                // user already exists
+                try {
+                    this.getPersonValues(newCert.getSubjectID());
+                    Log.writeLog(this, "user id already exists: " + newCert.getSubjectID());
+                } catch (SharkException e) {
+                    // not found - what we look for
+                    PersonValuesImpl newPersonValues =
+                            new PersonValuesImpl(newCert.getSubjectID(), newCert.getSubjectName(),
+                                    this.certificateStorage, this);
+
+                    this.personsList.add(newPersonValues);
+                    changed = true;
+                }
+            }
+        }
+
+        return changed;
+    }
+
+    public Collection<ASAPCertificate> getCertificateBySubject(CharSequence userID) throws SharkException {
         return this.certificateStorage.getCertificatesBySubjectID(userID);
     }
 
-    public Collection<ASAPCertificate> getCertificateBySigner(CharSequence userID) throws SharkException {
+    public Collection<ASAPCertificate> getCertificateByIssuer(CharSequence userID) throws SharkException {
         return this.certificateStorage.getCertificatesByIssuerID(userID);
+    }
+
+    public Collection<ASAPCertificate> getCertificatesForOwnerSubject(CharSequence userID) throws SharkException {
+        return this.certificateStorage.getCertificatesForOwnerSubject();
     }
 
     public CharSequence getOwnerName() {
@@ -203,6 +238,7 @@ public class PersonsStorageImpl implements PersonsStorage {
         this.getPersonValues(personID).setSigningFailureRate(failureRate);
         this.certificateStorage.syncIdentityAssurance();
     }
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //                                             persistence                                                    //

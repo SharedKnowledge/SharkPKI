@@ -4,7 +4,10 @@ import net.sharksystem.asap.*;
 import net.sharksystem.asap.apps.ASAPMessages;
 import net.sharksystem.asap.util.Log;
 
+import javax.management.RuntimeErrorException;
 import java.io.*;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 
 public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
@@ -24,13 +27,14 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
     //                                               ASAP Wrapper                                                //
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void addCertificate2InMemo(byte[] message, ASAPStorageAddressImpl asapStorageAddress,
+    private ASAPCertificate addCertificate2InMemo(byte[] message, ASAPStorageAddressImpl asapStorageAddress,
                                        Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap,
-                                       List<ASAPCertificate> expiredCertificates) {
-
+                                       List<ASAPCertificate> expiredCertificates)
+            throws ASAPException, SharkCryptoException {
+        String text = "nothing";
         try {
-            ASAPCertificateImpl asapCertificate =
-                    ASAPCertificateImpl.produceCertificateFromStorage(message, asapStorageAddress);
+            ASAPCertificate asapCertificate =
+                    ASAPCertificateImpl.produceCertificateFromByteArray(message, asapStorageAddress);
 
             // expired
             if(this.isExpired(asapCertificate)) {
@@ -42,15 +46,34 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
                 // add to in-memo structure
                 Set<ASAPCertificate> certSet = certificatesByOwnerIDMap.get(ownerID);
 
+                boolean addCert = true;
                 if (certSet == null) {
                     certSet = new HashSet<>();
                     certificatesByOwnerIDMap.put(ownerID, certSet);
+                } else {
+                    // check if certificate already in there
+                    for(ASAPCertificate cert : certSet) {
+                        if(cert.isIdentical(asapCertificate)) {
+                            Log.writeLog(this, "found identical certificate - don't add new one");
+                            addCert = false;
+                            throw new SharkCryptoException("certificate already exists");
+                        }
+                    }
                 }
-                certSet.add(asapCertificate);
+
+                if(addCert) {
+                    certSet.add(asapCertificate);
+                }
+
+                return asapCertificate;
             }
-        } catch (Exception e) {
-            Log.writeLog(this, "cannot create certificate: " + e.getLocalizedMessage());
+        } catch (RuntimeErrorException | IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+            text = "cannot create certificate: " + e.getLocalizedMessage();
+            Log.writeLog(this, text);
         }
+
+        // with no previous exception - we don't reach that line
+        throw new ASAPException(text);
     }
 
     protected void readCertificatesFromStorage(Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap) {
@@ -68,11 +91,15 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
                 // create address
                 ASAPStorageAddressImpl asapStorageAddress = new ASAPStorageAddressImpl(era);
                 while(messagesAsBytes.hasNext()) {
-                    this.addCertificate2InMemo(
-                            messagesAsBytes.next(), asapStorageAddress,
-                            certificatesByOwnerIDMap, expiredCertificates);
+                    try {
+                        this.addCertificate2InMemo(
+                                messagesAsBytes.next(), asapStorageAddress,
+                                certificatesByOwnerIDMap, expiredCertificates);
+                    } catch (SharkCryptoException e) {
+                        // certificate already exists - try next
+                    }
                 }
-            } catch (IOException e) {
+            } catch (IOException | ASAPException e) {
                 Log.writeLog(this, "exception when read certificates from asap storage: "
                         + e.getLocalizedMessage());
             }
@@ -89,21 +116,20 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
         }
 
         // read received certificates
-        this.readReceivedCertificates(certificatesByOwnerIDMap, this.asapStorage.getOldestEra());
+        this.readReceivedCertificates(certificatesByOwnerIDMap);
     }
 
-    protected void readReceivedCertificates(
-            Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap, int sinceEra) {
+    protected Collection<ASAPCertificate> readReceivedCertificates(
+            Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap) {
 
-        int era = sinceEra;
-        int thisEra = this.asapStorage.getEra();
+        Collection<ASAPCertificate> asapCertificatesReceived = new ArrayList<>();
 
         ASAPChunkStorage chunkStorage = this.asapStorage.getChunkStorage();
         try {
             List<CharSequence> senderList = this.asapStorage.getSender();
             // at least one sender - get access to owner channel
             ASAPChannel ownerCertificateChannel = this.asapStorage.getChannel(ASAPCertificate.ASAP_CERTIFICATE_URI);
-            ASAPStorageAddressImpl asapStorageAddress = new ASAPStorageAddressImpl(thisEra);
+            ASAPStorageAddressImpl asapStorageAddress = new ASAPStorageAddressImpl(this.asapStorage.getEra());
 
             for(CharSequence sender : senderList) {
                 Log.writeLog(this, "read certificates received from " + sender);
@@ -112,7 +138,8 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
                 ASAPChunkStorage incomingChunkStorage = incomingStorage.getChunkStorage();
                 Log.writeLog(this, "got chunk storage " + sender);
                 ASAPMessages incomingChunkCache =
-                        incomingChunkStorage.getASAPChunkCache(ASAPCertificate.ASAP_CERTIFICATE_URI, sinceEra, thisEra);
+                        incomingChunkStorage.getASAPChunkCache(ASAPCertificate.ASAP_CERTIFICATE_URI,
+                                ASAP.INITIAL_ERA, ASAP.MAX_ERA); // TODO that's real brute force
                 Log.writeLog(this, "got chunk cache from " + sender + " of "
                         + ASAPCertificate.ASAP_CERTIFICATE_URI);
 
@@ -127,9 +154,14 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
                     // deserialize
                     Log.writeLog(this, "add to internal certificate list");
 
-                    // nothing is done of certificate is expired - that's what we need here
-                    this.addCertificate2InMemo(message, asapStorageAddress,
-                            certificatesByOwnerIDMap, null);
+                    // remember new certificates - don't collect expired certs - they will be removed anyway
+                    try {
+                        asapCertificatesReceived.add(
+                            this.addCertificate2InMemo(message, asapStorageAddress,
+                                    certificatesByOwnerIDMap, null));
+                    } catch (SharkCryptoException e) {
+                        // cert already exists - try next
+                    }
                 }
 
                 // delete
@@ -139,8 +171,9 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
         } catch (IOException | ASAPException e) {
             Log.writeLog(this, "exception when looking for received certificates - give up: "
                     + e.getLocalizedMessage());
-            return;
         }
+
+        return asapCertificatesReceived;
     }
 
     @Override
@@ -187,7 +220,7 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
                 try {
                     if(!found) {
                         ASAPCertificateImpl asapCertificate =
-                                ASAPCertificateImpl.produceCertificateFromStorage(messageBytes, asapAddress);
+                                ASAPCertificateImpl.produceCertificateFromByteArray(messageBytes, asapAddress);
 
                         // to be dropped?
                         if (asapCertificate.getSubjectID() == cert2remove.getSubjectID()

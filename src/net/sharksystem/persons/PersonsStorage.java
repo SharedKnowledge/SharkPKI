@@ -42,10 +42,16 @@ public interface PersonsStorage {
     List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID)
             throws SharkCryptoException;
 
-    Collection<ASAPCertificate> getCertificateByOwner(CharSequence userID) throws SharkException;
-    Collection<ASAPCertificate> getCertificateBySigner(CharSequence userID) throws SharkException;
+    Collection<ASAPCertificate> getCertificateBySubject(CharSequence userID) throws SharkException;
+    Collection<ASAPCertificate> getCertificateByIssuer(CharSequence userID) throws SharkException;
 
     void addCertificate(ASAPCertificate asapCertificate) throws IOException, SharkException;
+
+    /**
+     * Call this method if probably new certificates are received
+     * @return true if certificate of a new person received - time to call store.
+     */
+    boolean syncNewReceivedCertificates();
 
     void store(OutputStream os) throws IOException;
     void load(InputStream os) throws IOException;
