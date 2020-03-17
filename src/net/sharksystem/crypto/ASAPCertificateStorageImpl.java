@@ -126,41 +126,41 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
         Log.writeLog(this, "readReceivedCertificates");
         Collection<ASAPCertificate> asapCertificatesReceived = new ArrayList<>();
 
-        Log.writeLog(this, "look for chunk storage...");
+//        Log.writeLog(this, "look for chunk storage...");
         ASAPChunkStorage chunkStorage = this.asapStorage.getChunkStorage();
-        Log.writeLog(this, "...got it: " + this.asapStorage);
+//        Log.writeLog(this, "...got it: " + this.asapStorage);
 
         try {
             List<CharSequence> senderList = this.asapStorage.getSender();
-            Log.writeLog(this, "got sender list" + senderList);
+//            Log.writeLog(this, "got sender list" + senderList);
             // at least one sender - get access to owner channel
             ASAPChannel ownerCertificateChannel = this.asapStorage.getChannel(ASAPCertificate.ASAP_CERTIFICATE_URI);
-            Log.writeLog(this, "got ownerCertificateChannel");
+//            Log.writeLog(this, "got ownerCertificateChannel");
             ASAPStorageAddressImpl asapStorageAddress = new ASAPStorageAddressImpl(this.asapStorage.getEra());
-            Log.writeLog(this, "created address");
+//            Log.writeLog(this, "created address");
 
             for(CharSequence sender : senderList) {
-                Log.writeLog(this, "read certificates received from " + sender);
+//                Log.writeLog(this, "read certificates received from " + sender);
                 ASAPStorage incomingStorage = this.asapStorage.getExistingIncomingStorage(sender);
-                Log.writeLog(this, "got existing asap storage " + sender);
+//                Log.writeLog(this, "got existing asap storage " + sender);
                 ASAPChunkStorage incomingChunkStorage = incomingStorage.getChunkStorage();
-                Log.writeLog(this, "got chunk storage " + sender);
+//                Log.writeLog(this, "got chunk storage " + sender);
                 ASAPMessages incomingChunkCache =
                         incomingChunkStorage.getASAPChunkCache(ASAPCertificate.ASAP_CERTIFICATE_URI,
                                 ASAP.INITIAL_ERA, ASAP.MAX_ERA); // TODO that's real brute force
-                Log.writeLog(this, "got chunk cache from " + sender + " of "
-                        + ASAPCertificate.ASAP_CERTIFICATE_URI);
+//                Log.writeLog(this, "got chunk cache from " + sender + " of "
+//                        + ASAPCertificate.ASAP_CERTIFICATE_URI);
 
                 Iterator<byte[]> messages = incomingChunkCache.getMessages();
-                Log.writeLog(this, "iterate messages");
+//                Log.writeLog(this, "iterate messages");
                 while(messages.hasNext()) {
                     byte[] message = messages.next();
                     // write into owners channel
-                    Log.writeLog(this, "copy message in owners channel");
+//                    Log.writeLog(this, "copy message in owners channel");
                     ownerCertificateChannel.addMessage(message);
 
                     // deserialize
-                    Log.writeLog(this, "add to internal certificate list");
+//                    Log.writeLog(this, "add to internal certificate list");
 
                     // remember new certificates - don't collect expired certs - they will be removed anyway
                     try {
@@ -173,7 +173,7 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
                 }
 
                 // delete
-                Log.writeLog(this, "remove channel in incoming storage");
+//                Log.writeLog(this, "remove channel in incoming storage");
                 incomingStorage.removeChannel(ASAPCertificate.ASAP_CERTIFICATE_URI);
             }
         } catch (IOException | ASAPException e) {

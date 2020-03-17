@@ -84,6 +84,10 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
 
     public Collection<ASAPCertificate> getNewReceivedCertificates() {
         // sync with external changes
+        if(this.certificatesByOwnerIDMap == null) {
+            this.certificatesByOwnerIDMap = new HashMap<>();
+        }
+
         Collection<ASAPCertificate> newCerts = this.readReceivedCertificates(this.certificatesByOwnerIDMap);
         if(!newCerts.isEmpty()) {
             // reset identity assurance - is most likely changed
