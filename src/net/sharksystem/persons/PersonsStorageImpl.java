@@ -105,6 +105,7 @@ public class PersonsStorageImpl implements PersonsStorage {
             CharSequence userID, CharSequence userName, PublicKey publicKey, long validSince)
             throws SharkCryptoException, IOException {
 
+        Log.writeLog(this, "entered addAndSignPerson");
         // try to overwrite owner ?
         if (userID.toString().equalsIgnoreCase(this.getOwnerID().toString())) {
             throw new SharkCryptoException("cannot add person with your userID");
@@ -117,6 +118,7 @@ public class PersonsStorageImpl implements PersonsStorage {
             }
         }
 
+        Log.writeLog(this, "going to add");
         // ok - add
         PersonValuesImpl newPersonValues =
                 new PersonValuesImpl(userID, userName, this.certificateStorage, this);
@@ -124,10 +126,12 @@ public class PersonsStorageImpl implements PersonsStorage {
 
         // is there already a certificate?
         try {
+            Log.writeLog(this, "check for duplicated certificates");
             Collection<ASAPCertificate> certificates = this.getCertificateBySubject(userID);
             for (ASAPCertificate certTemp : certificates) {
                 if (certTemp.getIssuerID().toString().equalsIgnoreCase(this.getOwnerID().toString())) {
                     // drop it
+                    Log.writeLog(this, "duplicate found - drop");
                     this.certificateStorage.removeCertificate(certTemp);
                 }
             }
@@ -137,6 +141,7 @@ public class PersonsStorageImpl implements PersonsStorage {
 
         ASAPCertificate cert = null;
         try {
+            Log.writeLog(this, "produce new certificate");
             cert = ASAPCertificateImpl.produceCertificate(
                     this.getOwnerID(),
                     this.getOwnerName(),
@@ -148,6 +153,7 @@ public class PersonsStorageImpl implements PersonsStorage {
                     this.signingAlgorithm);
 
             // make it persistent
+            Log.writeLog(this, "store certificate");
             this.certificateStorage.storeCertificate(cert);
 
             return cert;

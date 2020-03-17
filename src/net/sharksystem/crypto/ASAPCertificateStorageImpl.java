@@ -79,6 +79,7 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
     protected void readCertificatesFromStorage(Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap) {
         int era = this.asapStorage.getOldestEra();
         int thisEra = this.asapStorage.getEra();
+        Log.writeLog(this, "readCertificatesFromStorage oldestEra/thisEra: " + era + " | " + thisEra);
         ASAPChunkStorage chunkStorage = this.asapStorage.getChunkStorage();
         boolean lastRound = false;
         List<ASAPCertificate> expiredCertificates = new ArrayList<>();
@@ -122,14 +123,21 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
     protected Collection<ASAPCertificate> readReceivedCertificates(
             Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap) {
 
+        Log.writeLog(this, "readReceivedCertificates");
         Collection<ASAPCertificate> asapCertificatesReceived = new ArrayList<>();
 
+        Log.writeLog(this, "look for chunk storage...");
         ASAPChunkStorage chunkStorage = this.asapStorage.getChunkStorage();
+        Log.writeLog(this, "...got it: " + this.asapStorage);
+
         try {
             List<CharSequence> senderList = this.asapStorage.getSender();
+            Log.writeLog(this, "got sender list" + senderList);
             // at least one sender - get access to owner channel
             ASAPChannel ownerCertificateChannel = this.asapStorage.getChannel(ASAPCertificate.ASAP_CERTIFICATE_URI);
+            Log.writeLog(this, "got ownerCertificateChannel");
             ASAPStorageAddressImpl asapStorageAddress = new ASAPStorageAddressImpl(this.asapStorage.getEra());
+            Log.writeLog(this, "created address");
 
             for(CharSequence sender : senderList) {
                 Log.writeLog(this, "read certificates received from " + sender);
@@ -178,8 +186,10 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
 
     @Override
     public ASAPStorageAddress storeCertificateInStorage(ASAPCertificate asapCertificate) throws IOException {
+        Log.writeLog(this, "call asapStorage.add() to store certificate");
         this.asapStorage.add(asapCertificate.ASAP_CERTIFICATE_URI, asapCertificate.asBytes());
 
+        Log.writeLog(this, "create asap certificate address object");
         ASAPStorageAddressImpl asapStorageAddress = new ASAPStorageAddressImpl(
                 this.asapStorage.getFormat(),
                 asapCertificate.ASAP_CERTIFICATE_URI,
