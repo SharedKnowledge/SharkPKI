@@ -123,7 +123,7 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
     protected Collection<ASAPCertificate> readReceivedCertificates(
             Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap) {
 
-        Log.writeLog(this, "readReceivedCertificates");
+//        Log.writeLog(this, "readReceivedCertificates");
         Collection<ASAPCertificate> asapCertificatesReceived = new ArrayList<>();
 
 //        Log.writeLog(this, "look for chunk storage...");
@@ -132,9 +132,19 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
 
         try {
             List<CharSequence> senderList = this.asapStorage.getSender();
-//            Log.writeLog(this, "got sender list" + senderList);
-            // at least one sender - get access to owner channel
-            ASAPChannel ownerCertificateChannel = this.asapStorage.getChannel(ASAPCertificate.ASAP_CERTIFICATE_URI);
+            Log.writeLog(this, "got sender list" + senderList);
+            // at least one sender - get access to owner channel to copy messages to
+            this.asapStorage.createChannel(ASAPCertificate.ASAP_CERTIFICATE_URI);
+            ASAPChannel ownerCertificateChannel = null;
+            try {
+                 ownerCertificateChannel = this.asapStorage.getChannel(ASAPCertificate.ASAP_CERTIFICATE_URI);
+            }
+            catch(ASAPException e) {
+                // channel does not exist yet - set it up
+                this.asapStorage.createChannel(ASAPCertificate.ASAP_CERTIFICATE_URI);
+                ownerCertificateChannel = this.asapStorage.getChannel(ASAPCertificate.ASAP_CERTIFICATE_URI);
+                // exception can be thrown if creation is impossible - that's ok though
+            }
 //            Log.writeLog(this, "got ownerCertificateChannel");
             ASAPStorageAddressImpl asapStorageAddress = new ASAPStorageAddressImpl(this.asapStorage.getEra());
 //            Log.writeLog(this, "created address");
@@ -147,9 +157,9 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
 //                Log.writeLog(this, "got chunk storage " + sender);
                 ASAPMessages incomingChunkCache =
                         incomingChunkStorage.getASAPChunkCache(ASAPCertificate.ASAP_CERTIFICATE_URI,
-                                ASAP.INITIAL_ERA, ASAP.MAX_ERA); // TODO that's real brute force
+                                ASAP.INITIAL_ERA, ASAP.MAX_ERA);
 //                Log.writeLog(this, "got chunk cache from " + sender + " of "
-//                        + ASAPCertificate.ASAP_CERTIFICATE_URI);
+//                      + ASAPCertificate.ASAP_CERTIFICATE_URI);
 
                 Iterator<byte[]> messages = incomingChunkCache.getMessages();
 //                Log.writeLog(this, "iterate messages");
