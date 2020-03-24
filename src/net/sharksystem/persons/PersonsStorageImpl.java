@@ -1,6 +1,9 @@
 package net.sharksystem.persons;
 
 import net.sharksystem.SharkException;
+import net.sharksystem.asap.ASAPEngine;
+import net.sharksystem.asap.MultiASAPEngineFS;
+import net.sharksystem.asap.apps.ASAPMessages;
 import net.sharksystem.asap.util.Log;
 import net.sharksystem.crypto.*;
 
@@ -178,7 +181,11 @@ public class PersonsStorageImpl implements PersonsStorage {
 
     @Override
     public boolean syncNewReceivedCertificates() {
+        Log.writeLog(this, "sync with received certificates");
         Collection<ASAPCertificate> newReceivedCertificates = this.certificateStorage.getNewReceivedCertificates();
+
+        if(newReceivedCertificates != null)
+            Log.writeLog(this, "#received certificates == " + newReceivedCertificates.size());
 
         boolean changed = false;
         // check whether to add a new person
@@ -200,6 +207,8 @@ public class PersonsStorageImpl implements PersonsStorage {
                     this.personsList.add(newPersonValues);
                     changed = true;
                 }
+            } else {
+                Log.writeLog(this, "received certificate has owner as subject - nothing added");
             }
         }
 
@@ -245,6 +254,19 @@ public class PersonsStorageImpl implements PersonsStorage {
         this.certificateStorage.syncIdentityAssurance();
     }
 
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //                                             credentials                                                    //
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CredentialMessage createCredentialMessage()
+            throws SharkCryptoException {
+
+        CredentialMessage credentialMessage = new CredentialMessage(
+                this.getOwnerID(), this.getOwnerName(), this.getKeysCreationTime(), this.getPublicKey());
+
+        return credentialMessage;
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //                                             persistence                                                    //

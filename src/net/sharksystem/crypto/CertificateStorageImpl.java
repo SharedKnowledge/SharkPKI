@@ -1,6 +1,5 @@
 package net.sharksystem.crypto;
 
-import net.sharksystem.asap.ASAP;
 import net.sharksystem.asap.util.Log;
 import net.sharksystem.persons.OtherPerson;
 import net.sharksystem.persons.PersonsStorage;
@@ -431,7 +430,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         }
 
         ASAPStorageAddressImpl(int era) {
-            this(ASAPCertificateStorage.APP_NAME, ASAPCertificate.ASAP_CERTIFICATE_URI, era);
+            this(ASAPCertificateStorage.CERTIFICATE_APP_NAME, ASAPCertificate.ASAP_CERTIFICATE_URI, era);
         }
 
         ASAPStorageAddressImpl(byte[] serialized) throws IOException {

@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 public interface ASAPCertificateStorage {
-    String APP_NAME = "ASAPCertificates";
+    String CERTIFICATE_APP_NAME = "ASAPCertificates";
 
     /**
      *

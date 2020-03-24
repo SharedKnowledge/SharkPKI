@@ -1,6 +1,8 @@
 package net.sharksystem.persons;
 
 import net.sharksystem.SharkException;
+import net.sharksystem.asap.MultiASAPEngineFS;
+import net.sharksystem.asap.apps.ASAPMessages;
 import net.sharksystem.crypto.ASAPCertificate;
 import net.sharksystem.crypto.SharkCryptoException;
 
@@ -13,6 +15,9 @@ import java.util.Collection;
 import java.util.List;
 
 public interface PersonsStorage {
+    CharSequence CREDENTIAL_APP_NAME = "SN2Credentials";
+    CharSequence CREDENTIAL_URI = "sn2://credential";
+
     CharSequence getOwnerID();
 
     CharSequence getOwnerName();
@@ -46,6 +51,8 @@ public interface PersonsStorage {
     Collection<ASAPCertificate> getCertificateByIssuer(CharSequence userID) throws SharkException;
 
     void addCertificate(ASAPCertificate asapCertificate) throws IOException, SharkException;
+
+    CredentialMessage createCredentialMessage() throws SharkCryptoException;
 
     /**
      * Call this method if probably new certificates are received

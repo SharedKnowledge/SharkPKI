@@ -45,14 +45,14 @@ public class PersonsStorageTests {
 
         // setup alice
         ASAPEngine aliceASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.APP_NAME);
+                "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPCertificateStorageImpl(aliceASAPStorage, ALICE_ID, ALICE_NAME);
         PersonsStorage alicePersonsStorage = new PersonsStorageImpl(asapAliceCertificateStorage);
 
         // setup bob
         ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.APP_NAME);
+                "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapBobCertificateStorage =
                 new ASAPCertificateStorageImpl(aliceASAPStorage, BOB_ID, BOB_NAME);
         PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
@@ -74,14 +74,14 @@ public class PersonsStorageTests {
         // create a certificate of David issued by Clara
         // setup Clara
         ASAPEngine claraASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Clara", ROOT_DIRECTORY_CLARA, ASAPCertificateStorage.APP_NAME);
+                "Clara", ROOT_DIRECTORY_CLARA, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapClaraCertificateStorage =
                 new ASAPCertificateStorageImpl(claraASAPStorage, CLARA_ID, CLARA_NAME);
         PersonsStorage claraPersonsStorage = new PersonsStorageImpl(asapClaraCertificateStorage);
 
         // setup David
         ASAPEngine davidASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Clara", ROOT_DIRECTORY_DAVID, ASAPCertificateStorage.APP_NAME);
+                "Clara", ROOT_DIRECTORY_DAVID, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapDavidCertificateStorage =
                 new ASAPCertificateStorageImpl(davidASAPStorage, DAVID_ID, DAVID_NAME);
         PersonsStorage davidPersonsStorage = new PersonsStorageImpl(asapDavidCertificateStorage);
@@ -137,14 +137,14 @@ public class PersonsStorageTests {
 
         // setup alice
         ASAPEngine aliceASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.APP_NAME);
+                "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPCertificateStorageImpl(aliceASAPStorage, ALICE_ID, ALICE_NAME);
         PersonsStorage alicePersonsStorage = new PersonsStorageImpl(asapAliceCertificateStorage);
 
         // setup bob
         ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.APP_NAME);
+                "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapBobCertificateStorage =
                 new ASAPCertificateStorageImpl(aliceASAPStorage, BOB_ID, BOB_NAME);
         PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
@@ -178,14 +178,14 @@ public class PersonsStorageTests {
 
         // setup alice
         ASAPEngine aliceASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.APP_NAME);
+                "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPCertificateStorageImpl(aliceASAPStorage, ALICE_ID, ALICE_NAME);
         PersonsStorage alicePersonsStorage = new PersonsStorageImpl(asapAliceCertificateStorage);
 
         // setup bob
         ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.APP_NAME);
+                "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapBobCertificateStorage =
                 new ASAPCertificateStorageImpl(aliceASAPStorage, BOB_ID, BOB_NAME);
         PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
