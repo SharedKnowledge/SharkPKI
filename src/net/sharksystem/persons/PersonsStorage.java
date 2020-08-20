@@ -1,8 +1,6 @@
 package net.sharksystem.persons;
 
 import net.sharksystem.SharkException;
-import net.sharksystem.asap.MultiASAPEngineFS;
-import net.sharksystem.asap.apps.ASAPMessages;
 import net.sharksystem.crypto.ASAPCertificate;
 import net.sharksystem.crypto.SharkCryptoException;
 

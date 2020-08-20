@@ -1,7 +1,7 @@
 package net.sharksystem.crypto;
 
 import net.sharksystem.asap.*;
-import net.sharksystem.asap.apps.ASAPMessages;
+import net.sharksystem.asap.ASAPMessages;
 import net.sharksystem.asap.util.Log;
 
 import javax.management.RuntimeErrorException;
@@ -88,7 +88,7 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
 
             try {
                 ASAPChunk chunk = chunkStorage.getChunk(ASAPCertificate.ASAP_CERTIFICATE_URI, era);
-                Iterator<byte[]> messagesAsBytes = chunk.getMessagesAsBytes();
+                Iterator<byte[]> messagesAsBytes = chunk.getMessages();
                 // create address
                 ASAPStorageAddressImpl asapStorageAddress = new ASAPStorageAddressImpl(era);
                 while(messagesAsBytes.hasNext()) {
@@ -156,7 +156,7 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
                 ASAPChunkStorage incomingChunkStorage = incomingStorage.getChunkStorage();
                 Log.writeLog(this, "got chunk storage " + sender);
                 ASAPMessages incomingChunkCache =
-                        incomingChunkStorage.getASAPChunkCache(ASAPCertificate.ASAP_CERTIFICATE_URI,
+                        incomingChunkStorage.getASAPMessages(ASAPCertificate.ASAP_CERTIFICATE_URI,
                                 ASAP.INITIAL_ERA, ASAP.MAX_ERA);
                         Log.writeLog(this, "got chunk cache from " + sender + " of "
                               + ASAPCertificate.ASAP_CERTIFICATE_URI);
@@ -231,7 +231,7 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
                 return;
             }
 
-            Iterator<byte[]> messagesAsBytes = chunk.getMessagesAsBytes();
+            Iterator<byte[]> messagesAsBytes = chunk.getMessages();
             List<byte[]> tempCopy = new ArrayList<>();
             boolean found = false;
 

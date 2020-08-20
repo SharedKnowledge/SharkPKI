@@ -2,11 +2,11 @@ package net.sharksystem.persons;
 
 import net.sharksystem.SharkException;
 import net.sharksystem.asap.*;
-import net.sharksystem.asap.apps.ASAPMessages;
-import net.sharksystem.asap.util.ASAPEngineThread;
+import net.sharksystem.asap.ASAPMessages;
+import net.sharksystem.asap.util.ASAPPeerHandleConnectionThread;
 import net.sharksystem.asap.util.Helper;
 import net.sharksystem.asap.util.Log;
-import net.sharksystem.cmdline.TCPChannel;
+import net.sharksystem.cmdline.TCPStream;
 import net.sharksystem.crypto.ASAPCertificate;
 import net.sharksystem.crypto.ASAPCertificateStorage;
 import net.sharksystem.crypto.ASAPCertificateStorageImpl;
@@ -17,8 +17,6 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
-import static net.sharksystem.asap.MultiASAPEngineFS.DEFAULT_MAX_PROCESSING_TIME;
 
 public class ExchangeTest {
     public static final String ALICE_ROOT_FOLDER = "tests/Alice";
@@ -65,15 +63,15 @@ public class ExchangeTest {
         supportedFormats.add(PersonsStorage.CREDENTIAL_APP_NAME);
 
         CredentialReceiver aliceListener = new CredentialReceiver(alicePersonsStorage);
-        MultiASAPEngineFS aliceEngine = MultiASAPEngineFS_Impl.createMultiEngine(
-                ALICE_ID, ALICE_ROOT_FOLDER, DEFAULT_MAX_PROCESSING_TIME, supportedFormats, aliceListener);
+        ASAPPeer alicePeer = ASAPPeerFS.createASAPPeer(
+                ALICE_ID, ALICE_ROOT_FOLDER, ASAPPeer.DEFAULT_MAX_PROCESSING_TIME, supportedFormats, aliceListener);
 
         //aliceEngine.activateOnlineMessages();
 
         SignCredentialAndReply bobListener = new SignCredentialAndReply(BOB_ROOT_FOLDER, bobPersonsStorage);
-        MultiASAPEngineFS bobEngine = MultiASAPEngineFS_Impl.createMultiEngine(
-                BOB_ID, BOB_ROOT_FOLDER, DEFAULT_MAX_PROCESSING_TIME, supportedFormats, bobListener);
-        bobListener.setMultiEngine(bobEngine);
+        ASAPPeer bobPeer = ASAPPeerFS.createASAPPeer(
+                BOB_ID, BOB_ROOT_FOLDER, ASAPPeer.DEFAULT_MAX_PROCESSING_TIME, supportedFormats, bobListener);
+        bobListener.setAsapPeer(bobPeer);
 
         //bobEngine.activateOnlineMessages();
 
@@ -83,8 +81,8 @@ public class ExchangeTest {
 
         int portNumber = PORTNUMBER;
         // create connections for both sides
-        TCPChannel aliceChannel = new TCPChannel(portNumber, true, "a2b");
-        TCPChannel bobChannel = new TCPChannel(portNumber, false, "b2a");
+        TCPStream aliceChannel = new TCPStream(portNumber, true, "a2b");
+        TCPStream bobChannel = new TCPStream(portNumber, false, "b2a");
 
         aliceChannel.start();
         bobChannel.start();
@@ -98,12 +96,12 @@ public class ExchangeTest {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         // start alice engine as thread
-        ASAPEngineThread aliceEngineThread = new ASAPEngineThread(aliceEngine,
+        ASAPPeerHandleConnectionThread aliceEngineThread = new ASAPPeerHandleConnectionThread(alicePeer,
                 aliceChannel.getInputStream(), aliceChannel.getOutputStream());
         aliceEngineThread.start();
 
         // start bob engine as thread
-        ASAPEngineThread bobEngineThread = new ASAPEngineThread(bobEngine,
+        ASAPPeerHandleConnectionThread bobEngineThread = new ASAPPeerHandleConnectionThread(bobPeer,
                 bobChannel.getInputStream(), bobChannel.getOutputStream());
         bobEngineThread.start();
 
@@ -119,7 +117,7 @@ public class ExchangeTest {
         CredentialMessage credentialMessage = alicePersonsStorage.createCredentialMessage();
 
         // send it to bob - without traces in asap storages
-        aliceEngine.sendOnlineASAPAssimilateMessage(PersonsStorage.CREDENTIAL_APP_NAME,
+        alicePeer.sendOnlineASAPAssimilateMessage(PersonsStorage.CREDENTIAL_APP_NAME,
                 PersonsStorage.CREDENTIAL_URI, credentialMessage.getMessageAsBytes());
 
         // wait until communication probably ends
@@ -150,7 +148,7 @@ public class ExchangeTest {
     private class SignCredentialAndReply implements ASAPChunkReceivedListener {
         private final String folderName;
         private final PersonsStorage personsStorage;
-        private MultiASAPEngineFS multiEngine;
+        private ASAPPeer asapPeer;
 
         public SignCredentialAndReply(String folderName, PersonsStorage personsStorage) {
             this.folderName = folderName;
@@ -160,7 +158,7 @@ public class ExchangeTest {
         @Override
         public void chunkReceived(String format, String sender, String uri, int era) {
             ASAPMessages asapMessages =
-                    Helper.getMessageByChunkReceivedInfos(format, sender, uri, this.folderName, era);
+                    Helper.getMessagesByChunkReceivedInfos(format, sender, uri, this.folderName, era);
 
             Iterator<byte[]> messages = null;
             try {
@@ -183,11 +181,11 @@ public class ExchangeTest {
                     Log.writeLog(this, "try to get asap engine for "
                             + ASAPCertificateStorage.CERTIFICATE_APP_NAME);
 
-                    ASAPEngine asapCertEngine = multiEngine.getASAPEngine(ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+                    ASAPEngine asapCertEngine = asapPeer.getASAPEngine(ASAPCertificateStorage.CERTIFICATE_APP_NAME);
 
                     Log.writeLog(this,
                             "right before sending certificate as ASAP Message");
-                    asapCertEngine.activateOnlineMessages(multiEngine);
+                    asapCertEngine.activateOnlineMessages(asapPeer);
                     asapCertEngine.add(ASAPCertificate.ASAP_CERTIFICATE_URI, newCert.asBytes());
                 }
             } catch (Exception e) {
@@ -196,8 +194,8 @@ public class ExchangeTest {
             }
         }
 
-        public void setMultiEngine(MultiASAPEngineFS multiEngine) {
-            this.multiEngine = multiEngine;
+        public void setAsapPeer(ASAPPeer asapPeer) {
+            this.asapPeer = asapPeer;
         }
     }
 
