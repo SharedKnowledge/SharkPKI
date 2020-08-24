@@ -1,5 +1,5 @@
 <component name="ArtifactManager">
-  <artifact type="jar" name="ASAPCertificateExchange:jar">
+  <artifact type="jar" build-on-make="true" name="ASAPCertificateExchange:jar">
     <output-path>$PROJECT_DIR$/out</output-path>
     <root id="archive" name="ASAPCertificate_x.y.z.jar">
       <element id="module-output" name="ASAPCertificateExchange" />

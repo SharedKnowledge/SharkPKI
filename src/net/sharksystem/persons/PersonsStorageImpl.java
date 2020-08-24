@@ -112,17 +112,24 @@ public class PersonsStorageImpl implements PersonsStorage {
         }
 
         // already in there
+        boolean personAlreadyExists = false;
         for (PersonValuesImpl personValues : this.personsList) {
             if (userID.toString().equalsIgnoreCase(personValues.getUserID().toString())) {
-                throw new SharkCryptoException("person with userID already exists: " + userID);
+                //throw new SharkCryptoException("person with userID already exists: " + userID);
+                personAlreadyExists = true;
+                break;
             }
         }
 
-        Log.writeLog(this, "going to add");
-        // ok - add
-        PersonValuesImpl newPersonValues =
-                new PersonValuesImpl(userID, userName, this.certificateStorage, this);
-        this.personsList.add(newPersonValues);
+        if(!personAlreadyExists) {
+            Log.writeLog(this, "going to add");
+            // ok - add
+            PersonValuesImpl newPersonValues =
+                    new PersonValuesImpl(userID, userName, this.certificateStorage, this);
+            this.personsList.add(newPersonValues);
+        } else {
+            Log.writeLog(this, "person already exists - don't change anything");
+        }
 
         // is there already a certificate?
         try {

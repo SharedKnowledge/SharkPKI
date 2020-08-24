@@ -1,5 +1,6 @@
 package net.sharksystem.crypto;
 
+import net.sharksystem.asap.util.DateTimeHelper;
 import net.sharksystem.asap.util.Log;
 
 import java.io.*;
@@ -45,14 +46,17 @@ public class ASAPCertificateImpl implements ASAPCertificate {
             CharSequence signingAlgorithm)
                 throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
 
+        // must be in the past to avoid key not yet valid exception
         long now = System.currentTimeMillis();
+
         if(validSince > now) {
-            Log.writeLog(ASAPCertificateImpl.class, "valid since cannot be in future - set to now");
+            Log.writeLog(ASAPCertificateImpl.class, "valid since must be in past - set to now");
             validSince = now;
         }
 
         Calendar since = Calendar.getInstance();
         since.setTimeInMillis(validSince);
+        since.add(Calendar.MINUTE, -1);
 
         Calendar until = Calendar.getInstance();
         until.setTimeInMillis(validSince);
@@ -64,9 +68,13 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         Log.writeLog(ASAPCertificateImpl.class, "ownerID: " + ownerID);
         Log.writeLog(ASAPCertificateImpl.class, "ownerName: " + ownerName);
         Log.writeLog(ASAPCertificateImpl.class, "publicKey: " + publicKey);
+        Log.writeLog(ASAPCertificateImpl.class, "since: " + DateTimeHelper.long2DateString(since.getTimeInMillis()));
+        Log.writeLog(ASAPCertificateImpl.class, "until: " + DateTimeHelper.long2DateString(until.getTimeInMillis()));
+
+        Log.writeLog(ASAPCertificateImpl.class, "now: " + DateTimeHelper.long2DateString(now));
 
         ASAPCertificateImpl asapCertificate = new ASAPCertificateImpl(
-                signerID, signerName, ownerID, ownerName, publicKey, validSince,
+                signerID, signerName, ownerID, ownerName, publicKey, since.getTimeInMillis(),
                 until.getTimeInMillis(), signingAlgorithm);
 
         asapCertificate.sign(privateKey);
@@ -98,14 +106,17 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     private void sign(PrivateKey privateKey) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
         // create signature
 //        Signature signature = Signature.getInstance(DEFAULT_SIGNATURE_METHOD);
+        Log.writeLog(this, "try to get signature object...");
         Signature signature = Signature.getInstance(this.signingAlgorithm);
-        Log.writeLog(this, "got signature object: " + signature);
-        signature.initSign(privateKey, new SecureRandom()); // TODO: should use a seed
-        Log.writeLog(this, "initialized signature object for signing");
+        Log.writeLog(this, "...got signature object: " + signature);
+        Log.writeLog(this, "going to initialize signature object.... ");
+//        signature.initSign(privateKey, new SecureRandom()); // TODO: should use a seed
+        signature.initSign(privateKey); // desperate try
+        Log.writeLog(this, "...initialized. Going to feed signature with text to sign..." + signature);
         signature.update(this.getAnythingButSignatur());
-        Log.writeLog(this, "updated signature object");
+        Log.writeLog(this, "...updated signature object, going to sign...");
         this.signatureBytes = signature.sign();
-        Log.writeLog(this, "got signature");
+        Log.writeLog(this, "..got signature. done." + signature);
     }
 
     @Override
