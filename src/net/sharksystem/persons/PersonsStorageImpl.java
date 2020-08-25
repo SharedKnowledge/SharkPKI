@@ -36,7 +36,7 @@ public class PersonsStorageImpl implements PersonsStorage {
             // check expiration time
             createCal = ASAPCertificateImpl.long2Calendar(creationTime);
             createCal.add(Calendar.YEAR, DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS);
-            if (createCal.getTimeInMillis() > System.currentTimeMillis()) {
+            if (createCal.getTimeInMillis() < System.currentTimeMillis()) {
                 Log.writeLog(this, "local key pair expired - reset");
                 this.asapKeyStorage.generateKeyPair();
             }
@@ -237,6 +237,14 @@ public class PersonsStorageImpl implements PersonsStorage {
         return this.certificateStorage.getCertificateByIssuerAndSubjectID(issuerID, subjectID);
     }
 
+    public boolean verifyCertificate(ASAPCertificate asapCertificate) throws SharkCryptoException {
+        try {
+            return asapCertificate.verify(this.getPublicKey());
+        }
+        catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
+            throw new SharkCryptoException(e.getClass().getSimpleName() + ": " + e.getLocalizedMessage());
+        }
+    }
 
     public CharSequence getOwnerName() {
         return this.certificateStorage.getOwnerName();

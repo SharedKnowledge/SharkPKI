@@ -130,7 +130,9 @@ public class ASAPCertificateImpl implements ASAPCertificate {
             Log.writeLog(this, "got signature object for verifying: " + signature);
             signature.update(this.getAnythingButSignatur());
             Log.writeLog(this, "updated signature object");
-            return signature.verify(this.signatureBytes);
+            boolean verified = signature.verify(this.signatureBytes);
+            Log.writeLog(this, "verified: " + verified);
+            return verified;
         }
         catch(Exception e) {
             Log.writeLogErr(this, "exception during verification:  " + e.getLocalizedMessage());

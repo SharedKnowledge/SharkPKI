@@ -207,7 +207,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
 
     private Map<CharSequence, IdentityAssurance> userIdentityAssurance; // cache
 
-    private boolean verify(ASAPCertificate cert, PublicKey publicKey) {
+    public boolean verify(ASAPCertificate cert, PublicKey publicKey) {
         if(cert == null) return false;
 
         try {

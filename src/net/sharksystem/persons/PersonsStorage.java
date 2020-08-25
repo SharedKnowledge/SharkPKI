@@ -7,8 +7,7 @@ import net.sharksystem.crypto.SharkCryptoException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.*;
 import java.util.Collection;
 import java.util.List;
 
@@ -51,6 +50,17 @@ public interface PersonsStorage {
             throws SharkException;
 
     void addCertificate(ASAPCertificate asapCertificate) throws IOException, SharkException;
+
+    /**
+     * It is assumed this certificate is issued by storage owner. This is verified with this method or not.
+     * That method is more for debugging purpose. It is used inside when re-reading certificates from external storage
+     * to prevent security breeches.
+     * class to assure thaty
+     * @param asapCertificate
+     * @throws IOException
+     * @throws SharkException
+     */
+    boolean verifyCertificate(ASAPCertificate asapCertificate) throws SharkCryptoException, NoSuchAlgorithmException, InvalidKeyException, SignatureException;
 
     CredentialMessage createCredentialMessage() throws SharkCryptoException;
 
