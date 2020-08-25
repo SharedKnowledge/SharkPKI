@@ -81,11 +81,18 @@ public class PersonsStorageImpl implements PersonsStorage {
         }
     }
 
+    public boolean isMe(CharSequence userID) {
+        return this.getOwnerID().equals(userID);
+    }
+
     public int getNumberOfPersons() {
         return this.personsList.size();
     }
 
     public int getIdentityAssurance(CharSequence userID) throws SharkException {
+        // You are aware of yourself - I hope :)
+        if(this.isMe(userID)) return OtherPerson.HIGHEST_IDENTITY_ASSURANCE_LEVEL;
+
         return this.getPersonValues(userID).getIdentityAssurance();
     }
 
