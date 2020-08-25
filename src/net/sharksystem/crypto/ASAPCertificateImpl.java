@@ -13,10 +13,10 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     public static final String DEFAULT_SIGNATURE_METHOD = "SHA256withRSA";
 
     private PublicKey publicKey;
-    private CharSequence ownerName;
-    private CharSequence ownerID;
-    private CharSequence signerName;
-    private CharSequence signerID;
+    private CharSequence subjectName;
+    private CharSequence subjectID;
+    private CharSequence issuerName;
+    private CharSequence issuerID;
     private byte[] signatureBytes;
     private ASAPStorageAddress asapStorageAddress;
     private long validSince;
@@ -25,11 +25,11 @@ public class ASAPCertificateImpl implements ASAPCertificate {
 
     /**
      * Create fresh certificate for owner and sign it now with signers private key.
-     * @param signerID
-     * @param signerName
+     * @param issuerID
+     * @param issuerName
      * @param privateKey
-     * @param ownerID
-     * @param ownerName
+     * @param subjectID
+     * @param subjectName
      * @param publicKey
      * @return
      * @throws SignatureException
@@ -38,9 +38,9 @@ public class ASAPCertificateImpl implements ASAPCertificate {
      * @throws IOException
      */
     public static ASAPCertificateImpl produceCertificate(
-            CharSequence signerID, CharSequence signerName,
+            CharSequence issuerID, CharSequence issuerName,
             PrivateKey privateKey,
-            CharSequence ownerID, CharSequence ownerName,
+            CharSequence subjectID, CharSequence subjectName,
             PublicKey publicKey,
             long validSince,
             CharSequence signingAlgorithm)
@@ -62,11 +62,11 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         until.setTimeInMillis(validSince);
         until.add(Calendar.YEAR, DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS);
 
-        Log.writeLog(ASAPCertificateImpl.class, "signerID: " + signerID);
-        Log.writeLog(ASAPCertificateImpl.class, "signerName: " + signerName);
+        Log.writeLog(ASAPCertificateImpl.class, "issuerID: " + issuerID);
+        Log.writeLog(ASAPCertificateImpl.class, "issuerName: " + issuerName);
         Log.writeLog(ASAPCertificateImpl.class, "privateKey: " + privateKey);
-        Log.writeLog(ASAPCertificateImpl.class, "ownerID: " + ownerID);
-        Log.writeLog(ASAPCertificateImpl.class, "ownerName: " + ownerName);
+        Log.writeLog(ASAPCertificateImpl.class, "subjectID: " + subjectID);
+        Log.writeLog(ASAPCertificateImpl.class, "subjectName: " + subjectName);
         Log.writeLog(ASAPCertificateImpl.class, "publicKey: " + publicKey);
         Log.writeLog(ASAPCertificateImpl.class, "since: " + DateTimeHelper.long2DateString(since.getTimeInMillis()));
         Log.writeLog(ASAPCertificateImpl.class, "until: " + DateTimeHelper.long2DateString(until.getTimeInMillis()));
@@ -74,7 +74,7 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         Log.writeLog(ASAPCertificateImpl.class, "now: " + DateTimeHelper.long2DateString(now));
 
         ASAPCertificateImpl asapCertificate = new ASAPCertificateImpl(
-                signerID, signerName, ownerID, ownerName, publicKey, since.getTimeInMillis(),
+                issuerID, issuerName, subjectID, subjectName, publicKey, since.getTimeInMillis(),
                 until.getTimeInMillis(), signingAlgorithm);
 
         asapCertificate.sign(privateKey);
@@ -82,15 +82,15 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         return asapCertificate;
     }
 
-    private ASAPCertificateImpl(CharSequence signerID,
-                                CharSequence signerName,
-                                CharSequence ownerID, CharSequence ownerName,
+    private ASAPCertificateImpl(CharSequence issuerID,
+                                CharSequence issuerName,
+                                CharSequence subjectID, CharSequence subjectName,
                                 PublicKey publicKey, long validSince, long validUntil,
                                 CharSequence signingAlgorithm) {
-        this.signerID = signerID;
-        this.signerName = signerName;
-        this.ownerID = ownerID;
-        this.ownerName = ownerName;
+        this.issuerID = issuerID;
+        this.issuerName = issuerName;
+        this.subjectID = subjectID;
+        this.subjectName = subjectName;
         this.publicKey = publicKey;
 
         this.validSince = validSince;
@@ -189,9 +189,9 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     private void fillWithAnythingButSignature(DataOutputStream dos) {
         // create byte array that is to be signed
         try {
-            dos.writeUTF(this.signerID.toString());
-            dos.writeUTF(this.signerName.toString());
-            dos.writeUTF(this.ownerID.toString());
+            dos.writeUTF(this.issuerID.toString());
+            dos.writeUTF(this.issuerName.toString());
+            dos.writeUTF(this.subjectID.toString());
             dos.writeUTF(this.getSubjectName().toString());
 
             dos.writeLong(this.validSince);
@@ -238,16 +238,16 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     }
 
     @Override
-    public CharSequence getSubjectID() { return this.ownerID; }
+    public CharSequence getSubjectID() { return this.subjectID; }
 
     @Override
-    public CharSequence getSubjectName() { return this.ownerName; }
+    public CharSequence getSubjectName() { return this.subjectName; }
 
     @Override
-    public CharSequence getIssuerName() {  return this.signerName;  }
+    public CharSequence getIssuerName() {  return this.issuerName;  }
 
     @Override
-    public CharSequence getIssuerID() { return this.signerID; }
+    public CharSequence getIssuerID() { return this.issuerID; }
 
     public static Calendar long2Calendar(long timeInMillis) {
         Calendar calendar = Calendar.getInstance();

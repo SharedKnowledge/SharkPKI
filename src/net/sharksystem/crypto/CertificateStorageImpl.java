@@ -15,7 +15,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     private final CharSequence ownerID;
     private final CharSequence ownerName;
 
-    private Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap = null;
+    private Map<CharSequence, Set<ASAPCertificate>> certificatesBySubjectIDMap = null;
 
     public CertificateStorageImpl(CharSequence ownerID, CharSequence ownerName) {
         this.ownerID = ownerID;
@@ -41,7 +41,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     }
 
     public void syncCertificates() {
-        this.certificatesByOwnerIDMap = null;
+        this.certificatesBySubjectIDMap = null;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -49,13 +49,13 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
-    public Collection<ASAPCertificate> getCertificatesBySubjectID(CharSequence userID) {
-        if(this.certificatesByOwnerIDMap == null) {
-            this.certificatesByOwnerIDMap = new HashMap<>();
-            this.readCertificatesFromStorage(this.certificatesByOwnerIDMap);
+    public Collection<ASAPCertificate> getCertificatesBySubjectID(CharSequence subjectID) {
+        if(this.certificatesBySubjectIDMap == null) {
+            this.certificatesBySubjectIDMap = new HashMap<>();
+            this.readCertificatesFromStorage(this.certificatesBySubjectIDMap);
         }
 
-        Set<ASAPCertificate> asapCertificates = this.certificatesByOwnerIDMap.get(userID);
+        Set<ASAPCertificate> asapCertificates = this.certificatesBySubjectIDMap.get(subjectID);
         if(asapCertificates == null) {
             asapCertificates = new HashSet<>();
         }
@@ -68,11 +68,11 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     }
 
     @Override
-    public Collection<ASAPCertificate> getCertificatesByIssuerID(CharSequence userID) {
+    public Collection<ASAPCertificate> getCertificatesByIssuerID(CharSequence issuerID) {
         Set<ASAPCertificate> certSetIssuer = new HashSet<>();
-        for(Set<ASAPCertificate> certSet : this.certificatesByOwnerIDMap.values()) {
+        for(Set<ASAPCertificate> certSet : this.certificatesBySubjectIDMap.values()) {
             for(ASAPCertificate cert : certSet) {
-                if(cert.getIssuerID().toString().equalsIgnoreCase(userID.toString())) {
+                if(cert.getIssuerID().toString().equalsIgnoreCase(issuerID.toString())) {
                     certSetIssuer.add(cert);
                 }
             }
@@ -81,13 +81,33 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         return certSetIssuer;
     }
 
-    public Collection<ASAPCertificate> getNewReceivedCertificates() {
-        // sync with external changes
-        if(this.certificatesByOwnerIDMap == null) {
-            this.certificatesByOwnerIDMap = new HashMap<>();
+    public ASAPCertificate getCertificateByIssuerAndSubjectID(
+            CharSequence issuerID, CharSequence subjectID) throws SharkCryptoException {
+
+        Collection<ASAPCertificate> certificateBySubject = this.getCertificatesBySubjectID(subjectID);
+
+        if(certificateBySubject == null || certificateBySubject.size() < 1) {
+            throw new SharkCryptoException("no certificate found");
         }
 
-        Collection<ASAPCertificate> newCerts = this.readReceivedCertificates(this.certificatesByOwnerIDMap);
+        for(ASAPCertificate c : certificateBySubject) {
+            if(c.getIssuerID().equals(issuerID)) {
+                // got it
+                return c;
+            }
+        }
+
+        throw new SharkCryptoException("no certificate found");
+    }
+
+
+    public Collection<ASAPCertificate> getNewReceivedCertificates() {
+        // sync with external changes
+        if(this.certificatesBySubjectIDMap == null) {
+            this.certificatesBySubjectIDMap = new HashMap<>();
+        }
+
+        Collection<ASAPCertificate> newCerts = this.readReceivedCertificates(this.certificatesBySubjectIDMap);
         if(!newCerts.isEmpty()) {
             // reset identity assurance - is most likely changed
             this.userIdentityAssurance = null;
@@ -109,7 +129,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
 
     public void removeCertificate(Collection<ASAPCertificate> certs2remove) throws IOException {
         // drop caches
-        this.certificatesByOwnerIDMap = null;
+        this.certificatesBySubjectIDMap = null;
         this.userIdentityAssurance = null;
 
         try {
@@ -122,7 +142,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     @Override
     public ASAPStorageAddress storeCertificate(ASAPCertificate asapCertificate) throws IOException {
         // drop cache
-        this.certificatesByOwnerIDMap = null;
+        this.certificatesBySubjectIDMap = null;
         this.userIdentityAssurance = null;
 
         return storeCertificateInStorage(asapCertificate);

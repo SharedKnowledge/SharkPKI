@@ -45,8 +45,10 @@ public interface PersonsStorage {
     List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID)
             throws SharkCryptoException;
 
-    Collection<ASAPCertificate> getCertificateBySubject(CharSequence userID) throws SharkException;
-    Collection<ASAPCertificate> getCertificateByIssuer(CharSequence userID) throws SharkException;
+    Collection<ASAPCertificate> getCertificatesBySubject(CharSequence subjectID) throws SharkException;
+    Collection<ASAPCertificate> getCertificatesByIssuer(CharSequence issuerID) throws SharkException;
+    ASAPCertificate getCertificateByIssuerAndSubject(CharSequence issuerID, CharSequence subjectID)
+            throws SharkException;
 
     void addCertificate(ASAPCertificate asapCertificate) throws IOException, SharkException;
 

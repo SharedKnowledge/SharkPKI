@@ -134,7 +134,7 @@ public class PersonsStorageImpl implements PersonsStorage {
         // is there already a certificate?
         try {
             Log.writeLog(this, "check for duplicated certificates");
-            Collection<ASAPCertificate> certificates = this.getCertificateBySubject(userID);
+            Collection<ASAPCertificate> certificates = this.getCertificatesBySubject(userID);
             for (ASAPCertificate certTemp : certificates) {
                 if (certTemp.getIssuerID().toString().equalsIgnoreCase(this.getOwnerID().toString())) {
                     // drop it
@@ -219,17 +219,24 @@ public class PersonsStorageImpl implements PersonsStorage {
         return changed;
     }
 
-    public Collection<ASAPCertificate> getCertificateBySubject(CharSequence userID) throws SharkException {
+    public Collection<ASAPCertificate> getCertificatesBySubject(CharSequence userID) throws SharkException {
         return this.certificateStorage.getCertificatesBySubjectID(userID);
     }
 
-    public Collection<ASAPCertificate> getCertificateByIssuer(CharSequence userID) throws SharkException {
+    public Collection<ASAPCertificate> getCertificatesByIssuer(CharSequence userID) throws SharkException {
         return this.certificateStorage.getCertificatesByIssuerID(userID);
     }
 
     public Collection<ASAPCertificate> getCertificatesForOwnerSubject(CharSequence userID) throws SharkException {
         return this.certificateStorage.getCertificatesForOwnerSubject();
     }
+
+    public ASAPCertificate getCertificateByIssuerAndSubject(CharSequence issuerID, CharSequence subjectID)
+            throws SharkCryptoException {
+
+        return this.certificateStorage.getCertificateByIssuerAndSubjectID(issuerID, subjectID);
+    }
+
 
     public CharSequence getOwnerName() {
         return this.certificateStorage.getOwnerName();

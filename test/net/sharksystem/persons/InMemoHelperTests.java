@@ -24,19 +24,19 @@ public class InMemoHelperTests {
         personsStorage.fillWithExampleData();
 
         Collection<ASAPCertificate> certificate =
-                personsStorage.getCertificateBySubject(InMemoPersonsStorageImpl.FRANCIS_ID);
+                personsStorage.getCertificatesBySubject(InMemoPersonsStorageImpl.FRANCIS_ID);
         Assert.assertNotNull(certificate);
         Assert.assertFalse(certificate.isEmpty());
 
-        certificate = personsStorage.getCertificateBySubject(InMemoPersonsStorageImpl.GLORIA_ID);
+        certificate = personsStorage.getCertificatesBySubject(InMemoPersonsStorageImpl.GLORIA_ID);
         Assert.assertNotNull(certificate);
         Assert.assertFalse(certificate.isEmpty());
 
-        certificate = personsStorage.getCertificateBySubject(InMemoPersonsStorageImpl.HASSAN_ID);
+        certificate = personsStorage.getCertificatesBySubject(InMemoPersonsStorageImpl.HASSAN_ID);
         Assert.assertNotNull(certificate);
         Assert.assertFalse(certificate.isEmpty());
 
-        certificate = personsStorage.getCertificateBySubject(InMemoPersonsStorageImpl.IRIS_ID);
+        certificate = personsStorage.getCertificatesBySubject(InMemoPersonsStorageImpl.IRIS_ID);
         Assert.assertNotNull(certificate);
         Assert.assertFalse(certificate.isEmpty());
 
@@ -91,14 +91,14 @@ public class InMemoHelperTests {
 
         ///////////////// lists
         Collection<ASAPCertificate> francisOwnerCerts =
-                personsStorage.getCertificateBySubject(InMemoPersonsStorageImpl.FRANCIS_ID);
+                personsStorage.getCertificatesBySubject(InMemoPersonsStorageImpl.FRANCIS_ID);
 
         Assert.assertEquals(1, francisOwnerCerts.size());
         Assert.assertTrue(francisOwnerCerts.iterator().next().getIssuerID().toString()
                 .equalsIgnoreCase(ALICE_ID));
 
         Collection<ASAPCertificate> francisSignerCerts =
-                personsStorage.getCertificateByIssuer(InMemoPersonsStorageImpl.FRANCIS_ID);
+                personsStorage.getCertificatesByIssuer(InMemoPersonsStorageImpl.FRANCIS_ID);
 
         Assert.assertEquals(1, francisSignerCerts.size());
         Assert.assertTrue(francisSignerCerts.iterator().next().getSubjectID().toString()

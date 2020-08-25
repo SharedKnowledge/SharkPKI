@@ -1,6 +1,5 @@
 package net.sharksystem.crypto;
 
-import net.sharksystem.asap.ASAPStorage;
 import net.sharksystem.persons.PersonsStorage;
 
 import java.io.IOException;
@@ -12,16 +11,24 @@ public interface ASAPCertificateStorage {
 
     /**
      *
-     * @param userID
+     * @param subjectID
      * @return collection of certificates of a given subject
      */
-    Collection<ASAPCertificate> getCertificatesBySubjectID(CharSequence userID);
+    Collection<ASAPCertificate> getCertificatesBySubjectID(CharSequence subjectID);
 
     /**
-     * @param userID
+     * @param issuerID
      * @return collection of certificates signed by an issuer
      */
-    Collection<ASAPCertificate> getCertificatesByIssuerID(CharSequence userID);
+    Collection<ASAPCertificate> getCertificatesByIssuerID(CharSequence issuerID);
+
+    /**
+     * @param issuerID
+     * @param subjectID
+     * @return collection of certificates signed by an issuer for subjectID
+     */
+    ASAPCertificate getCertificateByIssuerAndSubjectID(
+            CharSequence issuerID, CharSequence subjectID) throws SharkCryptoException;
 
     /**
      *
