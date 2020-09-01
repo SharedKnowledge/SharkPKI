@@ -66,7 +66,7 @@ public class InMemoPersonsStorageImpl extends PersonsStorageImpl {
             irisStorage = new PersonsStorageImpl(certificateStorage);
             if(hassanStorage != null) {
                 ASAPCertificate asapCertificate =
-                    hassanStorage.addAndSignPerson(IRIS_ID, IRIS_NAME, irisStorage.getPublicKey(), now);
+                        hassanStorage.addAndSignPerson(IRIS_ID, IRIS_NAME, irisStorage.getPublicKey(), now);
                 this.addCertificate(asapCertificate);
             }
         }
