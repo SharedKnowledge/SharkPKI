@@ -1,6 +1,7 @@
 package net.sharksystem.persons;
 
 import net.sharksystem.SharkException;
+import net.sharksystem.asap.util.DateTimeHelper;
 import net.sharksystem.asap.util.Log;
 import net.sharksystem.crypto.*;
 
@@ -32,6 +33,9 @@ public class PersonsStorageImpl implements PersonsStorage {
         Calendar createCal = null;
         try {
             long creationTime = this.asapKeyStorage.getCreationTime(); // throws exception if not set
+
+            // ok, that's weired but I did not wanted another if-than-else clause
+            if(creationTime == DateTimeHelper.TIME_NOT_SET) throw new SharkCryptoException("time not set");
 
             // check expiration time
             createCal = ASAPCertificateImpl.long2Calendar(creationTime);

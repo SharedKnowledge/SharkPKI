@@ -6,6 +6,7 @@ import net.sharksystem.crypto.ASAPCertificateStorage;
 import net.sharksystem.crypto.InMemoCertificateStorageImpl;
 
 import java.io.IOException;
+import java.util.Random;
 
 public class TestHelperPersonStorage {
     public static final CharSequence FRANCIS_NAME = "Francis";
@@ -17,8 +18,12 @@ public class TestHelperPersonStorage {
         ASAPCertificateStorage certificateStorage;
         long now = System.currentTimeMillis();
 
+        Random random = new Random(System.currentTimeMillis());
+        int randomValue = random.nextInt();
+        String randomString = random.toString();
+
         // very very unlikely, but better safe than sorry: example data must same id
-        String idStart = personsStorage.getOwnerID() + "_";
+        String idStart = randomString.substring(0, 3) + "_";
 
         PersonsStorage gloriaStorage = null, hassanStorage = null, irisStorage;
 
