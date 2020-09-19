@@ -1,9 +1,9 @@
 package net.sharksystem.persons;
 
-import net.sharksystem.SharkException;
 import net.sharksystem.asap.ASAPEngine;
 import net.sharksystem.asap.ASAPEngineFS;
 import net.sharksystem.asap.ASAPException;
+import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.crypto.*;
 import org.junit.Assert;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class PersonsStorageTests {
     @Test
     public void identityAssuranceCalculationTest() throws
             IOException, ASAPException, NoSuchAlgorithmException, SignatureException,
-            InvalidKeyException, SharkException {
+            InvalidKeyException, ASAPSecurityException {
 
         ASAPEngineFS.removeFolder(ROOT_DIRECTORY);
 
@@ -129,7 +129,7 @@ public class PersonsStorageTests {
     @Test
     public void certificateVerifyTest1() throws
             IOException, ASAPException, NoSuchAlgorithmException, SignatureException,
-            InvalidKeyException, SharkException {
+            InvalidKeyException, ASAPSecurityException {
 
         ASAPEngineFS.removeFolder(ROOT_DIRECTORY);
 
@@ -170,7 +170,7 @@ public class PersonsStorageTests {
     @Test
     public void certificateVerifyTest2() throws
             IOException, ASAPException, NoSuchAlgorithmException, SignatureException,
-            InvalidKeyException, SharkException {
+            InvalidKeyException, ASAPSecurityException {
 
         ASAPEngineFS.removeFolder(ROOT_DIRECTORY);
 

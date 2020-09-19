@@ -1,6 +1,6 @@
 package net.sharksystem.persons;
 
-import net.sharksystem.SharkException;
+import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.crypto.ASAPCertificate;
 import org.junit.Assert;
 import org.junit.Test;
@@ -17,7 +17,7 @@ public class InMemoHelperTests {
     public static final String ALICE_NAME = "Alice";
 
     @Test
-    public void test1() throws SharkException, IOException {
+    public void test1() throws ASAPSecurityException, IOException {
         InMemoPersonsStorageImpl personsStorage =
                 new InMemoPersonsStorageImpl(ALICE_ID, ALICE_NAME);
 

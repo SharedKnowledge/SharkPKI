@@ -30,7 +30,7 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
     private ASAPCertificate addCertificate2InMemo(byte[] message, ASAPStorageAddressImpl asapStorageAddress,
                                        Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap,
                                        List<ASAPCertificate> expiredCertificates)
-            throws ASAPException, SharkCryptoException {
+            throws ASAPException, ASAPSecurityException {
         String text = "nothing";
         try {
             ASAPCertificate asapCertificate =
@@ -56,7 +56,7 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
                         if(cert.isIdentical(asapCertificate)) {
                             Log.writeLog(this, "found identical certificate - don't add new one");
                             addCert = false;
-                            throw new SharkCryptoException("certificate already exists");
+                            throw new ASAPSecurityException("certificate already exists");
                         }
                     }
                 }
@@ -96,7 +96,7 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
                         this.addCertificate2InMemo(
                                 messagesAsBytes.next(), asapStorageAddress,
                                 certificatesByOwnerIDMap, expiredCertificates);
-                    } catch (SharkCryptoException e) {
+                    } catch (ASAPSecurityException e) {
                         // certificate already exists - try next
                     }
                 }
@@ -177,7 +177,7 @@ public class ASAPCertificateStorageImpl extends CertificateStorageImpl {
                         asapCertificatesReceived.add(
                             this.addCertificate2InMemo(message, asapStorageAddress,
                                     certificatesByOwnerIDMap, null));
-                    } catch (SharkCryptoException e) {
+                    } catch (ASAPSecurityException e) {
                         // cert already exists - try next
                     }
                 }

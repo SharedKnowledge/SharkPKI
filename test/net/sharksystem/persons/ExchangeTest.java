@@ -1,6 +1,5 @@
 package net.sharksystem.persons;
 
-import net.sharksystem.SharkException;
 import net.sharksystem.asap.*;
 import net.sharksystem.asap.ASAPMessages;
 import net.sharksystem.asap.util.ASAPPeerHandleConnectionThread;
@@ -30,7 +29,7 @@ public class ExchangeTest {
     private static final int PORTNUMBER = 7777;
 
     @Test
-    public void credentialCertificateExchangeOneWay() throws IOException, ASAPException, SharkException, InterruptedException {
+    public void credentialCertificateExchangeOneWay() throws IOException, ASAPException, ASAPSecurityException, InterruptedException {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         //                                        prepare storages                                       //
         ///////////////////////////////////////////////////////////////////////////////////////////////////

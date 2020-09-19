@@ -1,6 +1,6 @@
 package net.sharksystem.persons;
 
-import net.sharksystem.SharkException;
+import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.util.DateTimeHelper;
 
 import java.io.ByteArrayInputStream;
@@ -51,7 +51,7 @@ public class CredentialMessage {
         this.randomInt = sixDigitsInt;
     }
 
-    public CredentialMessage(byte[] serializedMessage) throws IOException, SharkException {
+    public CredentialMessage(byte[] serializedMessage) throws IOException, ASAPSecurityException {
         ByteArrayInputStream bais = new ByteArrayInputStream(serializedMessage);
         DataInputStream dis = new DataInputStream(bais);
 
@@ -71,7 +71,7 @@ public class CredentialMessage {
             keyFactory = KeyFactory.getInstance(algorithm);
             this.publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(publicKeyBytes));
         } catch (Exception e) {
-            throw new SharkException(e.getLocalizedMessage());
+            throw new ASAPSecurityException(e.getLocalizedMessage());
         }
     }
 

@@ -1,5 +1,6 @@
 package net.sharksystem.persons;
 
+import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.util.Log;
 import net.sharksystem.crypto.ASAPCertificateStorage;
 import net.sharksystem.crypto.SharkCryptoException;
@@ -68,7 +69,7 @@ public class PersonValuesImpl implements PersonValues {
     public int getIdentityAssurance() {
         try {
             return this.certificateStorage.getIdentityAssurances(this.getUserID(), this.personsStorage);
-        } catch (SharkCryptoException e) {
+        } catch (ASAPSecurityException e) {
             Log.writeLogErr(this, "cannot calculate identity assurance: " + e.getLocalizedMessage());
             return OtherPerson.LOWEST_IDENTITY_ASSURANCE_LEVEL;
         }

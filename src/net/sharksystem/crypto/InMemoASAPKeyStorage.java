@@ -1,6 +1,6 @@
 package net.sharksystem.crypto;
 
-import net.sharksystem.SharkException;
+import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.util.Log;
 
 import java.security.*;
@@ -10,13 +10,13 @@ public class InMemoASAPKeyStorage implements ASAPKeyStorage {
     private PublicKey publicKey;
     private long timeInMillis = 0;
 
-    public void generateKeyPair() throws SharkException {
+    public void generateKeyPair() throws ASAPSecurityException {
         Log.writeLog(this, "create key pair");
         KeyPairGenerator keyGen = null;
         try {
             keyGen = KeyPairGenerator.getInstance("RSA");
         } catch (NoSuchAlgorithmException e) {
-            throw new SharkException(e.getLocalizedMessage());
+            throw new ASAPSecurityException(e.getLocalizedMessage());
         }
 
         SecureRandom secRandom = new SecureRandom();
@@ -28,7 +28,7 @@ public class InMemoASAPKeyStorage implements ASAPKeyStorage {
             this.timeInMillis = System.currentTimeMillis();
         }
         catch(RuntimeException re) {
-            throw new SharkException(re.getLocalizedMessage());
+            throw new ASAPSecurityException(re.getLocalizedMessage());
         }
     }
 
@@ -45,21 +45,21 @@ public class InMemoASAPKeyStorage implements ASAPKeyStorage {
     }
 
     @Override
-    public PrivateKey getPrivateKey() throws SharkCryptoException {
-        if(this.privateKey == null) throw new SharkCryptoException("private key does not exist");
+    public PrivateKey getPrivateKey() throws ASAPSecurityException {
+        if(this.privateKey == null) throw new ASAPSecurityException("private key does not exist");
         return this.privateKey;
     }
 
     @Override
-    public PublicKey getPublicKey() throws SharkCryptoException {
-        if(this.publicKey == null) throw new SharkCryptoException("public key does not exist");
+    public PublicKey getPublicKey() throws ASAPSecurityException {
+        if(this.publicKey == null) throw new ASAPSecurityException("public key does not exist");
         return this.publicKey;
     }
 
     @Override
-    public long getCreationTime() throws SharkCryptoException {
+    public long getCreationTime() throws ASAPSecurityException {
         if(this.publicKey == null || this.privateKey == null)
-            throw new SharkCryptoException("no keys created yet");
+            throw new ASAPSecurityException("no keys created yet");
         return this.timeInMillis;
     }
 }

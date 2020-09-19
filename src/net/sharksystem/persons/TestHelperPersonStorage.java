@@ -1,6 +1,6 @@
 package net.sharksystem.persons;
 
-import net.sharksystem.SharkException;
+import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.crypto.ASAPCertificate;
 import net.sharksystem.crypto.ASAPCertificateStorage;
 import net.sharksystem.crypto.InMemoCertificateStorageImpl;
@@ -14,7 +14,7 @@ public class TestHelperPersonStorage {
     public static final CharSequence HASSAN_NAME = "Hassan";
     public static final CharSequence IRIS_NAME = "Iris";
 
-    public static void fillWithExampleData(PersonsStorage personsStorage) throws SharkException, IOException {
+    public static void fillWithExampleData(PersonsStorage personsStorage) throws ASAPSecurityException, IOException {
         ASAPCertificateStorage certificateStorage;
         long now = System.currentTimeMillis();
 

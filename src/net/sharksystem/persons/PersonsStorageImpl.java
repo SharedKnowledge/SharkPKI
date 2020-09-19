@@ -1,6 +1,6 @@
 package net.sharksystem.persons;
 
-import net.sharksystem.SharkException;
+import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.util.DateTimeHelper;
 import net.sharksystem.asap.util.Log;
 import net.sharksystem.crypto.*;
@@ -20,12 +20,12 @@ public class PersonsStorageImpl implements PersonsStorage {
     // keep other persons - contact list in other words
     private List<PersonValuesImpl> personsList = new ArrayList<>();
 
-    public PersonsStorageImpl(ASAPCertificateStorage certificateStorage) throws SharkException {
+    public PersonsStorageImpl(ASAPCertificateStorage certificateStorage) throws ASAPSecurityException {
         this(certificateStorage, new InMemoASAPKeyStorage(), DEFAULT_SIGNATURE_METHOD);
     }
 
     public PersonsStorageImpl(ASAPCertificateStorage certificateStorage,
-                              ASAPKeyStorage asapKeyStorage, String signingAlgorithm) throws SharkException {
+                              ASAPKeyStorage asapKeyStorage, String signingAlgorithm) throws ASAPSecurityException {
         this.certificateStorage = certificateStorage;
         this.asapKeyStorage = asapKeyStorage;
         this.signingAlgorithm = signingAlgorithm;
@@ -35,7 +35,7 @@ public class PersonsStorageImpl implements PersonsStorage {
             long creationTime = this.asapKeyStorage.getCreationTime(); // throws exception if not set
 
             // ok, that's weired but I did not wanted another if-than-else clause
-            if(creationTime == DateTimeHelper.TIME_NOT_SET) throw new SharkCryptoException("time not set");
+            if(creationTime == DateTimeHelper.TIME_NOT_SET) throw new ASAPSecurityException("time not set");
 
             // check expiration time
             createCal = ASAPCertificateImpl.long2Calendar(creationTime);
@@ -44,21 +44,21 @@ public class PersonsStorageImpl implements PersonsStorage {
                 Log.writeLog(this, "local key pair expired - reset");
                 this.asapKeyStorage.generateKeyPair();
             }
-        } catch (SharkCryptoException e) {
+        } catch (ASAPSecurityException e) {
             Log.writeLog(this, "failure receiving keys: " + e.getLocalizedMessage());
             this.asapKeyStorage.generateKeyPair();
         }
     }
 
-    public PublicKey getPublicKey() throws SharkCryptoException {
+    public PublicKey getPublicKey() throws ASAPSecurityException {
         return this.asapKeyStorage.getPublicKey();
     }
 
-    public PrivateKey getPrivateKey() throws SharkCryptoException {
+    public PrivateKey getPrivateKey() throws ASAPSecurityException {
         return this.asapKeyStorage.getPrivateKey();
     }
 
-    public long getKeysCreationTime() throws SharkCryptoException {
+    public long getKeysCreationTime() throws ASAPSecurityException {
         return this.asapKeyStorage.getCreationTime();
     }
 
@@ -66,22 +66,22 @@ public class PersonsStorageImpl implements PersonsStorage {
     //                           other persons management - in memory                           //
     //////////////////////////////////////////////////////////////////////////////////////////////
 
-    public PersonValuesImpl getPersonValues(CharSequence userID) throws SharkException {
+    public PersonValuesImpl getPersonValues(CharSequence userID) throws ASAPSecurityException {
         for (PersonValuesImpl personValues : this.personsList) {
             if (personValues.getUserID().toString().equalsIgnoreCase(userID.toString())) {
                 return personValues;
             }
         }
 
-        throw new SharkException("person not found with userID: " + userID);
+        throw new ASAPSecurityException("person not found with userID: " + userID);
     }
 
-    public PersonValuesImpl getPersonValuesByPosition(int position) throws SharkException {
+    public PersonValuesImpl getPersonValuesByPosition(int position) throws ASAPSecurityException {
         try {
             PersonValuesImpl personValues = this.personsList.get(position);
             return personValues;
         } catch (IndexOutOfBoundsException e) {
-            throw new SharkException("position too high: " + position);
+            throw new ASAPSecurityException("position too high: " + position);
         }
     }
 
@@ -93,7 +93,7 @@ public class PersonsStorageImpl implements PersonsStorage {
         return this.personsList.size();
     }
 
-    public int getIdentityAssurance(CharSequence userID) throws SharkException {
+    public int getIdentityAssurance(CharSequence userID) throws ASAPSecurityException {
         // You are aware of yourself - I hope :)
         if(this.isMe(userID)) return OtherPerson.HIGHEST_IDENTITY_ASSURANCE_LEVEL;
 
@@ -101,7 +101,7 @@ public class PersonsStorageImpl implements PersonsStorage {
     }
 
     public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID)
-            throws SharkCryptoException {
+            throws ASAPSecurityException {
 
         return this.certificateStorage.
                 getIdentityAssurancesCertificationPath(userID, this);
@@ -114,12 +114,12 @@ public class PersonsStorageImpl implements PersonsStorage {
     @Override
     public ASAPCertificate addAndSignPerson(
             CharSequence userID, CharSequence userName, PublicKey publicKey, long validSince)
-            throws SharkCryptoException, IOException {
+            throws ASAPSecurityException, IOException {
 
         Log.writeLog(this, "entered addAndSignPerson");
         // try to overwrite owner ?
         if (userID.toString().equalsIgnoreCase(this.getOwnerID().toString())) {
-            throw new SharkCryptoException("cannot add person with your userID");
+            throw new ASAPSecurityException("cannot add person with your userID");
         }
 
         // already in there
@@ -153,7 +153,7 @@ public class PersonsStorageImpl implements PersonsStorage {
                     this.certificateStorage.removeCertificate(certTemp);
                 }
             }
-        } catch (SharkException e) {
+        } catch (ASAPSecurityException e) {
             e.printStackTrace();
         }
 
@@ -179,12 +179,12 @@ public class PersonsStorageImpl implements PersonsStorage {
         } catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
             Log.writeLogErr(this, "cannot create certificate: " + e.getLocalizedMessage());
             e.printStackTrace();
-            throw new SharkCryptoException("cannot create certificate: " + e.getLocalizedMessage());
+            throw new ASAPSecurityException("cannot create certificate: " + e.getLocalizedMessage());
         }
     }
 
     @Override
-    public void addCertificate(ASAPCertificate asapCert) throws IOException, SharkException {
+    public void addCertificate(ASAPCertificate asapCert) throws IOException, ASAPSecurityException {
         PersonValuesImpl newPersonValues =
                 new PersonValuesImpl(asapCert.getSubjectID(), asapCert.getSubjectName(),
                         this.certificateStorage, this);
@@ -213,7 +213,7 @@ public class PersonsStorageImpl implements PersonsStorage {
                 try {
                     this.getPersonValues(newCert.getSubjectID());
                     Log.writeLog(this, "user id already exists: " + newCert.getSubjectID());
-                } catch (SharkException e) {
+                } catch (ASAPSecurityException e) {
                     // not found - what we look for
                     PersonValuesImpl newPersonValues =
                             new PersonValuesImpl(newCert.getSubjectID(), newCert.getSubjectName(),
@@ -230,30 +230,30 @@ public class PersonsStorageImpl implements PersonsStorage {
         return changed;
     }
 
-    public Collection<ASAPCertificate> getCertificatesBySubject(CharSequence userID) throws SharkException {
+    public Collection<ASAPCertificate> getCertificatesBySubject(CharSequence userID) throws ASAPSecurityException {
         return this.certificateStorage.getCertificatesBySubjectID(userID);
     }
 
-    public Collection<ASAPCertificate> getCertificatesByIssuer(CharSequence userID) throws SharkException {
+    public Collection<ASAPCertificate> getCertificatesByIssuer(CharSequence userID) throws ASAPSecurityException {
         return this.certificateStorage.getCertificatesByIssuerID(userID);
     }
 
-    public Collection<ASAPCertificate> getCertificatesForOwnerSubject(CharSequence userID) throws SharkException {
+    public Collection<ASAPCertificate> getCertificatesForOwnerSubject(CharSequence userID) throws ASAPSecurityException {
         return this.certificateStorage.getCertificatesForOwnerSubject();
     }
 
     public ASAPCertificate getCertificateByIssuerAndSubject(CharSequence issuerID, CharSequence subjectID)
-            throws SharkCryptoException {
+            throws ASAPSecurityException {
 
         return this.certificateStorage.getCertificateByIssuerAndSubjectID(issuerID, subjectID);
     }
 
-    public boolean verifyCertificate(ASAPCertificate asapCertificate) throws SharkCryptoException {
+    public boolean verifyCertificate(ASAPCertificate asapCertificate) throws ASAPSecurityException {
         try {
             return asapCertificate.verify(this.getPublicKey());
         }
         catch (NoSuchAlgorithmException | InvalidKeyException | SignatureException e) {
-            throw new SharkCryptoException(e.getClass().getSimpleName() + ": " + e.getLocalizedMessage());
+            throw new ASAPSecurityException(e.getClass().getSimpleName() + ": " + e.getLocalizedMessage());
         }
     }
 
@@ -269,16 +269,16 @@ public class PersonsStorageImpl implements PersonsStorage {
 
         try {
             return this.getPersonValues(personID).getSigningFailureRate();
-        } catch (SharkException e) {
+        } catch (ASAPSecurityException e) {
             // fix that problem by assuming worst failure rate
             return OtherPerson.WORST_SIGNING_FAILURE_RATE;
         }
     }
 
-    public void setSigningFailureRate(CharSequence personID, int failureRate) throws SharkException {
+    public void setSigningFailureRate(CharSequence personID, int failureRate) throws ASAPSecurityException {
         if (failureRate < OtherPerson.BEST_SIGNING_FAILURE_RATE
                 || failureRate > OtherPerson.WORST_SIGNING_FAILURE_RATE)
-            throw new SharkCryptoException("failure rate you are trying to set is out of defined range");
+            throw new ASAPSecurityException("failure rate you are trying to set is out of defined range");
 
         this.getPersonValues(personID).setSigningFailureRate(failureRate);
         this.certificateStorage.syncIdentityAssurance();
@@ -290,7 +290,7 @@ public class PersonsStorageImpl implements PersonsStorage {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public CredentialMessage createCredentialMessage()
-            throws SharkCryptoException {
+            throws ASAPSecurityException {
 
         CredentialMessage credentialMessage = new CredentialMessage(
                 this.getOwnerID(), this.getOwnerName(), this.getKeysCreationTime(), this.getPublicKey());

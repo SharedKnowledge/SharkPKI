@@ -1,6 +1,6 @@
 package net.sharksystem.persons;
 
-import net.sharksystem.SharkException;
+import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.crypto.ASAPCertificate;
 import net.sharksystem.crypto.SharkCryptoException;
 
@@ -19,37 +19,37 @@ public interface PersonsStorage {
 
     CharSequence getOwnerName();
 
-    PrivateKey getPrivateKey() throws SharkCryptoException;
+    PrivateKey getPrivateKey() throws ASAPSecurityException;
 
-    PublicKey getPublicKey() throws SharkCryptoException;
+    PublicKey getPublicKey() throws ASAPSecurityException;
 
     /**
      * @return time when key are created
      */
-    long getKeysCreationTime() throws SharkCryptoException;
+    long getKeysCreationTime() throws ASAPSecurityException;
 
     ASAPCertificate addAndSignPerson(CharSequence userID, CharSequence userName, PublicKey publicKey, long validSince)
-            throws SharkCryptoException, IOException;
+            throws ASAPSecurityException, IOException;
 
-    void setSigningFailureRate(CharSequence personID, int failureRate) throws SharkException;
+    void setSigningFailureRate(CharSequence personID, int failureRate) throws ASAPSecurityException;
 
     int getSigningFailureRate(CharSequence personID);
 
-    PersonValuesImpl getPersonValuesByPosition(int position) throws SharkException;
+    PersonValuesImpl getPersonValuesByPosition(int position) throws ASAPSecurityException;
 
     int getNumberOfPersons();
 
-    int getIdentityAssurance(CharSequence userID) throws SharkException;
+    int getIdentityAssurance(CharSequence userID) throws ASAPSecurityException;
 
     List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID)
-            throws SharkCryptoException;
+            throws ASAPSecurityException;
 
-    Collection<ASAPCertificate> getCertificatesBySubject(CharSequence subjectID) throws SharkException;
-    Collection<ASAPCertificate> getCertificatesByIssuer(CharSequence issuerID) throws SharkException;
+    Collection<ASAPCertificate> getCertificatesBySubject(CharSequence subjectID) throws ASAPSecurityException;
+    Collection<ASAPCertificate> getCertificatesByIssuer(CharSequence issuerID) throws ASAPSecurityException;
     ASAPCertificate getCertificateByIssuerAndSubject(CharSequence issuerID, CharSequence subjectID)
-            throws SharkException;
+            throws ASAPSecurityException;
 
-    void addCertificate(ASAPCertificate asapCertificate) throws IOException, SharkException;
+    void addCertificate(ASAPCertificate asapCertificate) throws IOException, ASAPSecurityException;
 
     /**
      * It is assumed this certificate is issued by storage owner. This is verified with this method or not.
@@ -58,11 +58,11 @@ public interface PersonsStorage {
      * class to assure thaty
      * @param asapCertificate
      * @throws IOException
-     * @throws SharkException
+     * @throws ASAPSecurityException
      */
-    boolean verifyCertificate(ASAPCertificate asapCertificate) throws SharkCryptoException, NoSuchAlgorithmException, InvalidKeyException, SignatureException;
+    boolean verifyCertificate(ASAPCertificate asapCertificate) throws ASAPSecurityException, NoSuchAlgorithmException, InvalidKeyException, SignatureException;
 
-    CredentialMessage createCredentialMessage() throws SharkCryptoException;
+    CredentialMessage createCredentialMessage() throws ASAPSecurityException;
 
     /**
      * Call this method if probably new certificates are received

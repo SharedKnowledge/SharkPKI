@@ -1,5 +1,6 @@
 package net.sharksystem.crypto;
 
+import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.util.Log;
 import net.sharksystem.persons.OtherPerson;
 import net.sharksystem.persons.PersonsStorage;
@@ -82,12 +83,12 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     }
 
     public ASAPCertificate getCertificateByIssuerAndSubjectID(
-            CharSequence issuerID, CharSequence subjectID) throws SharkCryptoException {
+            CharSequence issuerID, CharSequence subjectID) throws ASAPSecurityException {
 
         Collection<ASAPCertificate> certificateBySubject = this.getCertificatesBySubjectID(subjectID);
 
         if(certificateBySubject == null || certificateBySubject.size() < 1) {
-            throw new SharkCryptoException("no certificate found");
+            throw new ASAPSecurityException("no certificate found");
         }
 
         for(ASAPCertificate c : certificateBySubject) {
@@ -97,7 +98,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
             }
         }
 
-        throw new SharkCryptoException("no certificate found");
+        throw new ASAPSecurityException("no certificate found");
     }
 
 
@@ -226,7 +227,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     }
 
     private IdentityAssurance getIdentityAssurance(CharSequence userID, PersonsStorage personsStorage)
-            throws SharkCryptoException {
+            throws ASAPSecurityException {
         // general setup?
         if(this.userIdentityAssurance == null) {
             this.userIdentityAssurance = new HashMap<CharSequence, IdentityAssurance>();
@@ -247,15 +248,15 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
 
     @Override
     public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, PersonsStorage personsStorage)
-            throws SharkCryptoException {
+            throws ASAPSecurityException {
         return this.getIdentityAssurance(userID, personsStorage).path;
     }
 
-    public int getIdentityAssurances(CharSequence userID, PersonsStorage personsStorage) throws SharkCryptoException {
+    public int getIdentityAssurances(CharSequence userID, PersonsStorage personsStorage) throws ASAPSecurityException {
         return this.getIdentityAssurance(userID, personsStorage).getValue();
     }
 
-    private void setupIdentityAssurance(CharSequence userID, PersonsStorage personsStorage) throws SharkCryptoException {
+    private void setupIdentityAssurance(CharSequence userID, PersonsStorage personsStorage) throws ASAPSecurityException {
         Collection<ASAPCertificate> certificates = this.getCertificatesBySubjectID(userID);
         if (certificates == null || certificates.isEmpty()) {
             // we don't know anything about this person
@@ -290,7 +291,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
                 }
             }
             if(found) {
-                throw new SharkCryptoException
+                throw new ASAPSecurityException
                         ("there is a certificate signed by owner but cannot be verified - that's serious");
             }
         }
@@ -348,7 +349,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
                 if(!this.verify(currentCertificate, publicKey)) {
                     return this.worstIdentityAssurance;
                 }
-            } catch (SharkCryptoException e) {
+            } catch (ASAPSecurityException e) {
                 return this.worstIdentityAssurance; // no key at all
             }
 

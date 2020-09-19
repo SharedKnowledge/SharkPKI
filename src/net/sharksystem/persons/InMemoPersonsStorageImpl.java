@@ -1,6 +1,6 @@
 package net.sharksystem.persons;
 
-import net.sharksystem.SharkException;
+import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.crypto.*;
 
 import java.io.IOException;
@@ -17,14 +17,14 @@ public class InMemoPersonsStorageImpl extends PersonsStorageImpl {
     public static final CharSequence IRIS_ID = "1003";
     public static final CharSequence IRIS_NAME = "Iris";
 
-    public InMemoPersonsStorageImpl(CharSequence ownerID, CharSequence ownerName) throws SharkException {
+    public InMemoPersonsStorageImpl(CharSequence ownerID, CharSequence ownerName) throws ASAPSecurityException {
         super(
             new InMemoCertificateStorageImpl(ownerID, ownerName),
             new InMemoASAPKeyStorage(),
             DEFAULT_SIGNATURE_METHOD);
     }
 
-    public void fillWithExampleData() throws SharkException, IOException {
+    public void fillWithExampleData() throws ASAPSecurityException, IOException {
         ASAPCertificateStorage certificateStorage;
         PersonsStorage francisStorage = null, gloriaStorage = null, hassanStorage = null, irisStorage;
 
