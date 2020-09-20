@@ -2,9 +2,11 @@ package net.sharksystem.crypto;
 
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.util.Log;
+import net.sharksystem.persons.ASAPKeyStoreWithWriteAccess;
+
 import java.security.*;
 
-public class InMemoASAPKeyStorage implements ASAPKeyStorage {
+public class InMemoASAPKeyStorage implements ASAPKeyStoreWithWriteAccess {
     private PrivateKey privateKey;
     private PublicKey publicKey;
     private long timeInMillis = 0;
@@ -31,11 +33,11 @@ public class InMemoASAPKeyStorage implements ASAPKeyStorage {
         }
     }
 
-    protected void setPrivateKey(PrivateKey privateKey) {
+    public void setPrivateKey(PrivateKey privateKey) {
         this.privateKey = privateKey;
     }
 
-    protected void setPublicKey(PublicKey publicKey) {
+    public void setPublicKey(PublicKey publicKey) {
         this.publicKey = publicKey;
     }
 

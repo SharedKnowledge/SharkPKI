@@ -12,9 +12,9 @@ import java.util.*;
 import static net.sharksystem.crypto.ASAPCertificateImpl.DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS;
 import static net.sharksystem.crypto.ASAPCertificateImpl.DEFAULT_SIGNATURE_METHOD;
 
-public class ASAPPKIImpl implements ASAPPKI {
+public class ASAPPKIImpl implements ASAPPKI, ASAPKeyStoreWriteAccess {
     private final ASAPCertificateStorage certificateStorage;
-    private final ASAPKeyStorage asapKeyStorage;
+    private final ASAPKeyStoreWithWriteAccess asapKeyStorage;
     private final String signingAlgorithm;
 
     // keep other persons - contact list in other words
@@ -25,7 +25,11 @@ public class ASAPPKIImpl implements ASAPPKI {
     }
 
     public ASAPPKIImpl(ASAPCertificateStorage certificateStorage,
-                       ASAPKeyStorage asapKeyStorage, String signingAlgorithm) throws ASAPSecurityException {
+                       ASAPKeyStoreWithWriteAccess asapKeyStorage,
+                       String signingAlgorithm)
+
+            throws ASAPSecurityException {
+
         this.certificateStorage = certificateStorage;
         this.asapKeyStorage = asapKeyStorage;
         this.signingAlgorithm = signingAlgorithm;
@@ -339,4 +343,19 @@ public class ASAPPKIImpl implements ASAPPKI {
             this.personsList.add(new PersonValuesImpl(dis, this.certificateStorage, this));
         }
     }
+
+
+    //////////////////////////////////////////////////////////////////////////////////////
+    //                             setup keystore from outside                          //
+    //////////////////////////////////////////////////////////////////////////////////////
+
+    @Override
+
+    public void setPrivateKey(PrivateKey privateKey) {
+        this.asapKeyStorage.setPrivateKey(privateKey);
+    }
+
+    @Override
+    public void setPublicKey(PublicKey publicKey) {
+        this.asapKeyStorage.setPublicKey(publicKey);    }
 }

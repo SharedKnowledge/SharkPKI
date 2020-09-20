@@ -4,6 +4,7 @@ import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.crypto.*;
 
 import javax.crypto.SecretKey;
+import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Collection;
 
@@ -11,18 +12,23 @@ import java.util.Collection;
  * Class uses ASAP PKI to meet requirements of BasicKeyStore
  */
 public class FullAsapPKIStorage extends ASAPPKIImpl implements BasicKeyStore {
+
     public FullAsapPKIStorage(ASAPCertificateStorage certificateStorage,
-                                  ASAPKeyStorage asapKeyStorage, String signingAlgorithm)
+                                  ASAPKeyStoreWithWriteAccess asapKeyStorage,
+                              String signingAlgorithm)
+
             throws ASAPSecurityException {
 
         super(certificateStorage, asapKeyStorage, signingAlgorithm);
     }
 
+/*
     public FullAsapPKIStorage(ASAPCertificateStorage certificateStorage)
             throws ASAPSecurityException {
 
         super(certificateStorage);
     }
+ */
 
     /**
      * Find public key in certificate storage
