@@ -2,14 +2,9 @@ package net.sharksystem.crypto;
 
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.util.Log;
-
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
 import java.security.*;
 
-import static net.sharksystem.crypto.BasicCryptoKeyStorage.*;
-
-public class InMemoASAPKeyStorage implements ASAPKeyStorage, BasicKeyStore {
+public class InMemoASAPKeyStorage implements ASAPKeyStorage {
     private PrivateKey privateKey;
     private PublicKey publicKey;
     private long timeInMillis = 0;
@@ -54,20 +49,20 @@ public class InMemoASAPKeyStorage implements ASAPKeyStorage, BasicKeyStore {
         return this.privateKey;
     }
 
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    //                                      Basic Key Storage                                   //
-    //////////////////////////////////////////////////////////////////////////////////////////////
-
-    @Override
-    public PublicKey getPublicKey(CharSequence subjectID) throws ASAPSecurityException {
-        // this implementation does not store any other public key than its own
-        throw new ASAPSecurityException("this implementation does not store any other public key than its own");
-    }
-
     @Override
     public PublicKey getPublicKey() throws ASAPSecurityException {
         if(this.publicKey == null) throw new ASAPSecurityException("public key does not exist");
         return this.publicKey;
+    }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //                                      Basic Key Storage                                   //
+    //////////////////////////////////////////////////////////////////////////////////////////////
+/*
+    @Override
+    public PublicKey getPublicKey(CharSequence subjectID) throws ASAPSecurityException {
+        // this implementation does not store any other public key than its own
+        throw new ASAPSecurityException("this implementation does not store any other public key than its own");
     }
 
     @Override
@@ -105,6 +100,7 @@ public class InMemoASAPKeyStorage implements ASAPKeyStorage, BasicKeyStore {
     public boolean isOwner(CharSequence charSequence) {
         return false;
     }
+ */
 
     @Override
     public long getCreationTime() throws ASAPSecurityException {

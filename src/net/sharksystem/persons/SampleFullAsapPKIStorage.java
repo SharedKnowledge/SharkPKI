@@ -7,7 +7,7 @@ import java.io.IOException;
 
 import static net.sharksystem.crypto.ASAPCertificateImpl.DEFAULT_SIGNATURE_METHOD;
 
-public class SampleBasicKeyASAPpkiStorage extends ASAPPKIImpl {
+public class SampleFullAsapPKIStorage extends FullAsapPKIStorage {
     public static final CharSequence FRANCIS_ID = "1000";
     public static final CharSequence FRANCIS_NAME = "Francis";
     public static final CharSequence GLORIA_ID = "1001";
@@ -17,7 +17,9 @@ public class SampleBasicKeyASAPpkiStorage extends ASAPPKIImpl {
     public static final CharSequence IRIS_ID = "1003";
     public static final CharSequence IRIS_NAME = "Iris";
 
-    public SampleBasicKeyASAPpkiStorage(CharSequence ownerID, CharSequence ownerName) throws ASAPSecurityException {
+    public SampleFullAsapPKIStorage(CharSequence ownerID, CharSequence ownerName)
+            throws ASAPSecurityException {
+
         super(
             new InMemoCertificateStorageImpl(ownerID, ownerName),
             new InMemoASAPKeyStorage(),

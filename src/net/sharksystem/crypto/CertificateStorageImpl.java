@@ -226,19 +226,19 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         return false;
     }
 
-    private IdentityAssurance getIdentityAssurance(CharSequence userID, ASAPPKI ASAPPKI)
+    private IdentityAssurance getIdentityAssurance(CharSequence userID, ASAPPKI asapPKI)
             throws ASAPSecurityException {
         // general setup?
         if(this.userIdentityAssurance == null) {
             this.userIdentityAssurance = new HashMap<CharSequence, IdentityAssurance>();
-            this.setupIdentityAssurance(userID, ASAPPKI);
+            this.setupIdentityAssurance(userID, asapPKI);
         }
 
         IdentityAssurance identityAssurance = this.userIdentityAssurance.get(userID);
         // setup individual user?
         if(identityAssurance == null) {
             // setup
-            this.setupIdentityAssurance(userID, ASAPPKI);
+            this.setupIdentityAssurance(userID, asapPKI);
             // try again
             identityAssurance = this.userIdentityAssurance.get(userID);
         }
@@ -247,9 +247,10 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     }
 
     @Override
-    public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, ASAPPKI ASAPPKI)
+    public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, ASAPPKI asapPKI)
             throws ASAPSecurityException {
-        return this.getIdentityAssurance(userID, ASAPPKI).path;
+
+        return this.getIdentityAssurance(userID, asapPKI).path;
     }
 
     public int getIdentityAssurances(CharSequence userID, ASAPPKI ASAPPKI) throws ASAPSecurityException {
