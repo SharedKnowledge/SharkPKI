@@ -2,7 +2,6 @@ package net.sharksystem.persons;
 
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.crypto.ASAPCertificate;
-import net.sharksystem.crypto.SharkCryptoException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,7 +10,7 @@ import java.security.*;
 import java.util.Collection;
 import java.util.List;
 
-public interface PersonsStorage {
+public interface ASAPPKI {
     CharSequence CREDENTIAL_APP_NAME = "SN2Credentials";
     CharSequence CREDENTIAL_URI = "sn2://credential";
 

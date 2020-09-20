@@ -1,7 +1,7 @@
 package net.sharksystem.crypto;
 
 import net.sharksystem.asap.ASAPSecurityException;
-import net.sharksystem.persons.PersonsStorage;
+import net.sharksystem.persons.ASAPPKI;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -83,9 +83,9 @@ public interface ASAPCertificateStorage {
      */
     void syncCertificates();
 
-    int getIdentityAssurances(CharSequence userID, PersonsStorage personsStorage) throws ASAPSecurityException;
+    int getIdentityAssurances(CharSequence userID, ASAPPKI ASAPPKI) throws ASAPSecurityException;
 
-    List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, PersonsStorage personsStorage)
+    List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, ASAPPKI ASAPPKI)
             throws ASAPSecurityException;
 
     ASAPStorageAddress getASAPStorageAddress(byte[] serializedAddress) throws IOException;

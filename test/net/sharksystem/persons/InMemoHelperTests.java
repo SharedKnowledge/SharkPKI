@@ -18,47 +18,47 @@ public class InMemoHelperTests {
 
     @Test
     public void test1() throws ASAPSecurityException, IOException {
-        InMemoPersonsStorageImpl personsStorage =
-                new InMemoPersonsStorageImpl(ALICE_ID, ALICE_NAME);
+        SampleBasicKeyASAPpkiStorage personsStorage =
+                new SampleBasicKeyASAPpkiStorage(ALICE_ID, ALICE_NAME);
 
         personsStorage.fillWithExampleData();
 
         Collection<ASAPCertificate> certificate =
-                personsStorage.getCertificatesBySubject(InMemoPersonsStorageImpl.FRANCIS_ID);
+                personsStorage.getCertificatesBySubject(SampleBasicKeyASAPpkiStorage.FRANCIS_ID);
         Assert.assertNotNull(certificate);
         Assert.assertFalse(certificate.isEmpty());
 
-        certificate = personsStorage.getCertificatesBySubject(InMemoPersonsStorageImpl.GLORIA_ID);
+        certificate = personsStorage.getCertificatesBySubject(SampleBasicKeyASAPpkiStorage.GLORIA_ID);
         Assert.assertNotNull(certificate);
         Assert.assertFalse(certificate.isEmpty());
 
-        certificate = personsStorage.getCertificatesBySubject(InMemoPersonsStorageImpl.HASSAN_ID);
+        certificate = personsStorage.getCertificatesBySubject(SampleBasicKeyASAPpkiStorage.HASSAN_ID);
         Assert.assertNotNull(certificate);
         Assert.assertFalse(certificate.isEmpty());
 
-        certificate = personsStorage.getCertificatesBySubject(InMemoPersonsStorageImpl.IRIS_ID);
+        certificate = personsStorage.getCertificatesBySubject(SampleBasicKeyASAPpkiStorage.IRIS_ID);
         Assert.assertNotNull(certificate);
         Assert.assertFalse(certificate.isEmpty());
 
-        PersonValuesImpl personValues = personsStorage.getPersonValues(InMemoPersonsStorageImpl.FRANCIS_ID);
+        PersonValuesImpl personValues = personsStorage.getPersonValues(SampleBasicKeyASAPpkiStorage.FRANCIS_ID);
         Assert.assertNotNull(personValues);
         int iA = personValues.getIdentityAssurance();
         System.out.println(iA);
         Assert.assertEquals(10, iA);
 
-        personValues = personsStorage.getPersonValues(InMemoPersonsStorageImpl.GLORIA_ID);
+        personValues = personsStorage.getPersonValues(SampleBasicKeyASAPpkiStorage.GLORIA_ID);
         Assert.assertNotNull(personValues);
         iA = personValues.getIdentityAssurance();
         System.out.println(iA);
         Assert.assertEquals(5, iA);
 
-        personValues = personsStorage.getPersonValues(InMemoPersonsStorageImpl.HASSAN_ID);
+        personValues = personsStorage.getPersonValues(SampleBasicKeyASAPpkiStorage.HASSAN_ID);
         Assert.assertNotNull(personValues);
         iA = personValues.getIdentityAssurance();
         System.out.println(iA);
         Assert.assertEquals(3, iA);
 
-        personValues = personsStorage.getPersonValues(InMemoPersonsStorageImpl.IRIS_ID);
+        personValues = personsStorage.getPersonValues(SampleBasicKeyASAPpkiStorage.IRIS_ID);
         Assert.assertNotNull(personValues);
         iA = personValues.getIdentityAssurance();
         System.out.println(iA);
@@ -66,55 +66,55 @@ public class InMemoHelperTests {
 
         // change cef(francis) to best
         personsStorage.setSigningFailureRate(
-                InMemoPersonsStorageImpl.FRANCIS_ID,1);
+                SampleBasicKeyASAPpkiStorage.FRANCIS_ID,1);
 
         // check again
-        personValues = personsStorage.getPersonValues(InMemoPersonsStorageImpl.FRANCIS_ID);
+        personValues = personsStorage.getPersonValues(SampleBasicKeyASAPpkiStorage.FRANCIS_ID);
         iA = personValues.getIdentityAssurance();
         System.out.println(iA);
         Assert.assertEquals(10, iA);
 
-        personValues = personsStorage.getPersonValues(InMemoPersonsStorageImpl.GLORIA_ID);
+        personValues = personsStorage.getPersonValues(SampleBasicKeyASAPpkiStorage.GLORIA_ID);
         iA = personValues.getIdentityAssurance();
         System.out.println(iA);
         Assert.assertEquals(9, iA);
 
-        personValues = personsStorage.getPersonValues(InMemoPersonsStorageImpl.HASSAN_ID);
+        personValues = personsStorage.getPersonValues(SampleBasicKeyASAPpkiStorage.HASSAN_ID);
         iA = personValues.getIdentityAssurance();
         System.out.println(iA);
         Assert.assertEquals(5, iA); // 4.5
 
-        personValues = personsStorage.getPersonValues(InMemoPersonsStorageImpl.IRIS_ID);
+        personValues = personsStorage.getPersonValues(SampleBasicKeyASAPpkiStorage.IRIS_ID);
         iA = personValues.getIdentityAssurance();
         System.out.println(iA);
         Assert.assertEquals(2, iA); // 2.25
 
         ///////////////// lists
         Collection<ASAPCertificate> francisOwnerCerts =
-                personsStorage.getCertificatesBySubject(InMemoPersonsStorageImpl.FRANCIS_ID);
+                personsStorage.getCertificatesBySubject(SampleBasicKeyASAPpkiStorage.FRANCIS_ID);
 
         Assert.assertEquals(1, francisOwnerCerts.size());
         Assert.assertTrue(francisOwnerCerts.iterator().next().getIssuerID().toString()
                 .equalsIgnoreCase(ALICE_ID));
 
         Collection<ASAPCertificate> francisSignerCerts =
-                personsStorage.getCertificatesByIssuer(InMemoPersonsStorageImpl.FRANCIS_ID);
+                personsStorage.getCertificatesByIssuer(SampleBasicKeyASAPpkiStorage.FRANCIS_ID);
 
         Assert.assertEquals(1, francisSignerCerts.size());
         Assert.assertTrue(francisSignerCerts.iterator().next().getSubjectID().toString()
-                .equalsIgnoreCase(InMemoPersonsStorageImpl.GLORIA_ID.toString()));
+                .equalsIgnoreCase(SampleBasicKeyASAPpkiStorage.GLORIA_ID.toString()));
 
         List<CharSequence> path =
-                personsStorage.getIdentityAssurancesCertificationPath(InMemoPersonsStorageImpl.FRANCIS_ID);
+                personsStorage.getIdentityAssurancesCertificationPath(SampleBasicKeyASAPpkiStorage.FRANCIS_ID);
         System.out.println(path);
 
-        path = personsStorage.getIdentityAssurancesCertificationPath(InMemoPersonsStorageImpl.GLORIA_ID);
+        path = personsStorage.getIdentityAssurancesCertificationPath(SampleBasicKeyASAPpkiStorage.GLORIA_ID);
         System.out.println(path);
 
-        path = personsStorage.getIdentityAssurancesCertificationPath(InMemoPersonsStorageImpl.HASSAN_ID);
+        path = personsStorage.getIdentityAssurancesCertificationPath(SampleBasicKeyASAPpkiStorage.HASSAN_ID);
         System.out.println(path);
 
-        path = personsStorage.getIdentityAssurancesCertificationPath(InMemoPersonsStorageImpl.IRIS_ID);
+        path = personsStorage.getIdentityAssurancesCertificationPath(SampleBasicKeyASAPpkiStorage.IRIS_ID);
         System.out.println(path);
 
         // test persistence
@@ -129,16 +129,16 @@ public class InMemoHelperTests {
 
         // setup input
         InputStream is = new ByteArrayInputStream(persistentStorage);
-        PersonsStorage freshPersonsStorage = new InMemoPersonsStorageImpl(ALICE_ID, ALICE_NAME);
+        ASAPPKI freshASAPPKI = new SampleBasicKeyASAPpkiStorage(ALICE_ID, ALICE_NAME);
 
         // load
-        freshPersonsStorage.load(is);
+        freshASAPPKI.load(is);
 
         // test
-        Assert.assertEquals(expectedSize, freshPersonsStorage.getNumberOfPersons());
-        freshPersonsStorage.getIdentityAssurance(InMemoPersonsStorageImpl.FRANCIS_ID);
-        freshPersonsStorage.getIdentityAssurance(InMemoPersonsStorageImpl.GLORIA_ID);
-        freshPersonsStorage.getIdentityAssurance(InMemoPersonsStorageImpl.HASSAN_ID);
-        freshPersonsStorage.getIdentityAssurance(InMemoPersonsStorageImpl.IRIS_ID);
+        Assert.assertEquals(expectedSize, freshASAPPKI.getNumberOfPersons());
+        freshASAPPKI.getIdentityAssurance(SampleBasicKeyASAPpkiStorage.FRANCIS_ID);
+        freshASAPPKI.getIdentityAssurance(SampleBasicKeyASAPpkiStorage.GLORIA_ID);
+        freshASAPPKI.getIdentityAssurance(SampleBasicKeyASAPpkiStorage.HASSAN_ID);
+        freshASAPPKI.getIdentityAssurance(SampleBasicKeyASAPpkiStorage.IRIS_ID);
     }
 }

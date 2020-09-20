@@ -43,7 +43,7 @@ public class ExchangeTest {
 
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPCertificateStorageImpl(aliceStorage, ALICE_ID, ALICE_NAME);
-        PersonsStorage alicePersonsStorage = new PersonsStorageImpl(asapAliceCertificateStorage);
+        ASAPPKI aliceASAPPKI = new ASAPPKIImpl(asapAliceCertificateStorage);
 
         // setup bob
         ASAPStorage bobStorage = ASAPEngineFS.getASAPStorage(
@@ -51,7 +51,7 @@ public class ExchangeTest {
 
         ASAPCertificateStorage asapBobCertificateStorage =
                 new ASAPCertificateStorageImpl(bobStorage, BOB_ID, BOB_NAME);
-        PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
+        ASAPPKI bobASAPPKI = new ASAPPKIImpl(asapBobCertificateStorage);
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         //                                        prepare multi engines                                  //
@@ -59,15 +59,15 @@ public class ExchangeTest {
 
         Set<CharSequence> supportedFormats = new HashSet<>();
         supportedFormats.add(ASAPCertificateStorage.CERTIFICATE_APP_NAME);
-        supportedFormats.add(PersonsStorage.CREDENTIAL_APP_NAME);
+        supportedFormats.add(ASAPPKI.CREDENTIAL_APP_NAME);
 
-        CredentialReceiver aliceListener = new CredentialReceiver(alicePersonsStorage);
+        CredentialReceiver aliceListener = new CredentialReceiver(aliceASAPPKI);
         ASAPPeer alicePeer = ASAPPeerFS.createASAPPeer(
                 ALICE_ID, ALICE_ROOT_FOLDER, ASAPPeer.DEFAULT_MAX_PROCESSING_TIME, supportedFormats, aliceListener);
 
         //aliceEngine.activateOnlineMessages();
 
-        SignCredentialAndReply bobListener = new SignCredentialAndReply(BOB_ROOT_FOLDER, bobPersonsStorage);
+        SignCredentialAndReply bobListener = new SignCredentialAndReply(BOB_ROOT_FOLDER, bobASAPPKI);
         ASAPPeer bobPeer = ASAPPeerFS.createASAPPeer(
                 BOB_ID, BOB_ROOT_FOLDER, ASAPPeer.DEFAULT_MAX_PROCESSING_TIME, supportedFormats, bobListener);
         bobListener.setAsapPeer(bobPeer);
@@ -113,11 +113,11 @@ public class ExchangeTest {
         System.out.println("//////////////////////////////////////////////////////////////////////////////////");
 
         // Alice send credentials to Bob
-        CredentialMessage credentialMessage = alicePersonsStorage.createCredentialMessage();
+        CredentialMessage credentialMessage = aliceASAPPKI.createCredentialMessage();
 
         // send it to bob - without traces in asap storages
-        alicePeer.sendOnlineASAPAssimilateMessage(PersonsStorage.CREDENTIAL_APP_NAME,
-                PersonsStorage.CREDENTIAL_URI, credentialMessage.getMessageAsBytes());
+        alicePeer.sendOnlineASAPAssimilateMessage(ASAPPKI.CREDENTIAL_APP_NAME,
+                ASAPPKI.CREDENTIAL_URI, credentialMessage.getMessageAsBytes());
 
         // wait until communication probably ends
         System.out.flush();
@@ -139,19 +139,19 @@ public class ExchangeTest {
 
         // alice should have got a certificate of Bob
         Assert.assertTrue(aliceListener.received);
-        bobPersonsStorage.getIdentityAssurance(ALICE_ID);
+        bobASAPPKI.getIdentityAssurance(ALICE_ID);
 
         Thread.sleep(1000);
     }
 
     private class SignCredentialAndReply implements ASAPChunkReceivedListener {
         private final String folderName;
-        private final PersonsStorage personsStorage;
+        private final ASAPPKI ASAPPKI;
         private ASAPPeer asapPeer;
 
-        public SignCredentialAndReply(String folderName, PersonsStorage personsStorage) {
+        public SignCredentialAndReply(String folderName, ASAPPKI ASAPPKI) {
             this.folderName = folderName;
-            this.personsStorage = personsStorage;
+            this.ASAPPKI = ASAPPKI;
         }
 
         @Override
@@ -170,7 +170,7 @@ public class ExchangeTest {
 
                     Log.writeLog(this, "..created: " + credential);
 
-                    ASAPCertificate newCert = personsStorage.addAndSignPerson(
+                    ASAPCertificate newCert = ASAPPKI.addAndSignPerson(
                             credential.getOwnerID(),
                             credential.getOwnerName(),
                             credential.getPublicKey(),
@@ -199,17 +199,17 @@ public class ExchangeTest {
     }
 
     private class CredentialReceiver implements ASAPChunkReceivedListener {
-        private final PersonsStorage personsStorage;
+        private final ASAPPKI ASAPPKI;
         boolean received = false;
 
-        public CredentialReceiver(PersonsStorage personsStorage) {
-            this.personsStorage = personsStorage;
+        public CredentialReceiver(ASAPPKI ASAPPKI) {
+            this.ASAPPKI = ASAPPKI;
         }
 
         @Override
         public void chunkReceived(String format, String sender, String uri, int era) {
             this.received = true;
-            this.personsStorage.syncNewReceivedCertificates();
+            this.ASAPPKI.syncNewReceivedCertificates();
         }
     }
 }

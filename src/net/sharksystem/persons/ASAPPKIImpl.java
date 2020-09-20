@@ -12,7 +12,7 @@ import java.util.*;
 import static net.sharksystem.crypto.ASAPCertificateImpl.DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS;
 import static net.sharksystem.crypto.ASAPCertificateImpl.DEFAULT_SIGNATURE_METHOD;
 
-public class PersonsStorageImpl implements PersonsStorage {
+public class ASAPPKIImpl implements ASAPPKI {
     private final ASAPCertificateStorage certificateStorage;
     private final ASAPKeyStorage asapKeyStorage;
     private final String signingAlgorithm;
@@ -20,12 +20,12 @@ public class PersonsStorageImpl implements PersonsStorage {
     // keep other persons - contact list in other words
     private List<PersonValuesImpl> personsList = new ArrayList<>();
 
-    public PersonsStorageImpl(ASAPCertificateStorage certificateStorage) throws ASAPSecurityException {
+    public ASAPPKIImpl(ASAPCertificateStorage certificateStorage) throws ASAPSecurityException {
         this(certificateStorage, new InMemoASAPKeyStorage(), DEFAULT_SIGNATURE_METHOD);
     }
 
-    public PersonsStorageImpl(ASAPCertificateStorage certificateStorage,
-                              ASAPKeyStorage asapKeyStorage, String signingAlgorithm) throws ASAPSecurityException {
+    public ASAPPKIImpl(ASAPCertificateStorage certificateStorage,
+                       ASAPKeyStorage asapKeyStorage, String signingAlgorithm) throws ASAPSecurityException {
         this.certificateStorage = certificateStorage;
         this.asapKeyStorage = asapKeyStorage;
         this.signingAlgorithm = signingAlgorithm;

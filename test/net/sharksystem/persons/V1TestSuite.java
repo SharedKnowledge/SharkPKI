@@ -6,7 +6,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
         ExchangeTest.class,
         InMemoHelperTests.class,
-        PersonsStorageTests.class
+        ASAPPKITests.class
 })
 public class V1TestSuite {
 

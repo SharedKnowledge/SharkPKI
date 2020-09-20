@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.security.*;
 import java.util.Collection;
 
-public class PersonsStorageTests {
+public class ASAPPKITests {
     private static final String ROOT_DIRECTORY = "asapStorageRootDirectory/";
     private static final String ROOT_DIRECTORY_ALICE = "asapStorageRootDirectory/alice/";
     private static final String ROOT_DIRECTORY_BOB = "asapStorageRootDirectory/bob/";
@@ -48,28 +48,28 @@ public class PersonsStorageTests {
                 "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPCertificateStorageImpl(aliceASAPStorage, ALICE_ID, ALICE_NAME);
-        PersonsStorage alicePersonsStorage = new PersonsStorageImpl(asapAliceCertificateStorage);
+        ASAPPKI aliceASAPPKI = new ASAPPKIImpl(asapAliceCertificateStorage);
 
         // setup bob
         ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
                 "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapBobCertificateStorage =
                 new ASAPCertificateStorageImpl(aliceASAPStorage, BOB_ID, BOB_NAME);
-        PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
+        ASAPPKI bobASAPPKI = new ASAPPKIImpl(asapBobCertificateStorage);
 
         // simulation - Bob must send its credentials in some way to Alice - assume that happened
-        CharSequence bobID = bobPersonsStorage.getOwnerID();
-        CharSequence bobName = bobPersonsStorage.getOwnerName();
-        PublicKey bobPublicKey = bobPersonsStorage.getPublicKey();
+        CharSequence bobID = bobASAPPKI.getOwnerID();
+        CharSequence bobName = bobASAPPKI.getOwnerName();
+        PublicKey bobPublicKey = bobASAPPKI.getPublicKey();
 
         // alice signs a certificate of bob
-        ASAPCertificate asapCertificate = alicePersonsStorage.addAndSignPerson(bobID, bobName, bobPublicKey, now);
+        ASAPCertificate asapCertificate = aliceASAPPKI.addAndSignPerson(bobID, bobName, bobPublicKey, now);
 
         // Alice could (and should) send it back to Bob - not tested here
         byte[] bytes = asapCertificate.asBytes();
 
         Assert.assertEquals(OtherPerson.HIGHEST_IDENTITY_ASSURANCE_LEVEL,
-                alicePersonsStorage.getIdentityAssurance(bobID));
+                aliceASAPPKI.getIdentityAssurance(bobID));
 
         // create a certificate of David issued by Clara
         // setup Clara
@@ -77,53 +77,53 @@ public class PersonsStorageTests {
                 "Clara", ROOT_DIRECTORY_CLARA, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapClaraCertificateStorage =
                 new ASAPCertificateStorageImpl(claraASAPStorage, CLARA_ID, CLARA_NAME);
-        PersonsStorage claraPersonsStorage = new PersonsStorageImpl(asapClaraCertificateStorage);
+        ASAPPKI claraASAPPKI = new ASAPPKIImpl(asapClaraCertificateStorage);
 
         // setup David
         ASAPEngine davidASAPStorage = ASAPEngineFS.getASAPStorage(
                 "Clara", ROOT_DIRECTORY_DAVID, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapDavidCertificateStorage =
                 new ASAPCertificateStorageImpl(davidASAPStorage, DAVID_ID, DAVID_NAME);
-        PersonsStorage davidPersonsStorage = new PersonsStorageImpl(asapDavidCertificateStorage);
+        ASAPPKI davidASAPPKI = new ASAPPKIImpl(asapDavidCertificateStorage);
 
         // clara signs a certificate of david
-        CharSequence davidID = davidPersonsStorage.getOwnerID();
-        asapCertificate = claraPersonsStorage.addAndSignPerson(
+        CharSequence davidID = davidASAPPKI.getOwnerID();
+        asapCertificate = claraASAPPKI.addAndSignPerson(
                 davidID,
-                davidPersonsStorage.getOwnerName(),
-                davidPersonsStorage.getPublicKey(), now);
+                davidASAPPKI.getOwnerName(),
+                davidASAPPKI.getPublicKey(), now);
 
         // add to alice certification storage
-        alicePersonsStorage.addCertificate(asapCertificate);
+        aliceASAPPKI.addCertificate(asapCertificate);
 
-        Collection<ASAPCertificate> davidCerts = alicePersonsStorage.getCertificatesBySubject(davidID);
+        Collection<ASAPCertificate> davidCerts = aliceASAPPKI.getCertificatesBySubject(davidID);
         Assert.assertNotNull(davidCerts);
         Assert.assertEquals(1, davidCerts.size());
 
         // alice cannot verify clara - there is no safe way to david
         Assert.assertEquals(OtherPerson.LOWEST_IDENTITY_ASSURANCE_LEVEL,
-                alicePersonsStorage.getIdentityAssurance(davidID));
+                aliceASAPPKI.getIdentityAssurance(davidID));
 
         // bob signs a certificate of clara
-        CharSequence claraID = claraPersonsStorage.getOwnerID();
-        asapCertificate = bobPersonsStorage.addAndSignPerson(
+        CharSequence claraID = claraASAPPKI.getOwnerID();
+        asapCertificate = bobASAPPKI.addAndSignPerson(
                 claraID,
-                claraPersonsStorage.getOwnerName(),
-                claraPersonsStorage.getPublicKey(), now);
+                claraASAPPKI.getOwnerName(),
+                claraASAPPKI.getPublicKey(), now);
 
         // add to alice certification storage
-        alicePersonsStorage.addCertificate(asapCertificate);
+        aliceASAPPKI.addCertificate(asapCertificate);
 
         // alice can verify clara thanks to bob
-        int claraIdentityAssurance = alicePersonsStorage.getIdentityAssurance(claraID);
+        int claraIdentityAssurance = aliceASAPPKI.getIdentityAssurance(claraID);
         System.out.println("clara identity assurance on alice side == " + claraIdentityAssurance);
         Assert.assertEquals(5, claraIdentityAssurance);
 
         // alice can verify david thanks to bob and clara
-        int davidIdentityAssurance = alicePersonsStorage.getIdentityAssurance(davidID);
+        int davidIdentityAssurance = aliceASAPPKI.getIdentityAssurance(davidID);
         System.out.println("david identity assurance on alice side == " + davidIdentityAssurance);
         // there is a way from alice to david now - iA is 2.5 rounded up to 3
-        Assert.assertEquals(3, alicePersonsStorage.getIdentityAssurance(davidID));
+        Assert.assertEquals(3, aliceASAPPKI.getIdentityAssurance(davidID));
     }
 
     @Test
@@ -140,26 +140,26 @@ public class PersonsStorageTests {
                 "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPCertificateStorageImpl(aliceASAPStorage, ALICE_ID, ALICE_NAME);
-        PersonsStorage alicePersonsStorage = new PersonsStorageImpl(asapAliceCertificateStorage);
+        ASAPPKI aliceASAPPKI = new ASAPPKIImpl(asapAliceCertificateStorage);
 
         // setup bob
         ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
                 "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapBobCertificateStorage =
                 new ASAPCertificateStorageImpl(aliceASAPStorage, BOB_ID, BOB_NAME);
-        PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
+        ASAPPKI bobASAPPKI = new ASAPPKIImpl(asapBobCertificateStorage);
 
         // simulation - Bob must send its credentials in some way to Alice - assume that happened
-        CharSequence bobID = bobPersonsStorage.getOwnerID();
-        CharSequence bobName = bobPersonsStorage.getOwnerName();
-        PublicKey bobPublicKey = bobPersonsStorage.getPublicKey();
+        CharSequence bobID = bobASAPPKI.getOwnerID();
+        CharSequence bobName = bobASAPPKI.getOwnerName();
+        PublicKey bobPublicKey = bobASAPPKI.getPublicKey();
 
-        PublicKey alicePublicKey = alicePersonsStorage.getPublicKey();
-        PrivateKey alicePrivateKey = alicePersonsStorage.getPrivateKey();
+        PublicKey alicePublicKey = aliceASAPPKI.getPublicKey();
+        PrivateKey alicePrivateKey = aliceASAPPKI.getPrivateKey();
 
         // alice signs a certificate of bob
         ASAPCertificate asapCertificate = ASAPCertificateImpl.produceCertificate(
-                alicePersonsStorage.getOwnerID(), alicePersonsStorage.getOwnerName(), alicePrivateKey,
+                aliceASAPPKI.getOwnerID(), aliceASAPPKI.getOwnerName(), alicePrivateKey,
                 bobID, bobName, bobPublicKey, now, ASAPCertificateImpl.DEFAULT_SIGNATURE_METHOD);
 
         // verify
@@ -181,25 +181,25 @@ public class PersonsStorageTests {
                 "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPCertificateStorageImpl(aliceASAPStorage, ALICE_ID, ALICE_NAME);
-        PersonsStorage alicePersonsStorage = new PersonsStorageImpl(asapAliceCertificateStorage);
+        ASAPPKI aliceASAPPKI = new ASAPPKIImpl(asapAliceCertificateStorage);
 
         // setup bob
         ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
                 "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
         ASAPCertificateStorage asapBobCertificateStorage =
                 new ASAPCertificateStorageImpl(aliceASAPStorage, BOB_ID, BOB_NAME);
-        PersonsStorage bobPersonsStorage = new PersonsStorageImpl(asapBobCertificateStorage);
+        ASAPPKI bobASAPPKI = new ASAPPKIImpl(asapBobCertificateStorage);
 
         // simulation - Bob must send its credentials in some way to Alice - assume that happened
-        CharSequence bobID = bobPersonsStorage.getOwnerID();
-        CharSequence bobName = bobPersonsStorage.getOwnerName();
-        PublicKey bobPublicKey = bobPersonsStorage.getPublicKey();
+        CharSequence bobID = bobASAPPKI.getOwnerID();
+        CharSequence bobName = bobASAPPKI.getOwnerName();
+        PublicKey bobPublicKey = bobASAPPKI.getPublicKey();
 
-        PublicKey alicePublicKey = alicePersonsStorage.getPublicKey();
-        PrivateKey alicePrivateKey = alicePersonsStorage.getPrivateKey();
+        PublicKey alicePublicKey = aliceASAPPKI.getPublicKey();
+        PrivateKey alicePrivateKey = aliceASAPPKI.getPrivateKey();
 
         // alice signs a certificate of bob
-        ASAPCertificate asapCertificate = alicePersonsStorage.addAndSignPerson(bobID, bobName, bobPublicKey, now);
+        ASAPCertificate asapCertificate = aliceASAPPKI.addAndSignPerson(bobID, bobName, bobPublicKey, now);
 
         // verify
         Assert.assertTrue(asapCertificate.verify(alicePublicKey));

@@ -3,7 +3,7 @@ package net.sharksystem.crypto;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.util.Log;
 import net.sharksystem.persons.OtherPerson;
-import net.sharksystem.persons.PersonsStorage;
+import net.sharksystem.persons.ASAPPKI;
 
 import java.io.*;
 import java.security.InvalidKeyException;
@@ -226,19 +226,19 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
         return false;
     }
 
-    private IdentityAssurance getIdentityAssurance(CharSequence userID, PersonsStorage personsStorage)
+    private IdentityAssurance getIdentityAssurance(CharSequence userID, ASAPPKI ASAPPKI)
             throws ASAPSecurityException {
         // general setup?
         if(this.userIdentityAssurance == null) {
             this.userIdentityAssurance = new HashMap<CharSequence, IdentityAssurance>();
-            this.setupIdentityAssurance(userID, personsStorage);
+            this.setupIdentityAssurance(userID, ASAPPKI);
         }
 
         IdentityAssurance identityAssurance = this.userIdentityAssurance.get(userID);
         // setup individual user?
         if(identityAssurance == null) {
             // setup
-            this.setupIdentityAssurance(userID, personsStorage);
+            this.setupIdentityAssurance(userID, ASAPPKI);
             // try again
             identityAssurance = this.userIdentityAssurance.get(userID);
         }
@@ -247,16 +247,16 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     }
 
     @Override
-    public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, PersonsStorage personsStorage)
+    public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, ASAPPKI ASAPPKI)
             throws ASAPSecurityException {
-        return this.getIdentityAssurance(userID, personsStorage).path;
+        return this.getIdentityAssurance(userID, ASAPPKI).path;
     }
 
-    public int getIdentityAssurances(CharSequence userID, PersonsStorage personsStorage) throws ASAPSecurityException {
-        return this.getIdentityAssurance(userID, personsStorage).getValue();
+    public int getIdentityAssurances(CharSequence userID, ASAPPKI ASAPPKI) throws ASAPSecurityException {
+        return this.getIdentityAssurance(userID, ASAPPKI).getValue();
     }
 
-    private void setupIdentityAssurance(CharSequence userID, PersonsStorage personsStorage) throws ASAPSecurityException {
+    private void setupIdentityAssurance(CharSequence userID, ASAPPKI ASAPPKI) throws ASAPSecurityException {
         Collection<ASAPCertificate> certificates = this.getCertificatesBySubjectID(userID);
         if (certificates == null || certificates.isEmpty()) {
             // we don't know anything about this person
@@ -271,7 +271,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
                     // verify certificate
                     found = true;
                     try {
-                        if(certificate.verify(personsStorage.getPublicKey())) {
+                        if(certificate.verify(ASAPPKI.getPublicKey())) {
                             ArrayList<CharSequence> directPath = new ArrayList<>();
                             directPath.add(this.ownerID);
                             this.userIdentityAssurance.put(userID,
@@ -305,7 +305,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
 
             // find a path and calculate best failure rate of it
             IdentityAssurance tmpIa = this.calculateIdentityProbability(new ArrayList<>(), // init chain
-                    userID, certificate, -1, personsStorage);
+                    userID, certificate, -1, ASAPPKI);
 
             if(bestIa == null) bestIa = tmpIa; // first round
             else {
@@ -332,7 +332,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     private IdentityAssurance calculateIdentityProbability(
             List<CharSequence> idPath, CharSequence currentPersonID,
             ASAPCertificate currentCertificate, float accumulatedIdentityProbability,
-            PersonsStorage personsStorage)
+            ASAPPKI ASAPPKI)
     {
         // are we in a circle?
         if (idPath.contains(currentPersonID)) return this.worstIdentityAssurance; // escape circle
@@ -345,7 +345,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
             // we should be able to verify currentCertificate with owners public key
             PublicKey publicKey = null;
             try {
-                publicKey = personsStorage.getPublicKey();
+                publicKey = ASAPPKI.getPublicKey();
                 if(!this.verify(currentCertificate, publicKey)) {
                     return this.worstIdentityAssurance;
                 }
@@ -384,7 +384,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
             copyIDPath.addAll(idPath);
 
             // convert failure rate number to failure probability something between 0 and 1.
-            float failureProbability = ((float) personsStorage.getSigningFailureRate(proceedingPersonID)) / 10;
+            float failureProbability = ((float) ASAPPKI.getSigningFailureRate(proceedingPersonID)) / 10;
 
             // OK. We have information about this person. Calculate assuranceLevel
             /*
@@ -423,7 +423,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
                     proceedingCertificate.getSubjectID(),
                     proceedingCertificate,
                     accumulatedIdentityProbability,
-                    personsStorage);
+                    ASAPPKI);
 
             if(bestIa == null) bestIa = tmpIa;
             else {

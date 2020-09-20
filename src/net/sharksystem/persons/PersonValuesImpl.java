@@ -3,7 +3,6 @@ package net.sharksystem.persons;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.util.Log;
 import net.sharksystem.crypto.ASAPCertificateStorage;
-import net.sharksystem.crypto.SharkCryptoException;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -15,10 +14,10 @@ public class PersonValuesImpl implements PersonValues {
     private int signingFailureRate;
 
     private final ASAPCertificateStorage certificateStorage;
-    private final PersonsStorageImpl personsStorage;
+    private final ASAPPKIImpl personsStorage;
 
     public PersonValuesImpl(CharSequence id, CharSequence name, ASAPCertificateStorage certificateStorage,
-                            PersonsStorageImpl personsStorage) {
+                            ASAPPKIImpl personsStorage) {
 
         this.id = id;
         this.name = name;
@@ -33,7 +32,7 @@ public class PersonValuesImpl implements PersonValues {
      * @param certificateStorage
      * @param personsStorage
      */
-    PersonValuesImpl(DataInputStream dis, ASAPCertificateStorage certificateStorage, PersonsStorageImpl personsStorage)
+    PersonValuesImpl(DataInputStream dis, ASAPCertificateStorage certificateStorage, ASAPPKIImpl personsStorage)
             throws IOException {
 
         this.certificateStorage = certificateStorage;
