@@ -38,6 +38,10 @@ public class FullAsapPKIStorage extends ASAPPKIImpl implements BasicKeyStore {
      */
     @Override
     public PublicKey getPublicKey(CharSequence peerID) throws ASAPSecurityException {
+        if(this.isOwner(peerID)) {
+            return this.getPublicKey();
+        }
+
         int identityAssurancePeer = this.getIdentityAssurance(peerID);
 
         if(identityAssurancePeer != OtherPerson.LOWEST_IDENTITY_ASSURANCE_LEVEL) {
