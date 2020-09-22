@@ -2,11 +2,13 @@ package net.sharksystem.crypto;
 
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.util.Log;
-import net.sharksystem.persons.ASAPKeyStoreWithWriteAccess;
+import net.sharksystem.persons.ASAPBasicCryptoStorage;
 
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import java.security.*;
 
-public class InMemoASAPKeyStorage implements ASAPKeyStoreWithWriteAccess {
+public class InMemoASAPKeyStorage implements ASAPBasicCryptoStorage {
     private PrivateKey privateKey;
     private PublicKey publicKey;
     private long timeInMillis = 0;
@@ -58,35 +60,26 @@ public class InMemoASAPKeyStorage implements ASAPKeyStoreWithWriteAccess {
     }
 
     //////////////////////////////////////////////////////////////////////////////////////////////
-    //                                      Basic Key Storage                                   //
+    //                                      Basic Crypto Setting                                //
     //////////////////////////////////////////////////////////////////////////////////////////////
-/*
-    @Override
-    public PublicKey getPublicKey(CharSequence subjectID) throws ASAPSecurityException {
-        // this implementation does not store any other public key than its own
-        throw new ASAPSecurityException("this implementation does not store any other public key than its own");
-    }
-
-    @Override
-    public String getRSAEncryptionAlgorithm() {
-        return DEFAULT_RSA_ENCRYPTION_ALGORITHM;
-    }
-
-    @Override
-    public String getRSASigningAlgorithm() {
-        return DEFAULT_SIGNATURE_ALGORITHM;
-    }
 
     @Override
     public SecretKey generateSymmetricKey() throws ASAPSecurityException {
         try {
             KeyGenerator gen = KeyGenerator.getInstance(this.getSymmetricKeyType());
-            gen.init(DEFAULT_AES_KEY_SIZE);
+            gen.init(this.getSymmetricKeyLen());
             SecretKey secretKey = gen.generateKey();
             return secretKey;
         } catch (NoSuchAlgorithmException e) {
             throw new ASAPSecurityException("cannot create symmetric key", e);
         }
+    }
+
+    @Override
+    public long getCreationTime() throws ASAPSecurityException {
+        if(this.publicKey == null || this.privateKey == null)
+            throw new ASAPSecurityException("no keys created yet");
+        return this.timeInMillis;
     }
 
     @Override
@@ -99,15 +92,17 @@ public class InMemoASAPKeyStorage implements ASAPKeyStoreWithWriteAccess {
     }
 
     @Override
-    public boolean isOwner(CharSequence charSequence) {
-        return false;
+    public int getSymmetricKeyLen() {
+        return DEFAULT_AES_KEY_SIZE;
     }
- */
 
     @Override
-    public long getCreationTime() throws ASAPSecurityException {
-        if(this.publicKey == null || this.privateKey == null)
-            throw new ASAPSecurityException("no keys created yet");
-        return this.timeInMillis;
+    public String getRSAEncryptionAlgorithm() {
+        return DEFAULT_RSA_ENCRYPTION_ALGORITHM;
+    }
+
+    @Override
+    public String getRSASigningAlgorithm() {
+        return DEFAULT_SIGNATURE_ALGORITHM;
     }
 }

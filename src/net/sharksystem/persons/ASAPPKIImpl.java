@@ -14,7 +14,7 @@ import static net.sharksystem.crypto.ASAPCertificateImpl.DEFAULT_SIGNATURE_METHO
 
 /**
  * This class adds person management to certificate management. Certificate Storage is a separate
- * object. Person information are managed with this class. They can be seen as index into
+ * object. Person information are managed with this class. They can be seen as index of
  * certificates.
  */
 public class ASAPPKIImpl implements ASAPPKI, ASAPKeyStoreWriteAccess {

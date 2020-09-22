@@ -4,7 +4,6 @@ import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.crypto.*;
 
 import javax.crypto.SecretKey;
-import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Collection;
 
@@ -12,23 +11,17 @@ import java.util.Collection;
  * Class uses ASAP PKI to meet requirements of BasicKeyStore
  */
 public class FullAsapPKIStorage extends ASAPPKIImpl implements BasicKeyStore {
+    private final ASAPBasicCryptoStorage asapKeyStorage;
 
     public FullAsapPKIStorage(ASAPCertificateStorage certificateStorage,
-                                  ASAPKeyStoreWithWriteAccess asapKeyStorage,
+                              ASAPBasicCryptoStorage asapKeyStorage,
                               String signingAlgorithm)
 
             throws ASAPSecurityException {
 
         super(certificateStorage, asapKeyStorage, signingAlgorithm);
+        this.asapKeyStorage = asapKeyStorage;
     }
-
-/*
-    public FullAsapPKIStorage(ASAPCertificateStorage certificateStorage)
-            throws ASAPSecurityException {
-
-        super(certificateStorage);
-    }
- */
 
     /**
      * Find public key in certificate storage
@@ -66,33 +59,31 @@ public class FullAsapPKIStorage extends ASAPPKIImpl implements BasicKeyStore {
 
     @Override
     public String getRSAEncryptionAlgorithm() {
-        return BasicKeyStore.DEFAULT_RSA_ENCRYPTION_ALGORITHM;
+        return this.asapKeyStorage.getRSAEncryptionAlgorithm();
     }
 
     @Override
     public String getRSASigningAlgorithm() {
-        return BasicKeyStore.DEFAULT_SIGNATURE_ALGORITHM;
+        return this.asapKeyStorage.getRSASigningAlgorithm();
     }
 
     @Override
     public SecretKey generateSymmetricKey() throws ASAPSecurityException {
-        return ASAPCryptoAlgorithms.generateSymmetricKey(
-                this.getSymmetricKeyType(),
-                this.getSymmetricKeyLen());
+        return this.asapKeyStorage.generateSymmetricKey();
     }
 
     @Override
     public String getSymmetricEncryptionAlgorithm() {
-        return BasicKeyStore.DEFAULT_SYMMETRIC_ENCRYPTION_ALGORITHM;
+        return this.asapKeyStorage.getSymmetricEncryptionAlgorithm();
     }
 
     @Override
     public String getSymmetricKeyType() {
-        return BasicKeyStore.DEFAULT_SYMMETRIC_KEY_TYPE;
+        return this.asapKeyStorage.getSymmetricKeyType();
     }
 
     @Override
     public int getSymmetricKeyLen() {
-        return BasicKeyStore.DEFAULT_AES_KEY_SIZE;
+        return this.asapKeyStorage.getSymmetricKeyLen();
     }
 }
