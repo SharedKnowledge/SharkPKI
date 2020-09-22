@@ -26,6 +26,22 @@ public class SampleFullAsapPKIStorage extends FullAsapPKIStorage {
             DEFAULT_SIGNATURE_METHOD);
     }
 
+    /**
+     * fits better to android sn2
+     * @param certificateStorage
+     * @param asapKeyStorage
+     * @param signingAlgorithm
+     * @throws ASAPSecurityException
+     */
+    public SampleFullAsapPKIStorage(ASAPCertificateStorage certificateStorage,
+                              ASAPKeyStoreWithWriteAccess asapKeyStorage,
+                              String signingAlgorithm)
+
+            throws ASAPSecurityException {
+
+        super(certificateStorage, asapKeyStorage, signingAlgorithm);
+    }
+
     public void fillWithExampleData() throws ASAPSecurityException, IOException {
         ASAPCertificateStorage certificateStorage;
         ASAPPKI francisStorage = null, gloriaStorage = null, hassanStorage = null, irisStorage;

@@ -12,6 +12,11 @@ import java.util.*;
 import static net.sharksystem.crypto.ASAPCertificateImpl.DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS;
 import static net.sharksystem.crypto.ASAPCertificateImpl.DEFAULT_SIGNATURE_METHOD;
 
+/**
+ * This class adds person management to certificate management. Certificate Storage is a separate
+ * object. Person information are managed with this class. They can be seen as index into
+ * certificates.
+ */
 public class ASAPPKIImpl implements ASAPPKI, ASAPKeyStoreWriteAccess {
     private final ASAPCertificateStorage certificateStorage;
     private final ASAPKeyStoreWithWriteAccess asapKeyStorage;
@@ -311,7 +316,7 @@ public class ASAPPKIImpl implements ASAPPKI, ASAPKeyStoreWriteAccess {
      */
     void save() {
         // nothing - should be overwritten
-        Log.writeLog(this, "save() schould be overwritten by inheriting classes");
+        Log.writeLog(this, "save() should be overwritten by inheriting classes");
     }
 
     @Override

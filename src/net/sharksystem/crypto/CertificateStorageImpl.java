@@ -49,13 +49,16 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
     //                                       getter on certificate map                                         //
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @Override
-    public Collection<ASAPCertificate> getCertificatesBySubjectID(CharSequence subjectID) {
+    private void checkCertificatesBySubjectIDMap() {
         if(this.certificatesBySubjectIDMap == null) {
             this.certificatesBySubjectIDMap = new HashMap<>();
             this.readCertificatesFromStorage(this.certificatesBySubjectIDMap);
         }
+    }
 
+    @Override
+    public Collection<ASAPCertificate> getCertificatesBySubjectID(CharSequence subjectID) {
+        this.checkCertificatesBySubjectIDMap();
         Set<ASAPCertificate> asapCertificates = this.certificatesBySubjectIDMap.get(subjectID);
         if(asapCertificates == null) {
             asapCertificates = new HashSet<>();
@@ -70,6 +73,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
 
     @Override
     public Collection<ASAPCertificate> getCertificatesByIssuerID(CharSequence issuerID) {
+        this.checkCertificatesBySubjectIDMap();
         Set<ASAPCertificate> certSetIssuer = new HashSet<>();
         for(Set<ASAPCertificate> certSet : this.certificatesBySubjectIDMap.values()) {
             for(ASAPCertificate cert : certSet) {
@@ -104,9 +108,7 @@ public abstract class CertificateStorageImpl implements ASAPCertificateStorage {
 
     public Collection<ASAPCertificate> getNewReceivedCertificates() {
         // sync with external changes
-        if(this.certificatesBySubjectIDMap == null) {
-            this.certificatesBySubjectIDMap = new HashMap<>();
-        }
+        this.checkCertificatesBySubjectIDMap();
 
         Collection<ASAPCertificate> newCerts = this.readReceivedCertificates(this.certificatesBySubjectIDMap);
         if(!newCerts.isEmpty()) {
