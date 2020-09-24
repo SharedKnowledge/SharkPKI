@@ -48,6 +48,13 @@ public class InMemoASAPKeyStorage implements ASAPBasicCryptoStorage {
     }
 
     @Override
+    public long getCreationTime() throws ASAPSecurityException {
+        if(this.publicKey == null || this.privateKey == null)
+            throw new ASAPSecurityException("no keys created yet");
+        return this.timeInMillis;
+    }
+
+    @Override
     public PrivateKey getPrivateKey() throws ASAPSecurityException {
         if(this.privateKey == null) throw new ASAPSecurityException("private key does not exist");
         return this.privateKey;
@@ -73,13 +80,6 @@ public class InMemoASAPKeyStorage implements ASAPBasicCryptoStorage {
         } catch (NoSuchAlgorithmException e) {
             throw new ASAPSecurityException("cannot create symmetric key", e);
         }
-    }
-
-    @Override
-    public long getCreationTime() throws ASAPSecurityException {
-        if(this.publicKey == null || this.privateKey == null)
-            throw new ASAPSecurityException("no keys created yet");
-        return this.timeInMillis;
     }
 
     @Override

@@ -30,23 +30,33 @@ public class ASAPPKIImpl implements ASAPPKI, ASAPKeyStoreWriteAccess {
         this.certificateStorage = certificateStorage;
         this.asapKeyStorage = asapKeyStorage;
 
-        Calendar createCal = null;
+        long creationTime = DateTimeHelper.TIME_NOT_SET;
         try {
-            long creationTime = this.asapKeyStorage.getCreationTime(); // throws exception if not set
+            creationTime = this.asapKeyStorage.getCreationTime();
+        } catch (ASAPSecurityException e) {
+            Log.writeLog(this, "creation time not set. No keypair so far?! : "
+                    + e.getLocalizedMessage());
+        }
 
-            // ok, that's weired but I did not wanted another if-than-else clause
-            if(creationTime == DateTimeHelper.TIME_NOT_SET) throw new ASAPSecurityException("time not set");
-
+        boolean createNewPair = false;
+        if(creationTime == DateTimeHelper.TIME_NOT_SET) {
+            createNewPair = true;
+        } else {
             // check expiration time
-            createCal = ASAPCertificateImpl.long2Calendar(creationTime);
+            Calendar createCal = ASAPCertificateImpl.long2Calendar(creationTime);
             createCal.add(Calendar.YEAR, DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS);
             if (createCal.getTimeInMillis() < System.currentTimeMillis()) {
                 Log.writeLog(this, "local key pair expired - reset");
-                this.asapKeyStorage.generateKeyPair();
+                createNewPair = true;
             }
-        } catch (ASAPSecurityException e) {
-            Log.writeLog(this, "failure receiving keys: " + e.getLocalizedMessage());
-            this.asapKeyStorage.generateKeyPair();
+        }
+
+        if(createNewPair) {
+            try {
+                this.asapKeyStorage.generateKeyPair();
+            } catch (ASAPSecurityException e) {
+                Log.writeLog(this, "failure receiving keys: " + e.getLocalizedMessage());
+            }
         }
     }
 
