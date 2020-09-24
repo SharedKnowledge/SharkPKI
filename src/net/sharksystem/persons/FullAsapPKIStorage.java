@@ -62,12 +62,12 @@ public class FullAsapPKIStorage extends ASAPPKIImpl implements BasicKeyStore {
 
     @Override
     public String getAsymmetricEncryptionAlgorithm() {
-        return this.asapKeyStorage.DEFAULT_ASYMMETRIC_ENCRYPTION_ALGORITHM;
+        return this.asapKeyStorage.getAsymmetricEncryptionAlgorithm();
     }
 
     @Override
     public String getAsymmetricSigningAlgorithm() {
-        return this.asapKeyStorage.DEFAULT_ASYMMETRIC_SIGNATURE_ALGORITHM;
+        return this.asapKeyStorage.getAsymmetricSigningAlgorithm();
     }
 
     @Override
