@@ -4,10 +4,9 @@ import net.sharksystem.asap.ASAPEngine;
 import net.sharksystem.asap.ASAPEngineFS;
 import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
-import net.sharksystem.crypto.ASAPCertificate;
 import net.sharksystem.crypto.ASAPCertificateStorage;
 import net.sharksystem.crypto.ASAPCertificateStorageImpl;
-import org.junit.Assert;
+import net.sharksystem.crypto.InMemoASAPKeyStorage;
 import org.junit.Test;
 
 import java.io.File;
@@ -16,7 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
 import java.security.SignatureException;
 
 public class HelpAnalyse {
@@ -39,8 +37,9 @@ public class HelpAnalyse {
 
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPCertificateStorageImpl(ownerASAPStorage, OWNER_ID, OWNER_NAME);
-        ASAPPKI ownerASAPPKI = new ASAPPKIImpl(asapAliceCertificateStorage);
 
+        ASAPBasicCryptoStorage ownerCryptoStorage = new InMemoASAPKeyStorage();
+        ASAPPKI ownerASAPPKI = new ASAPPKIImpl(asapAliceCertificateStorage, ownerCryptoStorage);
 
         File personsStorageFile = new File(PERSONSTORAGEFILE);
         InputStream is = new FileInputStream(personsStorageFile);

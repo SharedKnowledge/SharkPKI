@@ -5,8 +5,6 @@ import net.sharksystem.crypto.*;
 
 import java.io.IOException;
 
-import static net.sharksystem.crypto.ASAPCertificateImpl.DEFAULT_SIGNATURE_METHOD;
-
 public class SampleFullAsapPKIStorage extends FullAsapPKIStorage {
     public static final CharSequence FRANCIS_ID = "1000";
     public static final CharSequence FRANCIS_NAME = "Francis";
@@ -22,8 +20,7 @@ public class SampleFullAsapPKIStorage extends FullAsapPKIStorage {
 
         super(
             new InMemoCertificateStorageImpl(ownerID, ownerName),
-            new InMemoASAPKeyStorage(),
-            DEFAULT_SIGNATURE_METHOD);
+            new InMemoASAPKeyStorage());
     }
 
     public void fillWithExampleData() throws ASAPSecurityException, IOException {
@@ -32,17 +29,19 @@ public class SampleFullAsapPKIStorage extends FullAsapPKIStorage {
 
         long now = System.currentTimeMillis();
 
+        ASAPBasicCryptoStorage asapKeyStorage = this.getASAPBasicCryptoStorage();
+
         // Owner signs Francis ia(F): 10
         if(!this.getOwnerID().toString().equalsIgnoreCase(FRANCIS_ID.toString())) {
             certificateStorage = new InMemoCertificateStorageImpl(FRANCIS_ID, FRANCIS_NAME);
-            francisStorage = new ASAPPKIImpl(certificateStorage);
+            francisStorage = new ASAPPKIImpl(certificateStorage, asapKeyStorage);
             this.addAndSignPerson(FRANCIS_ID, FRANCIS_NAME, francisStorage.getPublicKey(), now);
         }
 
         // Francis signs Gloria: cef(f) = 0.5 ia(g) = 5.0
         if(!this.getOwnerID().toString().equalsIgnoreCase(GLORIA_ID.toString())) {
             certificateStorage = new InMemoCertificateStorageImpl(GLORIA_ID, GLORIA_NAME);
-            gloriaStorage = new ASAPPKIImpl(certificateStorage);
+            gloriaStorage = new ASAPPKIImpl(certificateStorage, asapKeyStorage);
             if(francisStorage != null) {
                 ASAPCertificate asapCertificate =
                         francisStorage.addAndSignPerson(
@@ -54,7 +53,7 @@ public class SampleFullAsapPKIStorage extends FullAsapPKIStorage {
         // Gloria signs Hassan: cef(g) = 0.5 ia(h) = 2.5 == 3
         if(!this.getOwnerID().toString().equalsIgnoreCase(HASSAN_ID.toString())) {
             certificateStorage = new InMemoCertificateStorageImpl(HASSAN_ID, HASSAN_NAME);
-            hassanStorage = new ASAPPKIImpl(certificateStorage);
+            hassanStorage = new ASAPPKIImpl(certificateStorage, asapKeyStorage);
             if(gloriaStorage != null) {
                 ASAPCertificate asapCertificate =
                         gloriaStorage.addAndSignPerson(HASSAN_ID, HASSAN_NAME, hassanStorage.getPublicKey(), now);
@@ -65,7 +64,7 @@ public class SampleFullAsapPKIStorage extends FullAsapPKIStorage {
         // Hassan signs Iris: cef(h) = 0.5: ia(i) = 1.25 == 1
         if(!this.getOwnerID().toString().equalsIgnoreCase(IRIS_ID.toString())) {
             certificateStorage = new InMemoCertificateStorageImpl(IRIS_ID, IRIS_NAME);
-            irisStorage = new ASAPPKIImpl(certificateStorage);
+            irisStorage = new ASAPPKIImpl(certificateStorage, asapKeyStorage);
             if(hassanStorage != null) {
                 ASAPCertificate asapCertificate =
                         hassanStorage.addAndSignPerson(IRIS_ID, IRIS_NAME, irisStorage.getPublicKey(), now);

@@ -9,6 +9,7 @@ import net.sharksystem.cmdline.TCPStream;
 import net.sharksystem.crypto.ASAPCertificate;
 import net.sharksystem.crypto.ASAPCertificateStorage;
 import net.sharksystem.crypto.ASAPCertificateStorageImpl;
+import net.sharksystem.crypto.InMemoASAPKeyStorage;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -43,7 +44,8 @@ public class ExchangeTest {
 
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPCertificateStorageImpl(aliceStorage, ALICE_ID, ALICE_NAME);
-        ASAPPKI aliceASAPPKI = new ASAPPKIImpl(asapAliceCertificateStorage);
+        ASAPBasicCryptoStorage aliceCryptoStorage = new InMemoASAPKeyStorage();
+        ASAPPKI aliceASAPPKI = new ASAPPKIImpl(asapAliceCertificateStorage, aliceCryptoStorage);
 
         // setup bob
         ASAPStorage bobStorage = ASAPEngineFS.getASAPStorage(
@@ -51,7 +53,8 @@ public class ExchangeTest {
 
         ASAPCertificateStorage asapBobCertificateStorage =
                 new ASAPCertificateStorageImpl(bobStorage, BOB_ID, BOB_NAME);
-        ASAPPKI bobASAPPKI = new ASAPPKIImpl(asapBobCertificateStorage);
+        ASAPBasicCryptoStorage bobCryptoStorage = new InMemoASAPKeyStorage();
+        ASAPPKI bobASAPPKI = new ASAPPKIImpl(asapBobCertificateStorage, bobCryptoStorage);
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         //                                        prepare multi engines                                  //

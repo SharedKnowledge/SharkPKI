@@ -19,25 +19,16 @@ import static net.sharksystem.crypto.ASAPCertificateImpl.DEFAULT_SIGNATURE_METHO
  */
 public class ASAPPKIImpl implements ASAPPKI, ASAPKeyStoreWriteAccess {
     private final ASAPCertificateStorage certificateStorage;
-    private final ASAPKeyStoreWithWriteAccess asapKeyStorage;
-    private final String signingAlgorithm;
+    private final ASAPBasicCryptoStorage asapKeyStorage;
 
     // keep other persons - contact list in other words
     private List<PersonValuesImpl> personsList = new ArrayList<>();
 
-    public ASAPPKIImpl(ASAPCertificateStorage certificateStorage) throws ASAPSecurityException {
-        this(certificateStorage, new InMemoASAPKeyStorage(), DEFAULT_SIGNATURE_METHOD);
-    }
-
-    public ASAPPKIImpl(ASAPCertificateStorage certificateStorage,
-                       ASAPKeyStoreWithWriteAccess asapKeyStorage,
-                       String signingAlgorithm)
-
+    public ASAPPKIImpl(ASAPCertificateStorage certificateStorage, ASAPBasicCryptoStorage asapKeyStorage)
             throws ASAPSecurityException {
 
         this.certificateStorage = certificateStorage;
         this.asapKeyStorage = asapKeyStorage;
-        this.signingAlgorithm = signingAlgorithm;
 
         Calendar createCal = null;
         try {
@@ -177,7 +168,7 @@ public class ASAPPKIImpl implements ASAPPKI, ASAPKeyStoreWriteAccess {
                     userName,
                     publicKey,
                     validSince,
-                    this.signingAlgorithm);
+                    this.asapKeyStorage.getAsymmetricSigningAlgorithm());
 
             // make it persistent
             Log.writeLog(this, "store certificate");

@@ -14,13 +14,16 @@ public class FullAsapPKIStorage extends ASAPPKIImpl implements BasicKeyStore {
     private final ASAPBasicCryptoStorage asapKeyStorage;
 
     public FullAsapPKIStorage(ASAPCertificateStorage certificateStorage,
-                              ASAPBasicCryptoStorage asapKeyStorage,
-                              String signingAlgorithm)
+                              ASAPBasicCryptoStorage asapKeyStorage)
 
             throws ASAPSecurityException {
 
-        super(certificateStorage, asapKeyStorage, signingAlgorithm);
+        super(certificateStorage, asapKeyStorage);
         this.asapKeyStorage = asapKeyStorage;
+    }
+
+    public ASAPBasicCryptoStorage getASAPBasicCryptoStorage() {
+        return this.asapKeyStorage;
     }
 
     /**
@@ -58,13 +61,13 @@ public class FullAsapPKIStorage extends ASAPPKIImpl implements BasicKeyStore {
     }
 
     @Override
-    public String getRSAEncryptionAlgorithm() {
-        return this.asapKeyStorage.getRSAEncryptionAlgorithm();
+    public String getAsymmetricEncryptionAlgorithm() {
+        return this.asapKeyStorage.DEFAULT_ASYMMETRIC_ENCRYPTION_ALGORITHM;
     }
 
     @Override
-    public String getRSASigningAlgorithm() {
-        return this.asapKeyStorage.getRSASigningAlgorithm();
+    public String getAsymmetricSigningAlgorithm() {
+        return this.asapKeyStorage.DEFAULT_ASYMMETRIC_SIGNATURE_ALGORITHM;
     }
 
     @Override

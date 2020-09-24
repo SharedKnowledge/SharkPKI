@@ -93,16 +93,16 @@ public class InMemoASAPKeyStorage implements ASAPBasicCryptoStorage {
 
     @Override
     public int getSymmetricKeyLen() {
-        return DEFAULT_AES_KEY_SIZE;
+        return DEFAULT_SYMMETRIC_KEY_SIZE;
     }
 
     @Override
-    public String getRSAEncryptionAlgorithm() {
-        return DEFAULT_RSA_ENCRYPTION_ALGORITHM;
+    public String getAsymmetricEncryptionAlgorithm() {
+        return DEFAULT_ASYMMETRIC_ENCRYPTION_ALGORITHM;
     }
 
     @Override
-    public String getRSASigningAlgorithm() {
-        return DEFAULT_SIGNATURE_ALGORITHM;
+    public String getAsymmetricSigningAlgorithm() {
+        return DEFAULT_ASYMMETRIC_SIGNATURE_ALGORITHM;
     }
 }
