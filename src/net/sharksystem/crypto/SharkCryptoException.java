@@ -1,8 +1,8 @@
 package net.sharksystem.crypto;
 
-import net.sharksystem.SharkException;
+import net.sharksystem.asap.ASAPException;
 
-public class SharkCryptoException extends SharkException {
+public class SharkCryptoException extends ASAPException {
         public SharkCryptoException() { super(); }
 
         public SharkCryptoException(String message) { super(message); }

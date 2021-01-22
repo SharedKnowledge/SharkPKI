@@ -1,7 +1,7 @@
 package net.sharksystem.persons;
 
 import net.sharksystem.asap.*;
-import net.sharksystem.asap.ASAPMessages;
+import net.sharksystem.asap.internals.*;
 import net.sharksystem.asap.util.ASAPPeerHandleConnectionThread;
 import net.sharksystem.asap.util.Helper;
 import net.sharksystem.asap.util.Log;
@@ -39,7 +39,7 @@ public class ExchangeTest {
         ASAPEngineFS.removeFolder(BOB_ROOT_FOLDER); // clean previous version before
 
         // setup alice
-        ASAPStorage aliceStorage = ASAPEngineFS.getASAPStorage(
+        ASAPInternalStorage aliceStorage = ASAPEngineFS.getASAPStorage(
                 ALICE_ID, ALICE_APP_FOLDER, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
 
         ASAPCertificateStorage asapAliceCertificateStorage =
@@ -48,7 +48,7 @@ public class ExchangeTest {
         ASAPPKI aliceASAPPKI = new ASAPPKIImpl(asapAliceCertificateStorage, aliceCryptoStorage);
 
         // setup bob
-        ASAPStorage bobStorage = ASAPEngineFS.getASAPStorage(
+        ASAPInternalStorage bobStorage = ASAPEngineFS.getASAPStorage(
                 BOB_ID, BOB_APP_FOLDER, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
 
         ASAPCertificateStorage asapBobCertificateStorage =
@@ -65,14 +65,14 @@ public class ExchangeTest {
         supportedFormats.add(ASAPPKI.CREDENTIAL_APP_NAME);
 
         CredentialReceiver aliceListener = new CredentialReceiver(aliceASAPPKI);
-        ASAPPeer alicePeer = ASAPPeerFS.createASAPPeer(
-                ALICE_ID, ALICE_ROOT_FOLDER, ASAPPeer.DEFAULT_MAX_PROCESSING_TIME, supportedFormats, aliceListener);
+        ASAPInternalPeer alicePeer = ASAPInternalPeerFS.createASAPPeer(
+                ALICE_ID, ALICE_ROOT_FOLDER, ASAPPeerService.DEFAULT_MAX_PROCESSING_TIME, supportedFormats, aliceListener);
 
         //aliceEngine.activateOnlineMessages();
 
         SignCredentialAndReply bobListener = new SignCredentialAndReply(BOB_ROOT_FOLDER, bobASAPPKI);
-        ASAPPeer bobPeer = ASAPPeerFS.createASAPPeer(
-                BOB_ID, BOB_ROOT_FOLDER, ASAPPeer.DEFAULT_MAX_PROCESSING_TIME, supportedFormats, bobListener);
+        ASAPInternalPeer bobPeer = ASAPInternalPeerFS.createASAPPeer(
+                BOB_ID, BOB_ROOT_FOLDER, ASAPPeerService.DEFAULT_MAX_PROCESSING_TIME, supportedFormats, bobListener);
         bobListener.setAsapPeer(bobPeer);
 
         //bobEngine.activateOnlineMessages();
@@ -150,7 +150,7 @@ public class ExchangeTest {
     private class SignCredentialAndReply implements ASAPChunkReceivedListener {
         private final String folderName;
         private final ASAPPKI ASAPPKI;
-        private ASAPPeer asapPeer;
+        private ASAPInternalPeer asapPeer;
 
         public SignCredentialAndReply(String folderName, ASAPPKI ASAPPKI) {
             this.folderName = folderName;
@@ -196,7 +196,7 @@ public class ExchangeTest {
             }
         }
 
-        public void setAsapPeer(ASAPPeer asapPeer) {
+        public void setAsapPeer(ASAPInternalPeer asapPeer) {
             this.asapPeer = asapPeer;
         }
     }

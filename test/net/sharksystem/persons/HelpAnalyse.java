@@ -1,9 +1,9 @@
 package net.sharksystem.persons;
 
-import net.sharksystem.asap.ASAPEngine;
-import net.sharksystem.asap.ASAPEngineFS;
 import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
+import net.sharksystem.asap.internals.ASAPEngine;
+import net.sharksystem.asap.internals.ASAPEngineFS;
 import net.sharksystem.crypto.ASAPCertificateStorage;
 import net.sharksystem.crypto.ASAPCertificateStorageImpl;
 import net.sharksystem.crypto.InMemoASAPKeyStorage;
