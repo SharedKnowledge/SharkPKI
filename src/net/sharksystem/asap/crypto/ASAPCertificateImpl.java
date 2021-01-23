@@ -1,7 +1,7 @@
 package net.sharksystem.asap.crypto;
 
+import net.sharksystem.Log;
 import net.sharksystem.asap.util.DateTimeHelper;
-import net.sharksystem.asap.util.Log;
 
 import java.io.*;
 import java.security.*;

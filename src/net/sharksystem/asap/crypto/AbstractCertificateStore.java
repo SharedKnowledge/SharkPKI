@@ -1,7 +1,7 @@
 package net.sharksystem.asap.crypto;
 
+import net.sharksystem.Log;
 import net.sharksystem.asap.ASAPSecurityException;
-import net.sharksystem.asap.util.Log;
 import net.sharksystem.asap.persons.OtherPerson;
 import net.sharksystem.asap.persons.ASAPCertificateStore;
 

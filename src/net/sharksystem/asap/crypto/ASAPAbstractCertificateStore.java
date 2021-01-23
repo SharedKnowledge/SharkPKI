@@ -1,8 +1,8 @@
 package net.sharksystem.asap.crypto;
 
+import net.sharksystem.Log;
 import net.sharksystem.asap.*;
 import net.sharksystem.asap.ASAPMessages;
-import net.sharksystem.asap.util.Log;
 
 import javax.management.RuntimeErrorException;
 import java.io.*;

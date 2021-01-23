@@ -1,7 +1,7 @@
 package net.sharksystem.asap.persons;
 
+import net.sharksystem.Log;
 import net.sharksystem.asap.ASAPSecurityException;
-import net.sharksystem.asap.util.Log;
 import net.sharksystem.asap.crypto.ASAPCertificateStorage;
 
 import java.io.DataInputStream;

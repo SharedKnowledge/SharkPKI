@@ -1,12 +1,12 @@
 package net.sharksystem.asap.persons;
 
+import net.sharksystem.Log;
 import net.sharksystem.asap.*;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
 import net.sharksystem.asap.internals.*;
 import net.sharksystem.asap.util.ASAPPeerHandleConnectionThread;
 import net.sharksystem.asap.util.Helper;
-import net.sharksystem.asap.util.Log;
 import net.sharksystem.cmdline.TCPStream;
 import net.sharksystem.asap.crypto.ASAPCertificate;
 import net.sharksystem.asap.crypto.ASAPCertificateStorage;

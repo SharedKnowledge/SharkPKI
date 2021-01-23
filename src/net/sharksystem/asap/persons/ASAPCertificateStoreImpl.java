@@ -1,9 +1,9 @@
 package net.sharksystem.asap.persons;
 
+import net.sharksystem.Log;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.util.DateTimeHelper;
-import net.sharksystem.asap.util.Log;
 import net.sharksystem.asap.crypto.*;
 
 import java.io.*;
