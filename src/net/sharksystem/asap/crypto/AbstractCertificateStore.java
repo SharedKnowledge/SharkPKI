@@ -1,9 +1,9 @@
 package net.sharksystem.asap.crypto;
 
-import net.sharksystem.Log;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.persons.OtherPerson;
 import net.sharksystem.asap.persons.ASAPCertificateStore;
+import net.sharksystem.utils.Log;
 
 import java.io.*;
 import java.security.InvalidKeyException;

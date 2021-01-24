@@ -1,7 +1,7 @@
 package net.sharksystem.asap.persons;
 
 import net.sharksystem.asap.ASAPSecurityException;
-import net.sharksystem.asap.util.DateTimeHelper;
+import net.sharksystem.asap.utils.DateTimeHelper;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

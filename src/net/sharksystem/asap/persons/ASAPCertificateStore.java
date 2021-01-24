@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.List;
 
 public interface ASAPCertificateStore {
-    CharSequence CREDENTIAL_APP_NAME = "SN2Credentials";
+    String CREDENTIAL_APP_NAME = "SN2Credentials";
     CharSequence CREDENTIAL_URI = "sn2://credential";
 
     CharSequence getOwnerID();
