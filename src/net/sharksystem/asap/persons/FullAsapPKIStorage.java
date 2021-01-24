@@ -12,7 +12,9 @@ import java.util.Collection;
 /**
  * Class uses ASAP PKI to meet requirements of ASAPKeyStore
  */
-public class FullAsapPKIStorage extends ASAPCertificateStoreImpl implements ASAPKeyStore {
+public class FullAsapPKIStorage extends ASAPCertificateStoreImpl implements
+        ASAPKeyStore, ASAPCertificateStore {
+
     private final ASAPKeyStore asapKeyStorage;
 
     public FullAsapPKIStorage(ASAPCertificateStorage certificateStorage,
