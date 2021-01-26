@@ -17,10 +17,36 @@ import java.util.List;
 
 /**
  * Shark component facade of this certificate / PKI component
+ /**
+ * This component has three major function:
+ * <ul>
+ *     <li>It implements <a href="http://sharksystem.net/asap/javadoc/net/sharksystem/asap/crypto/ASAPKeyStore.html">ASAPKeyStore</a></li>
+ *     <li>It stores received certificates and offers search methods</li>
+ *     <li>It offers means to send a a public key and receive public keys to initiate certificate creation</li>
+ * </ul>
+ *
+ * You should use specific interfaces for specific tasks to make your code clearer, e.g.
+ * <br/><br/>
+ * <code>SharkPeer sPeer = ...;</code><br/>
+ * <code>SharkCertificateComponent component = sPeer.getComponent(SharkCertificateComponent.class);</code><br/>
+ * <code>// use a specific interface</code><br/>
+ * <code>ASAPKeyStore asapKeyStore = component;</code><br/>
+ * <code>ASAPCertificateStore asapCertStore = component;</code><br/>
+ * <br/>
+ *
+ * <ul>
+ *     <li>Use <a href="http://sharksystem.net/asap/javadoc/net/sharksystem/asap/crypto/ASAPKeyStore.html">ASAPKeyStore</a>
+ *     interface to manage key of this local peer.</li>
+ *     <li>Use ASAPCertificateStore for certificate management and creation.</li>
+ * </ul>
+ *
+ * @see ASAPCertificateStore
+ *
+ *
+ *
  */
 @ASAPFormats(formats = {ASAPCertificateStore.CREDENTIAL_APP_NAME, ASAPCertificateStorage.CERTIFICATE_APP_NAME})
-public class SharkCertificateComponent implements SharkComponent,
-        ASAPKeyStore, ASAPCertificateStore {
+public class SharkCertificateComponent implements SharkComponent, ASAPKeyStore, ASAPCertificateStore {
 
     private FullAsapPKIStorage asapPKIStorage = null;
 
