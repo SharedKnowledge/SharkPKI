@@ -1,12 +1,12 @@
 package net.sharksystem;
 
 public class SharkCertificateComponentFactory implements SharkComponentFactory {
-    private SharkCertificateComponent instance = null;
+    private SharkCertificateComponentImpl instance = null;
 
     @Override
     public SharkComponent getComponent() {
         if(this.instance == null) {
-            this.instance = new SharkCertificateComponent();
+            this.instance = new SharkCertificateComponentImpl();
         }
 
         return this.instance;

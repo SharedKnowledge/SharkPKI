@@ -1,13 +1,13 @@
 package net.sharksystem;
 
-import net.sharksystem.asap.ASAPException;
-import net.sharksystem.asap.ASAPPeer;
 import net.sharksystem.asap.ASAPSecurityException;
-import net.sharksystem.asap.ASAPStorage;
-import net.sharksystem.asap.crypto.*;
-import net.sharksystem.asap.persons.*;
+import net.sharksystem.asap.crypto.ASAPCertificate;
+import net.sharksystem.asap.crypto.ASAPCertificateStorage;
+import net.sharksystem.asap.crypto.ASAPKeyStore;
+import net.sharksystem.asap.persons.ASAPCertificateStore;
+import net.sharksystem.asap.persons.CredentialMessage;
+import net.sharksystem.asap.persons.PersonValuesImpl;
 
-import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -16,22 +16,28 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Shark component facade of this certificate / PKI component
- /**
- * This component has three major function:
- * <ul>
- *     <li>It implements <a href="http://sharksystem.net/asap/javadoc/net/sharksystem/asap/crypto/ASAPKeyStore.html">ASAPKeyStore</a></li>
- *     <li>It stores received certificates and offers search methods</li>
- *     <li>It offers means to send a a public key and receive public keys to initiate certificate creation</li>
- * </ul>
+ * This component provides several information and methods:
  *
+ * <ul>
+ *     <li>A list of peers (actually real persons which are assumed to be owners of an encountered peer (device))</li>
+ *     <li>A storage of certificates</li>
+ *     <li>means to create a new certificate</li>
+ *     <li>means to send public key and some other information to ask another peer for certification</li>
+ *     <li>Methods to display information relevant for this PIK</li>
+ *     <li>The component also allows to estimate a failure rate of peers during the signing process. This
+ *     estimation is used to calculate an identity assurance, see Wiki of this component for details.</li>
+ * </ul>
+ * <br/>
+ * See <a href="https://github.com/SharedKnowledge/ASAPCertificateExchange/wiki">Wiki of this component
+ * for more details and explanations</a>.
+ * <br/>
  * You should use specific interfaces for specific tasks to make your code clearer, e.g.
  * <br/><br/>
  * <code>SharkPeer sPeer = ...;</code><br/>
  * <code>SharkCertificateComponent component = sPeer.getComponent(SharkCertificateComponent.class);</code><br/>
  * <code>// use a specific interface</code><br/>
  * <code>ASAPKeyStore asapKeyStore = component;</code><br/>
- * <code>ASAPCertificateStore asapCertStore = component;</code><br/>
+ * <code>SharkCertificateComponent cerComponent = component;</code><br/>
  * <br/>
  *
  * <ul>
@@ -39,221 +45,221 @@ import java.util.List;
  *     interface to manage key of this local peer.</li>
  *     <li>Use ASAPCertificateStore for certificate management and creation.</li>
  * </ul>
+ * <br/>
+ * Have a look in the test folder. There are usage examples which can in most cases uses in a cut&paste manner.
  *
- * @see ASAPCertificateStore
- *
- *
- *
+ * @see SharkCertificateComponent
  */
+
 @ASAPFormats(formats = {ASAPCertificateStore.CREDENTIAL_APP_NAME, ASAPCertificateStorage.CERTIFICATE_APP_NAME})
-public class SharkCertificateComponent implements SharkComponent, ASAPKeyStore, ASAPCertificateStore {
+public interface SharkCertificateComponent extends SharkComponent, ASAPKeyStore {
+    String CREDENTIAL_APP_NAME = "SN2Credentials";
+    CharSequence CREDENTIAL_URI = "sn2://credential";
 
-    private FullAsapPKIStorage asapPKIStorage = null;
+    /**
+     * Peers can ask each other to sign their public keys. This process can be automated by setting this
+     * flag on. In that case, this component would automatically send a credential message
+     * (a message containing peer id, public key, time of key creation). The other peer should have implemented
+     * a listener for a proper reaction.
+     * <br/>
+     * This behaviour can also be made by an application itself. It could listen to newly arrived peer with the
+     * ASAPPeer and send a message. This component offers a method to produce a credential message.
+     * <br/>
+     * Default behaviour is off.
+     * @see #setBehaviour(String, boolean)
+     * @see #createCredentialMessage()
+     */
+    String SEND_CREDENTIAL_FIRST_ENCOUNTER = "certComponent_sendCredentialFirstEncounter";
 
-    @Override
-    public void onStart(ASAPPeer asapPeer) throws SharkException {
-        try {
-            ASAPStorage asapStorage = asapPeer.getASAPStorage(asapPeer.getPeerName());
-            ASAPCertificateStorage asapAliceCertificateStorage =
-                new ASAPAbstractCertificateStore(asapStorage, asapPeer.getPeerName(), asapPeer.getPeerName());
+    /**
+     * Peers can send a credential message. This process can be automated by setting an flag. Anyway, your application
+     * must deal with it. That is probably the most essential part of your application when it comes to security.
+     * Users (human users! under no, repeated: under no, circumstances a machine) must ensure the identity of the
+     * person that transmitted that message with its peer. Read, an really please read and consider our documentation:
+     * <a href="https://github.com/SharedKnowledge/ASAPCertificateExchange/wiki#signing">Signing</a>
+     * <br/>Create a certificate if users of your application are doubtlessly ensure correctness of identity of the
+     * sending person.
+     * @param listener an object that runs this very crucial algorithm
+     * @see #acceptAndSignCredential(CredentialMessage)
+     */
+    void setSharkCredentialReceivedListener(SharkCredentialReceivedListener listener);
 
-            InMemoASAPKeyStore inMemoASAPKeyStore = new InMemoASAPKeyStore(asapPeer.getPeerName());
 
-            this.asapPKIStorage = new FullAsapPKIStorage(asapAliceCertificateStorage, inMemoASAPKeyStore);
-        } catch (IOException | ASAPException e) {
-            throw new SharkException(e);
-        }
-    }
+    /**
+     * Use this method to issue a new certificate based on a received message.
+     * Users (human users! under no, repeated: under no, circumstances a machine) must ensure the identity of the
+     * person that transmitted that message with its peer. Read, an really please read and consider our documentation:
+     * <a href="https://github.com/SharedKnowledge/ASAPCertificateExchange/wiki#signing">Signing</a>
+     * <br/>Create a certificate if users of your application are doubtlessly ensure correctness of identity of the
+     * sending person.
+     *
+     * @param credentialMessage message for which your are going to sign and disseminate a certificate for. Be careful!
+     *                         Your reputation as developer and reputation of your users are on stake here.
+     * @return created certificate. You do not have to deal with it. This component automatically exchanges certificate.
+     * @throws ASAPSecurityException
+     * @throws IOException
+     */
+    ASAPCertificate acceptAndSignCredential(CredentialMessage credentialMessage) throws IOException, ASAPSecurityException;
 
-    private void checkStatus() throws SharkStatusException {
-        if(this.asapPKIStorage == null) {
-            throw new SharkStatusException("ASAP peer not started component not yet initialized");
-        }
-    }
+    /*
+    ASAPCertificate addAndSignPerson(CharSequence userID, CharSequence userName, PublicKey publicKey, long validSince)
+            throws ASAPSecurityException, IOException;
+     */
 
-    @Override
-    public PublicKey getPublicKey(CharSequence charSequence) throws ASAPSecurityException {
-        this.checkStatus();
-        return this.asapPKIStorage.getPublicKey(charSequence);
-    }
+    /**
+     *
+     * @return owner id of this certificate storage. It will be most probably the local peer.
+     */
+    CharSequence getOwnerID();
 
-    @Override
-    public boolean isOwner(CharSequence charSequence) {
-        this.checkStatus();
-        return this.asapPKIStorage.isOwner(charSequence);
-    }
+    /**
+     * @return owner name of this certificate storage. It will be most probably the local peer.
+     */
+    CharSequence getOwnerName();
 
-    @Override
-    public CharSequence getOwner() {
-        this.checkStatus();
-        return this.asapPKIStorage.getOwner();
-    }
 
-    @Override
-    public void generateKeyPair() throws ASAPSecurityException {
-        this.checkStatus();
-        this.asapPKIStorage.generateKeyPair();
-    }
+    /**
+     * @return Private key of this local peer the local peer. Never, under no circumstances, store or sent this
+     * information to anybody else. Even existence of this method could be seen as a security risc. It is your
+     * app. It shall be safe. Persistent storage of key is the keystore which is platform specific.
+     */
+    PrivateKey getPrivateKey() throws ASAPSecurityException;
 
-    @Override
-    public CharSequence getOwnerID() {
-        this.checkStatus();
-        return this.asapPKIStorage.getOwnerID();
-    }
+    /**
+     * @return Public Key. There is no need to exchange this key in order to produce a certificate. There are better
+     * ways
+     * @throws ASAPSecurityException
+     * @see CredentialMessage
+     * @see #createCredentialMessage()
+     */
+    PublicKey getPublicKey() throws ASAPSecurityException;
 
-    @Override
-    public CharSequence getOwnerName() {
-        this.checkStatus();
-        return this.asapPKIStorage.getOwnerName();
-    }
+    /**
+     * @return time when key are created
+     */
+    long getKeysCreationTime() throws ASAPSecurityException;
 
-    @Override
-    public PrivateKey getPrivateKey() throws ASAPSecurityException {
-        this.checkStatus();
-        return this.asapPKIStorage.getPrivateKey();
-    }
+    /**
+     * Set failure rate estimation of this local of the other peer.
+     * @param personID peers' id which failure rate is estimated
+     * @param failureRate 1 .. 10 (10% .. 100%).
+     * @throws ASAPSecurityException
+     */
+    void setSigningFailureRate(CharSequence personID, int failureRate) throws ASAPSecurityException;
 
-    @Override
-    public PublicKey getPublicKey() throws ASAPSecurityException {
-        this.checkStatus();
-        return this.asapPKIStorage.getPublicKey();
-    }
+    /**
+     * @param personID
+     * @return estimated failure rate of this peer. That information should remain only visible to the peer that
+     * made this estimation. There is no need to reveal it to others. This method should only be used for a GUI
+     * not for any exchange.
+     */
+    int getSigningFailureRate(CharSequence personID);
 
-    @Override
-    public long getKeysCreationTime() throws ASAPSecurityException {
-        this.checkStatus();
-        return this.asapPKIStorage.getKeysCreationTime();
-    }
+    /**
+     * This component keeps an ordered list of known peers
+     * (or more precisely their owner which are considered to be persons).
+     *
+     * This method comes in handy when implementing a recycler view in Android.
+     *
+     * @param position non-negative value
+     * @return Information of person at position
+     * @throws ASAPSecurityException
+     */
+    PersonValuesImpl getPersonValuesByPosition(int position) throws ASAPSecurityException;
 
-    @Override
-    public ASAPCertificate addAndSignPerson(CharSequence userID, CharSequence userName, PublicKey publicKey, long validSince) throws ASAPSecurityException, IOException {
-        this.checkStatus();
-        return this.asapPKIStorage.addAndSignPerson(userID, userName, publicKey, validSince);
-    }
+    /**
+     * This component keeps an ordered list of known peers
+     * (or more precisely their owner which are considered to be persons).
+     *
+     * @return Number if known persons (without local peer)
+     */
+    int getNumberOfPersons();
 
-    @Override
-    public void setSigningFailureRate(CharSequence personID, int failureRate) throws ASAPSecurityException {
-        this.checkStatus();
-        this.asapPKIStorage.setSigningFailureRate(personID, failureRate);
-    }
+    /**
+     * Identity assurance is calculated by a chain of certificate. See Github Wiki for details.
+     * @param userID
+     * @return best identity assurance or 10 if no assurance at all
+     * @throws ASAPSecurityException
+     */
+    int getIdentityAssurance(CharSequence userID) throws ASAPSecurityException;
 
-    @Override
-    public int getSigningFailureRate(CharSequence personID) {
-        this.checkStatus();
-        return this.asapPKIStorage.getSigningFailureRate(personID);
-    }
+    /**
+     * Identity assurance is calculated by a chain of certificate. See Github Wiki for details.
+     *
+     * @param userID
+     * @return List of issuerIDs. Those peer issued certificates and form a chain that allows identifying peers
+     * certificate. This information is not meant to be shared but only to be shown on a GUI to the user.
+     * @param userID
+     * @throws ASAPSecurityException
+     */
+    List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID)
+            throws ASAPSecurityException;
 
-    @Override
-    public PersonValuesImpl getPersonValuesByPosition(int position) throws ASAPSecurityException {
-        this.checkStatus();
-        return this.asapPKIStorage.getPersonValuesByPosition(position);
-    }
+    /**
+     * @param subjectID peer id
+     * @return all certificates issued for this peer (subject)
+     * @throws ASAPSecurityException
+     */
+    Collection<ASAPCertificate> getCertificatesBySubject(CharSequence subjectID) throws ASAPSecurityException;
 
-    @Override
-    public int getNumberOfPersons() {
-        this.checkStatus();
-        return this.asapPKIStorage.getNumberOfPersons();
-    }
+    /**
+     * @param issuerID
+     * @return all certificates issued by this peer.
+     * @throws ASAPSecurityException
+     */
+    Collection<ASAPCertificate> getCertificatesByIssuer(CharSequence issuerID) throws ASAPSecurityException;
+    ASAPCertificate getCertificateByIssuerAndSubject(CharSequence issuerID, CharSequence subjectID)
+            throws ASAPSecurityException;
 
-    @Override
-    public int getIdentityAssurance(CharSequence userID) throws ASAPSecurityException {
-        this.checkStatus();
-        return this.asapPKIStorage.getIdentityAssurance(userID);
-    }
+    /**
+     * Add a certificate to this storage. That method is used to store an already existing certificate. There are
+     * rary circumstances in which an application needs this method. Certificates are exchange automatically by this
+     * component. A new certificate can only be produced by another method
+     * @see #acceptAndSignCredential(CredentialMessage)
+     * @param asapCertificate
+     * @throws IOException
+     * @throws ASAPSecurityException
+     */
+    void addCertificate(ASAPCertificate asapCertificate) throws IOException, ASAPSecurityException;
 
-    @Override
-    public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID) throws ASAPSecurityException {
-        this.checkStatus();
-        return this.asapPKIStorage.getIdentityAssurancesCertificationPath(userID);
-    }
+    /**
+     * It is assumed this certificate is issued by storage owner. This is verified with this method or not.
+     * That method is more for debugging purpose. It is used inside when re-reading certificates from external storage
+     * to prevent security breeches.
+     * class to assure thaty
+     * @param asapCertificate
+     * @throws IOException
+     * @throws ASAPSecurityException
+     */
+    boolean verifyCertificate(ASAPCertificate asapCertificate) throws ASAPSecurityException, NoSuchAlgorithmException, InvalidKeyException, SignatureException;
 
-    @Override
-    public Collection<ASAPCertificate> getCertificatesBySubject(CharSequence subjectID) throws ASAPSecurityException {
-        this.checkStatus();
-        return this.asapPKIStorage.getCertificatesBySubject(subjectID);
-    }
+    /**
+     * A credential message contains public key, peer id an name of this local peer. This message can be sent to
+     * another peer to ask for certification of those information. Use defined format and uri for that message.
+     * @return message that can be sent
+     * @throws ASAPSecurityException
+     * @see #CREDENTIAL_APP_NAME
+     * @see #CREDENTIAL_URI
+     */
+    CredentialMessage createCredentialMessage() throws ASAPSecurityException;
 
-    @Override
-    public Collection<ASAPCertificate> getCertificatesByIssuer(CharSequence issuerID) throws ASAPSecurityException {
-        this.checkStatus();
-        return this.asapPKIStorage.getCertificatesByIssuer(issuerID);
-    }
+    /**
+     * Call this method if probably new certificates are received
+     * @return true if certificate of a new person received - time to call store.
+     */
+    boolean syncNewReceivedCertificates();
 
-    @Override
-    public ASAPCertificate getCertificateByIssuerAndSubject(CharSequence issuerID, CharSequence subjectID) throws ASAPSecurityException {
-        this.checkStatus();
-        return this.asapPKIStorage.getCertificateByIssuerAndSubject(issuerID, subjectID);
-    }
+    /**
+     * Store content of this component into an external medium.
+     * @param os
+     * @throws IOException
+     */
+    void store(OutputStream os) throws IOException;
 
-    @Override
-    public void addCertificate(ASAPCertificate asapCertificate) throws IOException, ASAPSecurityException {
-        this.checkStatus();
-        this.asapPKIStorage.addCertificate(asapCertificate);
-    }
-
-    @Override
-    public boolean verifyCertificate(ASAPCertificate asapCertificate) throws ASAPSecurityException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        this.checkStatus();
-        return this.asapPKIStorage.verifyCertificate(asapCertificate);
-    }
-
-    @Override
-    public CredentialMessage createCredentialMessage() throws ASAPSecurityException {
-        this.checkStatus();
-        return this.asapPKIStorage.createCredentialMessage();
-    }
-
-    @Override
-    public boolean syncNewReceivedCertificates() {
-        this.checkStatus();
-        return this.asapPKIStorage.syncNewReceivedCertificates();
-    }
-
-    @Override
-    public void store(OutputStream os) throws IOException {
-        this.checkStatus();
-        this.asapPKIStorage.store(os);
-    }
-
-    @Override
-    public void load(InputStream is) throws IOException {
-        this.checkStatus();
-        this.asapPKIStorage.load(is);
-    }
-
-    @Override
-    public String getAsymmetricEncryptionAlgorithm() {
-        this.checkStatus();
-        return this.asapPKIStorage.getAsymmetricEncryptionAlgorithm();
-    }
-
-    @Override
-    public String getAsymmetricSigningAlgorithm() {
-        this.checkStatus();
-        return this.asapPKIStorage.getAsymmetricSigningAlgorithm();
-    }
-
-    @Override
-    public SecretKey generateSymmetricKey() throws ASAPSecurityException {
-        this.checkStatus();
-        return this.asapPKIStorage.generateSymmetricKey();
-    }
-
-    @Override
-    public String getSymmetricEncryptionAlgorithm() {
-        this.checkStatus();
-        return this.asapPKIStorage.getSymmetricEncryptionAlgorithm();
-    }
-
-    @Override
-    public String getSymmetricKeyType() {
-        this.checkStatus();
-        return this.asapPKIStorage.getSymmetricKeyType();
-    }
-
-    @Override
-    public int getSymmetricKeyLen() {
-        this.checkStatus();
-        return this.asapPKIStorage.getSymmetricKeyLen();
-    }
+    /**
+     * Recreate this component from an external medium.
+     * @param os
+     * @throws IOException
+     */
+    void load(InputStream os) throws IOException;
 }

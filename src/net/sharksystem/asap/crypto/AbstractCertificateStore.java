@@ -86,6 +86,12 @@ public abstract class AbstractCertificateStore implements ASAPCertificateStorage
         return certSetIssuer;
     }
 
+    /**
+     * @param issuerID
+     * @param subjectID
+     * @return
+     * @throws ASAPSecurityException if no certificate found
+     */
     public ASAPCertificate getCertificateByIssuerAndSubjectID(
             CharSequence issuerID, CharSequence subjectID) throws ASAPSecurityException {
 
