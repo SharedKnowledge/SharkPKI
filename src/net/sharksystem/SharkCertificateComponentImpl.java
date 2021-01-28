@@ -137,7 +137,7 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
     public void onStart(ASAPPeer asapPeer) throws SharkException {
         this.asapPeer = asapPeer;
         try {
-            ASAPStorage asapStorage = asapPeer.getASAPStorage(asapPeer.getPeerName());
+            ASAPStorage asapStorage = asapPeer.getASAPStorage(SharkCertificateComponent.CREDENTIAL_APP_NAME);
             ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPAbstractCertificateStore(asapStorage, asapPeer.getPeerName(), asapPeer.getPeerName());
 
