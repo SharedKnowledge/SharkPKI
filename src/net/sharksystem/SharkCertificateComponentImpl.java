@@ -34,6 +34,8 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
     private SharkCredentialReceivedListener credentialReceivedListener = null;
 
     private boolean behaviourSendCredentialFirstEncounter = false;
+    private boolean certificateExpected = false;
+
     public void setBehaviour(String behaviourName, boolean on) throws SharkUnknownBehaviourException {
         this.checkStatus();
         switch(behaviourName) {
@@ -59,7 +61,7 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
         this.checkStatus();
         this.credentialReceivedListener = listener;
 
-        this.asapPeer.addASAPMessageReceivedListener(SharkCertificateComponent.CREDENTIAL_APP_NAME, this);
+        this.asapPeer.addASAPMessageReceivedListener(ASAPCertificateStore.CREDENTIAL_APP_NAME, this);
     }
 
     @Override
@@ -90,30 +92,37 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
 
     @Override
     public void onlinePeersChanged(Set<CharSequence> onlinePeerList) {
-        Log.writeLog(this, "notified about changes in peer list: " + onlinePeerList);
+        Log.writeLog(this, this.asapPeer.getPeerName().toString(),
+                "notified about changes in peer list: " + onlinePeerList);
+
         if(onlinePeerList == null || onlinePeerList.isEmpty()) return;
 
-
         // is there a peer that has not yet signed our public key?
-        for(CharSequence peerID : onlinePeerList) {
+        for (CharSequence peerID : onlinePeerList) {
             boolean found = false;
             try {
                 ASAPCertificate cert = this.getCertificateByIssuerAndSubject(peerID, this.getOwnerID());
-                if(cert != null) found = true;
+                if (cert != null) found = true;
             } catch (ASAPSecurityException e) {
                 // no certificate
             }
 
-            Log.writeLog(this, "found == " + found);
-            if(!found) {
+            if(found) Log.writeLog(this, this.asapPeer.getPeerName().toString(),
+                    "found a certificate issued by == " + peerID);
+
+            if (!found && this.behaviourSendCredentialFirstEncounter) {
+                Log.writeLog(this, this.asapPeer.getPeerName().toString(),
+                        "going to ask a peer to signing a certificate: " + peerID);
                 try {
                     Log.writeLog(this, "create credential message");
                     CredentialMessage credentialMessage = this.createCredentialMessage();
                     Log.writeLog(this, "credential message == " + credentialMessage);
-                    this.asapPeer.sendASAPMessage(SharkCertificateComponent.CREDENTIAL_APP_NAME,
+                    this.asapPeer.sendOnlineASAPMessage(ASAPCertificateStore.CREDENTIAL_APP_NAME,
                             SharkCertificateComponent.CREDENTIAL_URI,
                             credentialMessage.getMessageAsBytes());
                     Log.writeLog(this, "credential message sent");
+
+                    this.certificateExpected = true;
 
                     break; // already send to anybody
                 } catch (IOException | ASAPException e) {
@@ -128,6 +137,7 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private FullAsapPKIStorage asapPKIStorage = null;
+    private ASAPAbstractCertificateStore asapCertificateStorage;
     private ASAPPeer asapPeer = null;
 
     // package private constructor - a factory is meant to creates instances of this class.
@@ -137,13 +147,14 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
     public void onStart(ASAPPeer asapPeer) throws SharkException {
         this.asapPeer = asapPeer;
         try {
-            ASAPStorage asapStorage = asapPeer.getASAPStorage(SharkCertificateComponent.CREDENTIAL_APP_NAME);
-            ASAPCertificateStorage asapAliceCertificateStorage =
+            ASAPStorage asapStorage = asapPeer.getASAPStorage(ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+            this.asapCertificateStorage =
                 new ASAPAbstractCertificateStore(asapStorage, asapPeer.getPeerName(), asapPeer.getPeerName());
 
             InMemoASAPKeyStore inMemoASAPKeyStore = new InMemoASAPKeyStore(asapPeer.getPeerName());
 
-            this.asapPKIStorage = new FullAsapPKIStorage(asapAliceCertificateStorage, inMemoASAPKeyStore);
+            this.asapPKIStorage = new FullAsapPKIStorage(this.asapCertificateStorage, inMemoASAPKeyStore);
+
         } catch (IOException | ASAPException e) {
             throw new SharkException(e);
         }
@@ -152,6 +163,13 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
     private void checkStatus() throws SharkStatusException {
         if(this.asapPKIStorage == null) {
             throw new SharkStatusException("ASAP peer not started component not yet initialized");
+        }
+
+        if(this.certificateExpected) {
+            this.certificateExpected = false;
+            // good chance that something was received
+            this.asapCertificateStorage.dropInMemoCache();
+            this.asapPKIStorage.incorporateReceivedCertificates();
         }
     }
 
@@ -218,10 +236,23 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
             throws IOException, ASAPSecurityException {
 
         this.checkStatus();
-        return this.asapPKIStorage.addAndSignPerson(credentialMessage.getOwnerID(),
+        ASAPCertificate asapCertificate = this.asapPKIStorage.addAndSignPerson(credentialMessage.getOwnerID(),
                 credentialMessage.getOwnerName(),
                 credentialMessage.getPublicKey(),
                 credentialMessage.getValidSince());
+
+        this.asapCertificateStorage.dropInMemoCache();
+
+        // spread the news to all peers only
+        try {
+            this.asapPeer.sendOnlineASAPMessage(ASAPCertificateStorage.CERTIFICATE_APP_NAME,
+                    ASAPCertificate.ASAP_CERTIFICATE_URI, asapCertificate.asBytes());
+
+        } catch (ASAPException e) {
+            Log.writeLog(this, "could not send certificate to online peers (ignored): " + e.getLocalizedMessage());
+        }
+
+        return asapCertificate;
     }
 
     /*
@@ -306,7 +337,7 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
     @Override
     public boolean syncNewReceivedCertificates() {
         this.checkStatus();
-        return this.asapPKIStorage.syncNewReceivedCertificates();
+        return this.asapPKIStorage.incorporateReceivedCertificates();
     }
 
     @Override

@@ -10,14 +10,13 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Collection;
 
+import static net.sharksystem.TestConstants.*;
+
 public class SharkComponentUsageTests {
-    public static final String ROOT_FOLDER = "asapCertificateComponentFolder";
-    public static final String ALICE = "Alice";
-    public static final String ALICE_FOLDER = ROOT_FOLDER + "/" + ALICE;
-    public static final String BOB = "Bob";
-    public static final String BOB_FOLDER = ROOT_FOLDER + "/" + BOB;
-    public static final String CALIANA = "Caliana";
-    public static final String CALIANA_FOLDER = ROOT_FOLDER + "/" + CALIANA;
+    public static final String SPECIFIC_ROOT_FOLDER = ROOT_DIRECTORY + "sharkComponentTests/";
+    public static final String ALICE_FOLDER = SPECIFIC_ROOT_FOLDER + ALICE_NAME;
+    public static final String BOB_FOLDER = SPECIFIC_ROOT_FOLDER + BOB_NAME;
+    public static final String CLARA_FOLDER = SPECIFIC_ROOT_FOLDER + CLARA_NAME;
 
     private SharkCertificateComponent setupComponent(SharkPeer sharkPeer)
             throws SharkException, ASAPSecurityException {
@@ -37,6 +36,18 @@ public class SharkComponentUsageTests {
         return sharkCertificateComponent;
     }
 
+    /**
+     * ALice send her credential information to Bob and expects him to sign. Certificates issued by Bob must be
+     * available on both sides.
+     *
+     * Problems / Bugs:
+     * credential is sent twice from Alice to Bob - it wrong but less important - Bob should deal it.
+     *
+     * @throws SharkException
+     * @throws ASAPSecurityException
+     * @throws IOException
+     * @throws InterruptedException
+     */
     @Test
     public void sendReceiveCredentialSignAndAddNewCertificate() throws SharkException, ASAPSecurityException,
             IOException, InterruptedException {
@@ -45,8 +56,8 @@ public class SharkComponentUsageTests {
          only use SharkPeer interface in your application and create a SharkPeerFS instance
          That's for testing only
          */
-        SharkTestPeerFS.removeFolder(ALICE_FOLDER);
-        SharkTestPeerFS aliceSharkPeer = new SharkTestPeerFS(ALICE, ALICE_FOLDER);
+        SharkTestPeerFS.removeFolder(ROOT_DIRECTORY);
+        SharkTestPeerFS aliceSharkPeer = new SharkTestPeerFS(ALICE_NAME, ALICE_FOLDER);
 
         SharkCertificateComponent aliceComponent = this.setupComponent(aliceSharkPeer);
 
@@ -58,7 +69,7 @@ public class SharkComponentUsageTests {
 
         ////////////////////////////////////////// BOB ///////////////////////////////////////////////////////////
         SharkTestPeerFS.removeFolder(BOB_FOLDER);
-        SharkTestPeerFS bobSharkPeer = new SharkTestPeerFS(BOB, BOB_FOLDER);
+        SharkTestPeerFS bobSharkPeer = new SharkTestPeerFS(BOB_NAME, BOB_FOLDER);
         SharkCertificateComponent bobComponent = this.setupComponent(bobSharkPeer);
 
         // lets starts peer and its components before doing anythings else
@@ -71,24 +82,30 @@ public class SharkComponentUsageTests {
         bobComponent.setSharkCredentialReceivedListener(new CredentialListenerExample(bobComponent));
 
         ///////////////////////////////// Encounter Alice - Bob ////////////////////////////////////////////////////
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start encounter >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         aliceSharkPeer.getASAPTestPeerFS().startEncounter(7777, bobSharkPeer.getASAPTestPeerFS());
 
         // give them moment to exchange data
         Thread.sleep(1000);
-
         //Thread.sleep(Long.MAX_VALUE);
+        System.out.println("slept a moment");
 
         /////////////////////////////////////////// Tests  /////////////////////////////////////////////////////////
 
         // Bob must have a certificate of Alice - he issued it by himself
-        Collection<ASAPCertificate> certificatesByIssuer = bobComponent.getCertificatesByIssuer(BOB);
+        Collection<ASAPCertificate> certificatesByIssuer = bobComponent.getCertificatesByIssuer(BOB_NAME);
         Assert.assertNotNull(certificatesByIssuer);
         Assert.assertEquals(1, certificatesByIssuer.size());
 
         // Alice must have got one too - issued by Bob and automatically transmitted by certificate component
-        certificatesByIssuer = aliceComponent.getCertificatesByIssuer(BOB);
+        certificatesByIssuer = aliceComponent.getCertificatesByIssuer(BOB_NAME);
         Assert.assertNotNull(certificatesByIssuer);
         Assert.assertEquals(1, certificatesByIssuer.size());
+
+        aliceSharkPeer.getASAPTestPeerFS().stopEncounter(bobSharkPeer.getASAPTestPeerFS());
+        // further tests after loosing connection
+        // non yet
+
     }
 
     private class CredentialListenerExample implements SharkCredentialReceivedListener {
@@ -105,7 +122,7 @@ public class SharkComponentUsageTests {
                 Absolutely no. No! Automatically signing a credential message which simply came along from an unknown
                 source is ridiculous. Never ever write an app like this. That's only for debugging. Only!
                 Don't even think things like: "Em, well, I just take is for a temporary solution, just to
-                illustrate that it works..." It works, alright. That is this test for.
+                illustrate that it works..." It works, alright. That is what this test is for.
 
                 Taking it as 'temporary' solution is most probably BS and you know that. Deal with security from the
                 beginning of your app development. Security is not anything you add 'sometimes later'. It is
@@ -115,7 +132,7 @@ public class SharkComponentUsageTests {
                 It is important: Users must ensure correct data. Human users must ensure that those data are valid and
                 the sending person is really who their claims their is
                  */
-                Log.writeLog(this, credentialMessage.toString());
+                Log.writeLog(this, "going to issue a certificate");
                 this.sharkCertificateComponent.acceptAndSignCredential(credentialMessage);
             } catch (IOException | ASAPSecurityException e) {
                 e.printStackTrace();

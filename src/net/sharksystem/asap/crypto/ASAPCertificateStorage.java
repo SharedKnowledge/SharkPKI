@@ -81,7 +81,7 @@ public interface ASAPCertificateStorage {
     /**
      * sync memory with potential external changes
      */
-    void syncCertificates();
+    void dropInMemoCache();
 
     int getIdentityAssurances(CharSequence userID, ASAPCertificateStore ASAPCertificateStore) throws ASAPSecurityException;
 

@@ -1,5 +1,6 @@
 package net.sharksystem.asap.persons;
 
+import net.sharksystem.TestConstants;
 import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
@@ -19,10 +20,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 
 public class HelpAnalyse {
-    private static final String ROOT_DIRECTORY = "asapStorageRootDirectory/";
+    private static final String SPECIFIC_ROOT_DIRECTORY = TestConstants.ROOT_DIRECTORY + "/helpAnalyse/";
     private static final String OWNER_ID = "lUx01bs0000q1w";
     private static final String OWNER_NAME = "Alice";
-    private static final String OWNER_ROOT_DIRECTORY = ROOT_DIRECTORY + OWNER_ID;
+    private static final String OWNER_ROOT_DIRECTORY = SPECIFIC_ROOT_DIRECTORY + OWNER_ID;
     private static final String PERSONSTORAGEFILE = OWNER_ROOT_DIRECTORY + "/sn2_personsStorageFile";
 
     @Test

@@ -41,7 +41,8 @@ public abstract class AbstractCertificateStore implements ASAPCertificateStorage
         this.userIdentityAssurance = null;
     }
 
-    public void syncCertificates() {
+    public void dropInMemoCache() {
+        Log.writeLog(this, this.ownerName.toString(), "drop in memo cache");
         this.certificatesBySubjectIDMap = null;
     }
 

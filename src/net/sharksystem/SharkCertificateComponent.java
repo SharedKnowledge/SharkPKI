@@ -53,7 +53,6 @@ import java.util.List;
 
 @ASAPFormats(formats = {ASAPCertificateStore.CREDENTIAL_APP_NAME, ASAPCertificateStorage.CERTIFICATE_APP_NAME})
 public interface SharkCertificateComponent extends SharkComponent, ASAPKeyStore {
-    String CREDENTIAL_APP_NAME = "SN2Credentials";
     CharSequence CREDENTIAL_URI = "sn2://credential";
 
     /**

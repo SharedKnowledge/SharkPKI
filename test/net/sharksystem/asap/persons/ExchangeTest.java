@@ -1,5 +1,6 @@
 package net.sharksystem.asap.persons;
 
+import net.sharksystem.TestConstants;
 import net.sharksystem.asap.*;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
@@ -19,15 +20,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import static net.sharksystem.TestConstants.*;
+
 public class ExchangeTest {
-    public static final String ALICE_ROOT_FOLDER = "tests/Alice";
+    private static final String SPECIFIC_ROOT_DIRECTORY = TestConstants.ROOT_DIRECTORY + "/asapStorageRootDirectory/";
+    private static final String ALICE_ROOT_FOLDER = SPECIFIC_ROOT_DIRECTORY + ALICE_ID;
     public static final String ALICE_APP_FOLDER = ALICE_ROOT_FOLDER + "/certificateStorage";
-    public static final String BOB_ROOT_FOLDER = "tests/Bob";
+    private static final String BOB_ROOT_FOLDER = SPECIFIC_ROOT_DIRECTORY + BOB_ID;
     public static final String BOB_APP_FOLDER = BOB_ROOT_FOLDER + "/certificateStorage";
-    public static final String ALICE_ID = "AliceID";
-    public static final String BOB_ID = "BobID";
-    public static final String ALICE_NAME = "Alice";
-    public static final String BOB_NAME = "Bob";
+
     private static final int PORTNUMBER = 7777;
 
     @Test
@@ -213,7 +214,7 @@ public class ExchangeTest {
         @Override
         public void chunkReceived(String format, String sender, String uri, int era) {
             this.received = true;
-            this.ASAPCertificateStore.syncNewReceivedCertificates();
+            this.ASAPCertificateStore.incorporateReceivedCertificates();
         }
     }
 }

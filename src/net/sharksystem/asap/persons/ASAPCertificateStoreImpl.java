@@ -208,7 +208,7 @@ public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
     }
 
     @Override
-    public boolean syncNewReceivedCertificates() {
+    public boolean incorporateReceivedCertificates() {
         Log.writeLog(this, "sync with received certificates");
         Collection<ASAPCertificate> newReceivedCertificates = this.certificateStorage.getNewReceivedCertificates();
 

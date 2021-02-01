@@ -1,5 +1,6 @@
 package net.sharksystem.asap.persons;
 
+import net.sharksystem.TestConstants;
 import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
@@ -14,20 +15,14 @@ import java.io.IOException;
 import java.security.*;
 import java.util.Collection;
 
+import static net.sharksystem.TestConstants.*;
+
 public class ASAPCertificateStoreTests {
-    private static final String ROOT_DIRECTORY = "asapStorageRootDirectory/";
-    private static final String ROOT_DIRECTORY_ALICE = "asapStorageRootDirectory/alice/";
-    private static final String ROOT_DIRECTORY_BOB = "asapStorageRootDirectory/bob/";
-    private static final String ROOT_DIRECTORY_CLARA = "asapStorageRootDirectory/clara/";
-    private static final String ROOT_DIRECTORY_DAVID = "asapStorageRootDirectory/david/";
-    private static final CharSequence ALICE_ID = "42";
-    private static final CharSequence ALICE_NAME = "Alice";
-    private static final CharSequence BOB_ID = "43";
-    private static final CharSequence BOB_NAME = "Bob";
-    private static final CharSequence CLARA_ID = "44";
-    private static final CharSequence CLARA_NAME = "Clara";
-    private static final CharSequence DAVID_ID = "45";
-    private static final CharSequence DAVID_NAME = "David";
+    private static final String SPECIFIC_ROOT_DIRECTORY = TestConstants.ROOT_DIRECTORY + "/asapStorageRootDirectory/";
+    private static final String ROOT_DIRECTORY_ALICE = SPECIFIC_ROOT_DIRECTORY + ALICE_NAME;
+    private static final String ROOT_DIRECTORY_BOB = SPECIFIC_ROOT_DIRECTORY + BOB_NAME;
+    private static final String ROOT_DIRECTORY_CLARA = SPECIFIC_ROOT_DIRECTORY + TestConstants.CLARA_NAME;
+    private static final String ROOT_DIRECTORY_DAVID = SPECIFIC_ROOT_DIRECTORY + TestConstants.DAVID_NAME;
 
     private void assertCertificateEquals(ASAPCertificate a, ASAPCertificate b) {
         Assert.assertEquals(a.getIssuerID(), b.getIssuerID());
@@ -38,7 +33,7 @@ public class ASAPCertificateStoreTests {
 
     @Test
     public void identityAssuranceCalculationTest() throws IOException, ASAPException {
-        ASAPEngineFS.removeFolder(ROOT_DIRECTORY);
+        ASAPEngineFS.removeFolder(SPECIFIC_ROOT_DIRECTORY);
 
         long now = System.currentTimeMillis();
 
@@ -138,7 +133,7 @@ public class ASAPCertificateStoreTests {
             IOException, ASAPException, NoSuchAlgorithmException, SignatureException,
             InvalidKeyException, ASAPSecurityException {
 
-        ASAPEngineFS.removeFolder(ROOT_DIRECTORY);
+        ASAPEngineFS.removeFolder(SPECIFIC_ROOT_DIRECTORY);
 
         long now = System.currentTimeMillis();
 
@@ -181,7 +176,7 @@ public class ASAPCertificateStoreTests {
             IOException, ASAPException, NoSuchAlgorithmException, SignatureException,
             InvalidKeyException, ASAPSecurityException {
 
-        ASAPEngineFS.removeFolder(ROOT_DIRECTORY);
+        ASAPEngineFS.removeFolder(SPECIFIC_ROOT_DIRECTORY);
 
         long now = System.currentTimeMillis();
 

@@ -193,7 +193,7 @@ public interface ASAPCertificateStore {
      * Call this method if probably new certificates are received
      * @return true if certificate of a new person received - time to call store.
      */
-    boolean syncNewReceivedCertificates();
+    boolean incorporateReceivedCertificates();
 
     /**
      * Store content of this component into an external medium.
