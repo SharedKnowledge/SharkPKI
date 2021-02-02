@@ -132,7 +132,7 @@ public class ASAPAbstractCertificateStore extends AbstractCertificateStore {
 
         try {
             List<CharSequence> senderList = this.asapStorage.getSender();
-            Log.writeLog(this, "got sender list" + senderList);
+            Log.writeLog(this, "got sender list: " + senderList);
             // at least one sender - get access to owner channel to copy messages to
             this.asapStorage.createChannel(ASAPCertificate.ASAP_CERTIFICATE_URI);
             ASAPChannel ownerCertificateChannel = null;
@@ -189,6 +189,7 @@ public class ASAPAbstractCertificateStore extends AbstractCertificateStore {
         } catch (IOException | ASAPException e) {
             Log.writeLog(this, "exception when looking for received certificates - give up: "
                     + e.getLocalizedMessage());
+            e.printStackTrace();
         }
 
         return asapCertificatesReceived;

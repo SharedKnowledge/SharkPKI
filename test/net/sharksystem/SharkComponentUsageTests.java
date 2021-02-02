@@ -1,7 +1,9 @@
 package net.sharksystem;
 
+import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPCertificate;
+import net.sharksystem.asap.crypto.ASAPCryptoAlgorithms;
 import net.sharksystem.asap.persons.CredentialMessage;
 import net.sharksystem.utils.Log;
 import org.junit.Assert;
@@ -49,7 +51,7 @@ public class SharkComponentUsageTests {
      * @throws InterruptedException
      */
     @Test
-    public void sendReceiveCredentialSignAndAddNewCertificate() throws SharkException, ASAPSecurityException,
+    public void sendReceiveCredentialSignAndAddNewCertificate() throws SharkException, ASAPException,
             IOException, InterruptedException {
         ////////////////////////////////////////// ALICE /////////////////////////////////////////////////////////
         /* it is a test - we use the test peer implementation
@@ -106,6 +108,42 @@ public class SharkComponentUsageTests {
         // further tests after loosing connection
         // non yet
 
+        // some more usage examples
+        ASAPCertificate oneCertificate = aliceComponent.getCertificateByIssuerAndSubject(BOB_NAME, ALICE_NAME);
+        Collection<ASAPCertificate> collectionOfCerts = aliceComponent.getCertificatesByIssuer(BOB_NAME);
+        collectionOfCerts = aliceComponent.getCertificatesBySubject(ALICE_NAME);
+
+        ///////////////////////////////////////////// signing: Alice -> Bob
+        byte[] message = "From Alice and signed".getBytes();
+        byte[] signedMessage = ASAPCryptoAlgorithms.sign(message, aliceComponent);
+
+        boolean verified = ASAPCryptoAlgorithms.verify(message, signedMessage, ALICE_NAME, bobComponent);
+
+        String messageString = "From Alice, encrypted for Bob";
+        // produce bytes
+        byte[] messageBytes = messageString.getBytes();
+
+        ///////////////////////////////////////////// encryption: Bob -> Alice
+        // produce encryption package: encrypt with new session key, encrypt session key with receivers public key
+        byte[] encryptedMessagePackageBytes = ASAPCryptoAlgorithms.produceEncryptedMessagePackage(
+                messageBytes, // message that is encrypted
+                ALICE_NAME, // recipient id
+                bobComponent // key store sender
+        );
+
+        // package is sent e.g. with ASAP
+        byte[] receivedEncryptedPackageBytes = encryptedMessagePackageBytes;
+
+        // receiver creates package from byte[] - will fail if we are not recipient
+        ASAPCryptoAlgorithms.EncryptedMessagePackage receivedEncryptedPackage =
+                ASAPCryptoAlgorithms.parseEncryptedMessagePackage(receivedEncryptedPackageBytes);
+
+        // decrypt message
+        byte[] receivedMessageBytes =
+                ASAPCryptoAlgorithms.decryptPackage(receivedEncryptedPackage, aliceComponent);
+
+        // must be the same
+        Assert.assertArrayEquals(messageBytes, receivedMessageBytes);
     }
 
     private class CredentialListenerExample implements SharkCredentialReceivedListener {
@@ -119,7 +157,7 @@ public class SharkComponentUsageTests {
         public void credentialReceived(CredentialMessage credentialMessage) {
             try {
                 /*
-                Absolutely no. No! Automatically signing a credential message which simply came along from an unknown
+                Absolutely not. No! Automatically signing a credential message which simply came along from an unknown
                 source is ridiculous. Never ever write an app like this. That's only for debugging. Only!
                 Don't even think things like: "Em, well, I just take is for a temporary solution, just to
                 illustrate that it works..." It works, alright. That is what this test is for.
