@@ -92,7 +92,7 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
 
     @Override
     public void onlinePeersChanged(Set<CharSequence> onlinePeerList) {
-        Log.writeLog(this, this.asapPeer.getPeerName().toString(),
+        Log.writeLog(this, this.asapPeer.getPeerID().toString(),
                 "notified about changes in peer list: " + onlinePeerList);
 
         if(onlinePeerList == null || onlinePeerList.isEmpty()) return;
@@ -107,11 +107,11 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
                 // no certificate
             }
 
-            if(found) Log.writeLog(this, this.asapPeer.getPeerName().toString(),
+            if(found) Log.writeLog(this, this.asapPeer.getPeerID().toString(),
                     "found a certificate issued by == " + peerID);
 
             if (!found && this.behaviourSendCredentialFirstEncounter) {
-                Log.writeLog(this, this.asapPeer.getPeerName().toString(),
+                Log.writeLog(this, this.asapPeer.getPeerID().toString(),
                         "going to ask a peer to signing a certificate: " + peerID);
                 try {
                     Log.writeLog(this, "create credential message");
@@ -149,9 +149,9 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
         try {
             ASAPStorage asapStorage = asapPeer.getASAPStorage(ASAPCertificateStorage.CERTIFICATE_APP_NAME);
             this.asapCertificateStorage =
-                new ASAPAbstractCertificateStore(asapStorage, asapPeer.getPeerName(), asapPeer.getPeerName());
+                new ASAPAbstractCertificateStore(asapStorage, asapPeer.getPeerID(), asapPeer.getPeerID());
 
-            InMemoASAPKeyStore inMemoASAPKeyStore = new InMemoASAPKeyStore(asapPeer.getPeerName());
+            InMemoASAPKeyStore inMemoASAPKeyStore = new InMemoASAPKeyStore(asapPeer.getPeerID());
 
             this.asapPKIStorage = new FullAsapPKIStorage(this.asapCertificateStorage, inMemoASAPKeyStore);
 
