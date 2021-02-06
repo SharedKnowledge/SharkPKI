@@ -1,14 +1,14 @@
 package net.sharksystem.asap.persons;
 
-import net.sharksystem.TestConstants;
+import net.sharksystem.pki.TestConstants;
 import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
 import net.sharksystem.asap.engine.ASAPEngine;
 import net.sharksystem.asap.engine.ASAPEngineFS;
-import net.sharksystem.asap.crypto.ASAPCertificateStorage;
-import net.sharksystem.asap.crypto.ASAPAbstractCertificateStore;
+import net.sharksystem.asap.pki.ASAPCertificateStorage;
+import net.sharksystem.asap.pki.ASAPAbstractCertificateStore;
 import org.junit.Test;
 
 import java.io.File;

@@ -2,7 +2,9 @@ package net.sharksystem.asap.persons;
 
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
-import net.sharksystem.asap.crypto.*;
+import net.sharksystem.asap.pki.ASAPCertificate;
+import net.sharksystem.asap.pki.ASAPCertificateImpl;
+import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import net.sharksystem.asap.utils.DateTimeHelper;
 import net.sharksystem.utils.Log;
 

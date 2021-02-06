@@ -1,5 +1,5 @@
 package net.sharksystem.asap.persons;
-import net.sharksystem.SharkComponentUsageTests;
+import net.sharksystem.pki.SharkComponentUsageTests;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 

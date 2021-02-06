@@ -3,7 +3,9 @@ package net.sharksystem.asap.persons;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
-import net.sharksystem.asap.crypto.*;
+import net.sharksystem.asap.pki.ASAPCertificate;
+import net.sharksystem.asap.pki.ASAPCertificateStorage;
+import net.sharksystem.asap.pki.InMemoAbstractCertificateStore;
 
 import java.io.IOException;
 import java.util.Random;

@@ -1,8 +1,12 @@
-package net.sharksystem;
+package net.sharksystem.pki;
 
+import net.sharksystem.SharkComponent;
+import net.sharksystem.SharkException;
+import net.sharksystem.SharkPeer;
+import net.sharksystem.SharkTestPeerFS;
 import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
-import net.sharksystem.asap.crypto.ASAPCertificate;
+import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.crypto.ASAPCryptoAlgorithms;
 import net.sharksystem.asap.persons.CredentialMessage;
 import net.sharksystem.utils.Log;
@@ -12,7 +16,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Collection;
 
-import static net.sharksystem.TestConstants.*;
+import static net.sharksystem.pki.TestConstants.*;
 
 public class SharkComponentUsageTests {
     public static final String SPECIFIC_ROOT_FOLDER = ROOT_DIRECTORY + "sharkComponentTests/";

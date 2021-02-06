@@ -1,6 +1,6 @@
 package net.sharksystem.asap.persons;
 
-import net.sharksystem.TestConstants;
+import net.sharksystem.pki.TestConstants;
 import net.sharksystem.asap.*;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
@@ -8,9 +8,9 @@ import net.sharksystem.asap.engine.*;
 import net.sharksystem.asap.utils.ASAPPeerHandleConnectionThread;
 import net.sharksystem.asap.utils.Helper;
 import net.sharksystem.cmdline.TCPStream;
-import net.sharksystem.asap.crypto.ASAPCertificate;
-import net.sharksystem.asap.crypto.ASAPCertificateStorage;
-import net.sharksystem.asap.crypto.ASAPAbstractCertificateStore;
+import net.sharksystem.asap.pki.ASAPCertificate;
+import net.sharksystem.asap.pki.ASAPCertificateStorage;
+import net.sharksystem.asap.pki.ASAPAbstractCertificateStore;
 import net.sharksystem.utils.Log;
 import org.junit.Assert;
 import org.junit.Test;
@@ -20,7 +20,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import static net.sharksystem.TestConstants.*;
+import static net.sharksystem.pki.TestConstants.*;
 
 public class ExchangeTest {
     private static final String SPECIFIC_ROOT_DIRECTORY = TestConstants.ROOT_DIRECTORY + "/asapStorageRootDirectory/";

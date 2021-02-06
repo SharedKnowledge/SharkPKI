@@ -1,13 +1,16 @@
 package net.sharksystem.asap.persons;
 
-import net.sharksystem.TestConstants;
+import net.sharksystem.pki.TestConstants;
 import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
 import net.sharksystem.asap.engine.ASAPEngine;
 import net.sharksystem.asap.engine.ASAPEngineFS;
-import net.sharksystem.asap.crypto.*;
+import net.sharksystem.asap.pki.ASAPAbstractCertificateStore;
+import net.sharksystem.asap.pki.ASAPCertificate;
+import net.sharksystem.asap.pki.ASAPCertificateImpl;
+import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -15,7 +18,7 @@ import java.io.IOException;
 import java.security.*;
 import java.util.Collection;
 
-import static net.sharksystem.TestConstants.*;
+import static net.sharksystem.pki.TestConstants.*;
 
 public class ASAPCertificateStoreTests {
     private static final String SPECIFIC_ROOT_DIRECTORY = TestConstants.ROOT_DIRECTORY + "/asapStorageRootDirectory/";

@@ -1,8 +1,12 @@
-package net.sharksystem;
+package net.sharksystem.pki;
 
+import net.sharksystem.*;
 import net.sharksystem.asap.*;
 import net.sharksystem.asap.crypto.*;
 import net.sharksystem.asap.persons.*;
+import net.sharksystem.asap.pki.ASAPAbstractCertificateStore;
+import net.sharksystem.asap.pki.ASAPCertificate;
+import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import net.sharksystem.utils.Log;
 
 import javax.crypto.SecretKey;

@@ -1,4 +1,7 @@
-package net.sharksystem;
+package net.sharksystem.pki;
+
+import net.sharksystem.SharkComponent;
+import net.sharksystem.SharkComponentFactory;
 
 public class SharkCertificateComponentFactory implements SharkComponentFactory {
     private SharkCertificateComponentImpl instance = null;

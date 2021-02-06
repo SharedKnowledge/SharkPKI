@@ -1,4 +1,4 @@
-package net.sharksystem;
+package net.sharksystem.pki;
 
 import net.sharksystem.asap.persons.CredentialMessage;
 

@@ -1,4 +1,4 @@
-package net.sharksystem;
+package net.sharksystem.pki;
 
 public interface TestConstants {
     String ROOT_DIRECTORY = "playground/";

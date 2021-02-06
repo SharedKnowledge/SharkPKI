@@ -1,8 +1,10 @@
-package net.sharksystem;
+package net.sharksystem.pki;
 
+import net.sharksystem.ASAPFormats;
+import net.sharksystem.SharkComponent;
 import net.sharksystem.asap.ASAPSecurityException;
-import net.sharksystem.asap.crypto.ASAPCertificate;
-import net.sharksystem.asap.crypto.ASAPCertificateStorage;
+import net.sharksystem.asap.pki.ASAPCertificate;
+import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.persons.ASAPCertificateStore;
 import net.sharksystem.asap.persons.CredentialMessage;
@@ -237,7 +239,7 @@ public interface SharkCertificateComponent extends SharkComponent, ASAPKeyStore 
      * another peer to ask for certification of those information. Use defined format and uri for that message.
      * @return message that can be sent
      * @throws ASAPSecurityException
-     * @see #CREDENTIAL_APP_NAME
+     * @see ASAPCertificateStore#CREDENTIAL_APP_NAME
      * @see #CREDENTIAL_URI
      */
     CredentialMessage createCredentialMessage() throws ASAPSecurityException;

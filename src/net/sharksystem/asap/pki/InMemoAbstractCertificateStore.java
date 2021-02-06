@@ -1,4 +1,4 @@
-package net.sharksystem.asap.crypto;
+package net.sharksystem.asap.pki;
 
 import net.sharksystem.asap.ASAP;
 
