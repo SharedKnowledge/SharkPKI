@@ -35,7 +35,7 @@ public class HelpAnalyse {
 
         // setup
         ASAPEngine ownerASAPStorage = ASAPEngineFS.getASAPStorage(
-                OWNER_ID, OWNER_ROOT_DIRECTORY, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+                OWNER_ID, OWNER_ROOT_DIRECTORY, ASAPCertificateStorage.PKI_APP_NAME);
 
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPAbstractCertificateStore(ownerASAPStorage, OWNER_ID, OWNER_NAME);

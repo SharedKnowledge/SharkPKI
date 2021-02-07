@@ -24,22 +24,22 @@ public class SharkComponentUsageTests {
     public static final String BOB_FOLDER = SPECIFIC_ROOT_FOLDER + BOB_NAME;
     public static final String CLARA_FOLDER = SPECIFIC_ROOT_FOLDER + CLARA_NAME;
 
-    private SharkCertificateComponent setupComponent(SharkPeer sharkPeer)
+    private SharkPKIComponent setupComponent(SharkPeer sharkPeer)
             throws SharkException, ASAPSecurityException {
 
         // create a component factory
-        SharkCertificateComponentFactory certificateComponentFactory = new SharkCertificateComponentFactory();
+        SharkPKIComponentFactory certificateComponentFactory = new SharkPKIComponentFactory();
 
         // register this component with shark peer - note: we use interface SharkPeer
-        sharkPeer.addComponent(certificateComponentFactory, SharkCertificateComponent.class);
+        sharkPeer.addComponent(certificateComponentFactory, SharkPKIComponent.class);
 
         // get component instance
-        SharkComponent component = sharkPeer.getComponent(SharkCertificateComponent.class);
+        SharkComponent component = sharkPeer.getComponent(SharkPKIComponent.class);
 
         // project "clean code" :) we only use interfaces - unfortunately casting is unavoidable
-        SharkCertificateComponent sharkCertificateComponent = (SharkCertificateComponent) component;
+        SharkPKIComponent sharkPKIComponent = (SharkPKIComponent) component;
 
-        return sharkCertificateComponent;
+        return sharkPKIComponent;
     }
 
     /**
@@ -65,18 +65,18 @@ public class SharkComponentUsageTests {
         SharkTestPeerFS.removeFolder(ROOT_DIRECTORY);
         SharkTestPeerFS aliceSharkPeer = new SharkTestPeerFS(ALICE_NAME, ALICE_FOLDER);
 
-        SharkCertificateComponent aliceComponent = this.setupComponent(aliceSharkPeer);
+        SharkPKIComponent aliceComponent = this.setupComponent(aliceSharkPeer);
 
         // lets starts peer and its components before doing anythings else
         aliceSharkPeer.start();
 
         // send credential message whenever a new peer is encountered - would not sign one (there is no listener)
-        aliceComponent.setBehaviour(SharkCertificateComponent.SEND_CREDENTIAL_FIRST_ENCOUNTER, true);
+        aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, true);
 
         ////////////////////////////////////////// BOB ///////////////////////////////////////////////////////////
         SharkTestPeerFS.removeFolder(BOB_FOLDER);
         SharkTestPeerFS bobSharkPeer = new SharkTestPeerFS(BOB_NAME, BOB_FOLDER);
-        SharkCertificateComponent bobComponent = this.setupComponent(bobSharkPeer);
+        SharkPKIComponent bobComponent = this.setupComponent(bobSharkPeer);
 
         // lets starts peer and its components before doing anythings else
         bobSharkPeer.start();
@@ -151,10 +151,10 @@ public class SharkComponentUsageTests {
     }
 
     private class CredentialListenerExample implements SharkCredentialReceivedListener {
-        private final SharkCertificateComponent sharkCertificateComponent;
+        private final SharkPKIComponent sharkPKIComponent;
 
-        public CredentialListenerExample(SharkCertificateComponent sharkCertificateComponent) {
-            this.sharkCertificateComponent = sharkCertificateComponent;
+        public CredentialListenerExample(SharkPKIComponent sharkPKIComponent) {
+            this.sharkPKIComponent = sharkPKIComponent;
         }
 
         @Override
@@ -175,7 +175,7 @@ public class SharkComponentUsageTests {
                 the sending person is really who their claims their is
                  */
                 Log.writeLog(this, "going to issue a certificate");
-                this.sharkCertificateComponent.acceptAndSignCredential(credentialMessage);
+                this.sharkPKIComponent.acceptAndSignCredential(credentialMessage);
             } catch (IOException | ASAPSecurityException e) {
                 e.printStackTrace();
             }

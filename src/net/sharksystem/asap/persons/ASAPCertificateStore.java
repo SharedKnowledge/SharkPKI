@@ -111,7 +111,9 @@ public interface ASAPCertificateStore {
      * @return Information of person at position
      * @throws ASAPSecurityException
      */
-    PersonValuesImpl getPersonValuesByPosition(int position) throws ASAPSecurityException;
+    PersonValues getPersonValuesByPosition(int position) throws ASAPSecurityException;
+
+    PersonValues getPersonValuesByID(CharSequence personID) throws ASAPSecurityException;
 
     /**
      * This component keeps an ordered list of known peers

@@ -42,7 +42,7 @@ public class ExchangeTest {
 
         // setup alice
         ASAPInternalStorage aliceStorage = ASAPEngineFS.getASAPStorage(
-                ALICE_ID, ALICE_APP_FOLDER, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+                ALICE_ID, ALICE_APP_FOLDER, ASAPCertificateStorage.PKI_APP_NAME);
 
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPAbstractCertificateStore(aliceStorage, ALICE_ID, ALICE_NAME);
@@ -51,7 +51,7 @@ public class ExchangeTest {
 
         // setup bob
         ASAPInternalStorage bobStorage = ASAPEngineFS.getASAPStorage(
-                BOB_ID, BOB_APP_FOLDER, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+                BOB_ID, BOB_APP_FOLDER, ASAPCertificateStorage.PKI_APP_NAME);
 
         ASAPCertificateStorage asapBobCertificateStorage =
                 new ASAPAbstractCertificateStore(bobStorage, BOB_ID, BOB_NAME);
@@ -63,7 +63,7 @@ public class ExchangeTest {
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
         Set<CharSequence> supportedFormats = new HashSet<>();
-        supportedFormats.add(ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+        supportedFormats.add(ASAPCertificateStorage.PKI_APP_NAME);
         supportedFormats.add(ASAPCertificateStore.CREDENTIAL_APP_NAME);
 
         CredentialReceiver aliceListener = new CredentialReceiver(aliceASAPCertificateStore);
@@ -183,9 +183,9 @@ public class ExchangeTest {
 
                     // return newly created certificate
                     Log.writeLog(this, "try to get asap engine for "
-                            + ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+                            + ASAPCertificateStorage.PKI_APP_NAME);
 
-                    ASAPEngine asapCertEngine = asapPeer.getASAPEngine(ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+                    ASAPEngine asapCertEngine = asapPeer.getASAPEngine(ASAPCertificateStorage.PKI_APP_NAME);
 
                     Log.writeLog(this,
                             "right before sending certificate as ASAP Message");

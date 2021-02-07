@@ -44,7 +44,7 @@ public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
         } else {
             // check expiration time
             Calendar createCal = ASAPCertificateImpl.long2Calendar(creationTime);
-            createCal.add(Calendar.YEAR, ASAPCertificateImpl.DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS);
+            createCal.add(Calendar.YEAR, ASAPCertificate.DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS);
             if (createCal.getTimeInMillis() < System.currentTimeMillis()) {
                 Log.writeLog(this, "local key pair expired - reset");
                 createNewPair = true;
@@ -98,6 +98,19 @@ public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
         } catch (IndexOutOfBoundsException e) {
             throw new ASAPSecurityException("position too high: " + position);
         }
+    }
+
+    @Override
+    public PersonValues getPersonValuesByID(CharSequence personID) throws ASAPSecurityException {
+        // TODO: a map would be better?
+        String wantedIDString = personID.toString();
+        for(PersonValuesImpl personValues : this.personsList) {
+            if(wantedIDString.equalsIgnoreCase(personValues.getUserID().toString())) {
+                return personValues;
+            }
+        }
+
+        throw new ASAPSecurityException("no person with this id found: " + personID);
     }
 
     public boolean isMe(CharSequence userID) {

@@ -42,7 +42,7 @@ public class ASAPCertificateStoreTests {
 
         // setup alice
         ASAPEngine aliceASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+                "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPAbstractCertificateStore(aliceASAPStorage, ALICE_ID, ALICE_NAME);
 
@@ -51,7 +51,7 @@ public class ASAPCertificateStoreTests {
 
         // setup bob
         ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+                "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapBobCertificateStorage =
                 new ASAPAbstractCertificateStore(aliceASAPStorage, BOB_ID, BOB_NAME);
 
@@ -75,7 +75,7 @@ public class ASAPCertificateStoreTests {
         // create a certificate of David issued by Clara
         // setup Clara
         ASAPEngine claraASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Clara", ROOT_DIRECTORY_CLARA, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+                "Clara", ROOT_DIRECTORY_CLARA, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapClaraCertificateStorage =
                 new ASAPAbstractCertificateStore(claraASAPStorage, CLARA_ID, CLARA_NAME);
 
@@ -84,7 +84,7 @@ public class ASAPCertificateStoreTests {
 
         // setup David
         ASAPEngine davidASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Clara", ROOT_DIRECTORY_DAVID, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+                "Clara", ROOT_DIRECTORY_DAVID, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapDavidCertificateStorage =
                 new ASAPAbstractCertificateStore(davidASAPStorage, DAVID_ID, DAVID_NAME);
 
@@ -129,6 +129,9 @@ public class ASAPCertificateStoreTests {
         System.out.println("david identity assurance on alice side == " + davidIdentityAssurance);
         // there is a way from alice to david now - iA is 2.5 rounded up to 3
         Assert.assertEquals(3, aliceASAPCertificateStore.getIdentityAssurance(davidID));
+
+        PersonValues davidValues = aliceASAPCertificateStore.getPersonValuesByID(davidID);
+        Assert.assertTrue(davidValues.getName().toString().equalsIgnoreCase(DAVID_NAME));
     }
 
     @Test
@@ -142,7 +145,7 @@ public class ASAPCertificateStoreTests {
 
         // setup alice
         ASAPEngine aliceASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+                "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPAbstractCertificateStore(aliceASAPStorage, ALICE_ID, ALICE_NAME);
         ASAPKeyStore aliceCryptoStorage = new InMemoASAPKeyStore(ALICE_ID);
@@ -150,7 +153,7 @@ public class ASAPCertificateStoreTests {
 
         // setup bob
         ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+                "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapBobCertificateStorage =
                 new ASAPAbstractCertificateStore(aliceASAPStorage, BOB_ID, BOB_NAME);
         ASAPKeyStore bobCryptoStorage = new InMemoASAPKeyStore(BOB_ID);
@@ -185,7 +188,7 @@ public class ASAPCertificateStoreTests {
 
         // setup alice
         ASAPEngine aliceASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+                "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPAbstractCertificateStore(aliceASAPStorage, ALICE_ID, ALICE_NAME);
         ASAPKeyStore aliceCryptoStorage = new InMemoASAPKeyStore(ALICE_ID);
@@ -193,7 +196,7 @@ public class ASAPCertificateStoreTests {
 
         // setup bob
         ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
-                "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+                "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapBobCertificateStorage =
                 new ASAPAbstractCertificateStore(aliceASAPStorage, BOB_ID, BOB_NAME);
         ASAPKeyStore bobCryptoStorage = new InMemoASAPKeyStore(BOB_ID);

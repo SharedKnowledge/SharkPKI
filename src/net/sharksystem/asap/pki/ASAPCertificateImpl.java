@@ -9,7 +9,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Calendar;
 
 public class ASAPCertificateImpl implements ASAPCertificate {
-    public static final int DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS = 1;
     public static final String DEFAULT_SIGNATURE_METHOD = "SHA256withRSA";
 
     private PublicKey publicKey;

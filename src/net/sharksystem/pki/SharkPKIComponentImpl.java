@@ -31,8 +31,8 @@ import java.util.Set;
  *
  *
  */
-class SharkCertificateComponentImpl extends AbstractSharkComponent
-        implements SharkComponent, ASAPKeyStore, SharkCertificateComponent,
+class SharkPKIComponentImpl extends AbstractSharkComponent
+        implements SharkComponent, ASAPKeyStore, SharkPKIComponent,
         ASAPMessageReceivedListener, ASAPEnvironmentChangesListener {
 
     private SharkCredentialReceivedListener credentialReceivedListener = null;
@@ -43,7 +43,7 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
     public void setBehaviour(String behaviourName, boolean on) throws SharkUnknownBehaviourException {
         this.checkStatus();
         switch(behaviourName) {
-            case SEND_CREDENTIAL_FIRST_ENCOUNTER: {
+            case BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER: {
                 this.behaviourSendCredentialFirstEncounter = on;
                 if(on) {
                     this.asapPeer.addASAPEnvironmentChangesListener(this);
@@ -76,7 +76,7 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
         }
 
         CharSequence uri = asapMessages.getURI();
-        if(uri == null || !uri.toString().equalsIgnoreCase(SharkCertificateComponent.CREDENTIAL_URI.toString())) {
+        if(uri == null || !uri.toString().equalsIgnoreCase(SharkPKIComponent.CREDENTIAL_URI.toString())) {
             Log.writeLog(this, "received message but wrong uri: " + uri);
             return;
         }
@@ -122,7 +122,7 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
                     CredentialMessage credentialMessage = this.createCredentialMessage();
                     Log.writeLog(this, "credential message == " + credentialMessage);
                     this.asapPeer.sendOnlineASAPMessage(ASAPCertificateStore.CREDENTIAL_APP_NAME,
-                            SharkCertificateComponent.CREDENTIAL_URI,
+                            SharkPKIComponent.CREDENTIAL_URI,
                             credentialMessage.getMessageAsBytes());
                     Log.writeLog(this, "credential message sent");
 
@@ -143,21 +143,25 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
     private FullAsapPKIStorage asapPKIStorage = null;
     private ASAPAbstractCertificateStore asapCertificateStorage;
     private ASAPPeer asapPeer = null;
+    private ASAPKeyStore asapKeyStore = null;
 
-    // package private constructor - a factory is meant to creates instances of this class.
-    SharkCertificateComponentImpl() {}
+    SharkPKIComponentImpl(ASAPKeyStore asapKeyStore) {
+        this.asapKeyStore = asapKeyStore;
+    }
 
     @Override
     public void onStart(ASAPPeer asapPeer) throws SharkException {
         this.asapPeer = asapPeer;
         try {
-            ASAPStorage asapStorage = asapPeer.getASAPStorage(ASAPCertificateStorage.CERTIFICATE_APP_NAME);
+            ASAPStorage asapStorage = asapPeer.getASAPStorage(ASAPCertificateStorage.PKI_APP_NAME);
             this.asapCertificateStorage =
                 new ASAPAbstractCertificateStore(asapStorage, asapPeer.getPeerID(), asapPeer.getPeerID());
 
-            InMemoASAPKeyStore inMemoASAPKeyStore = new InMemoASAPKeyStore(asapPeer.getPeerID());
+            if(this.asapKeyStore == null) {
+                this.asapKeyStore = new InMemoASAPKeyStore(asapPeer.getPeerID());
+            }
 
-            this.asapPKIStorage = new FullAsapPKIStorage(this.asapCertificateStorage, inMemoASAPKeyStore);
+            this.asapPKIStorage = new FullAsapPKIStorage(this.asapCertificateStorage, this.asapKeyStore);
 
         } catch (IOException | ASAPException e) {
             throw new SharkException(e);
@@ -249,7 +253,7 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
 
         // spread the news to all peers only
         try {
-            this.asapPeer.sendOnlineASAPMessage(ASAPCertificateStorage.CERTIFICATE_APP_NAME,
+            this.asapPeer.sendOnlineASAPMessage(ASAPCertificateStorage.PKI_APP_NAME,
                     ASAPCertificate.ASAP_CERTIFICATE_URI, asapCertificate.asBytes());
 
         } catch (ASAPException e) {
@@ -282,6 +286,12 @@ class SharkCertificateComponentImpl extends AbstractSharkComponent
     public PersonValuesImpl getPersonValuesByPosition(int position) throws ASAPSecurityException {
         this.checkStatus();
         return this.asapPKIStorage.getPersonValuesByPosition(position);
+    }
+
+    @Override
+    public PersonValues getPersonValuesByID(CharSequence peerID) throws ASAPSecurityException {
+        this.checkStatus();
+        return this.asapPKIStorage.getPersonValues(peerID);
     }
 
     @Override

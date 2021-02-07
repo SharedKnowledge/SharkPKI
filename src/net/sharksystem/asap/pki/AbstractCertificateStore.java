@@ -461,7 +461,7 @@ public abstract class AbstractCertificateStore implements ASAPCertificateStorage
         }
 
         ASAPStorageAddressImpl(int era) {
-            this(ASAPCertificateStorage.CERTIFICATE_APP_NAME, ASAPCertificate.ASAP_CERTIFICATE_URI, era);
+            this(ASAPCertificateStorage.PKI_APP_NAME, ASAPCertificate.ASAP_CERTIFICATE_URI, era);
         }
 
         ASAPStorageAddressImpl(byte[] serialized) throws IOException {

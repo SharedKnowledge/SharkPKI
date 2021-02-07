@@ -8,6 +8,7 @@ import java.util.Calendar;
 
 public interface ASAPCertificate {
     public static final String ASAP_CERTIFICATE_URI = "asap/certificate";
+    int DEFAULT_CERTIFICATE_VALIDITY_IN_YEARS = 1;
 
     /**
      * @return person which public key is matched with its name

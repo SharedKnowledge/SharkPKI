@@ -3,6 +3,7 @@ package net.sharksystem.pki;
 import net.sharksystem.ASAPFormats;
 import net.sharksystem.SharkComponent;
 import net.sharksystem.asap.ASAPSecurityException;
+import net.sharksystem.asap.persons.PersonValues;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
@@ -50,12 +51,14 @@ import java.util.List;
  * <br/>
  * Have a look in the test folder. There are usage examples which can in most cases uses in a cut&paste manner.
  *
- * @see SharkCertificateComponent
+ * @see SharkPKIComponent
  */
 
-@ASAPFormats(formats = {ASAPCertificateStore.CREDENTIAL_APP_NAME, ASAPCertificateStorage.CERTIFICATE_APP_NAME})
-public interface SharkCertificateComponent extends SharkComponent, ASAPKeyStore {
+@ASAPFormats(formats = {SharkPKIComponent.CREDENTIAL_APP_NAME, SharkPKIComponent.PKI_APP_NAME})
+public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
     CharSequence CREDENTIAL_URI = "sn2://credential";
+    String PKI_APP_NAME = ASAPCertificateStorage.PKI_APP_NAME;
+    String CREDENTIAL_APP_NAME = ASAPCertificateStore.CREDENTIAL_APP_NAME;
 
     /**
      * Peers can ask each other to sign their public keys. This process can be automated by setting this
@@ -70,7 +73,7 @@ public interface SharkCertificateComponent extends SharkComponent, ASAPKeyStore 
      * @see #setBehaviour(String, boolean)
      * @see #createCredentialMessage()
      */
-    String SEND_CREDENTIAL_FIRST_ENCOUNTER = "certComponent_sendCredentialFirstEncounter";
+    String BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER = "certComponent_sendCredentialFirstEncounter";
 
     /**
      * Peers can send a credential message. This process can be automated by setting an flag. Anyway, your application
@@ -167,6 +170,14 @@ public interface SharkCertificateComponent extends SharkComponent, ASAPKeyStore 
      * @throws ASAPSecurityException
      */
     PersonValuesImpl getPersonValuesByPosition(int position) throws ASAPSecurityException;
+
+    /**
+     * Get information about a peer by id
+     * @param peerID
+     * @return
+     * @throws ASAPSecurityException if no peer found with this id
+     */
+    PersonValues getPersonValuesByID(CharSequence peerID) throws ASAPSecurityException;
 
     /**
      * This component keeps an ordered list of known peers

@@ -24,7 +24,7 @@ public class InMemoAbstractCertificateStore extends AbstractCertificateStore {
         certificates.add(cert2store);
 
         return new ASAPStorageAddressImpl(
-                ASAPCertificateStorage.CERTIFICATE_APP_NAME,
+                ASAPCertificateStorage.PKI_APP_NAME,
                 ASAPCertificate.ASAP_CERTIFICATE_URI,
                 42); // era? always 42 - it's just for testing
     }
