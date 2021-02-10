@@ -1,22 +1,26 @@
-package net.sharksystem.asap.persons;
+package net.sharksystem.pki;
 
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
+import net.sharksystem.asap.persons.ASAPCertificateStore;
+import net.sharksystem.asap.persons.ASAPCertificateStoreImpl;
+import net.sharksystem.asap.persons.CredentialMessage;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import net.sharksystem.asap.pki.InMemoAbstractCertificateStore;
+import net.sharksystem.pki.SharkPKIComponent;
 
 import java.io.IOException;
 import java.util.Random;
 
-public class TestHelperPersonStorage {
+public class HelperPKITests {
     public static final CharSequence FRANCIS_NAME = "Francis";
     public static final CharSequence GLORIA_NAME = "Gloria";
     public static final CharSequence HASSAN_NAME = "Hassan";
     public static final CharSequence IRIS_NAME = "Iris";
 
-    public static void fillWithExampleData(FullAsapPKIStorage asapPKI)
+    public static void fillWithExampleData(SharkPKIComponent asapPKI)
             throws ASAPSecurityException, IOException {
 
         ASAPCertificateStorage certificateStorage;
@@ -44,7 +48,8 @@ public class TestHelperPersonStorage {
         ASAPCertificateStore francisStorage = new ASAPCertificateStoreImpl(certificateStorage, francisCryptoStorage);
 
         // produce Francis' public key which isn't used but signed by target PKI
-        asapPKI.addAndSignPerson(francisID, FRANCIS_NAME, francisStorage.getPublicKey(), now);
+        asapPKI.acceptAndSignCredential(
+                new CredentialMessage(francisID, FRANCIS_NAME, now, francisStorage.getPublicKey()));
 
         // Francis signs Gloria: cef(f) = 0.5 ia(g) = 5.0
         String gloriaID = idStart + GLORIA_NAME;
