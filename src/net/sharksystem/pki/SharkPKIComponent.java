@@ -2,6 +2,7 @@ package net.sharksystem.pki;
 
 import net.sharksystem.ASAPFormats;
 import net.sharksystem.SharkComponent;
+import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.persons.PersonValues;
 import net.sharksystem.asap.pki.ASAPCertificate;
@@ -104,6 +105,11 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * @throws IOException
      */
     ASAPCertificate acceptAndSignCredential(CredentialMessage credentialMessage) throws IOException, ASAPSecurityException;
+
+    /**
+     * Create a new key pair. Old one is removed
+     */
+    void createNewKeyPair() throws ASAPException, IOException;
 
     /*
     ASAPCertificate addAndSignPerson(CharSequence userID, CharSequence userName, PublicKey publicKey, long validSince)

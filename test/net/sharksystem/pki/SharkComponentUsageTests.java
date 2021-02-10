@@ -89,7 +89,7 @@ public class SharkComponentUsageTests {
 
         ///////////////////////////////// Encounter Alice - Bob ////////////////////////////////////////////////////
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start encounter >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        aliceSharkPeer.getASAPTestPeerFS().startEncounter(7777, bobSharkPeer.getASAPTestPeerFS());
+        aliceSharkPeer.getASAPTestPeerFS().startEncounter(this.getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
 
         // give them moment to exchange data
         Thread.sleep(1000);
@@ -152,6 +152,8 @@ public class SharkComponentUsageTests {
 
     private class CredentialListenerExample implements SharkCredentialReceivedListener {
         private final SharkPKIComponent sharkPKIComponent;
+        public int numberOfEncounter = 0;
+        public CredentialMessage lastCredentialMessage;
 
         public CredentialListenerExample(SharkPKIComponent sharkPKIComponent) {
             this.sharkPKIComponent = sharkPKIComponent;
@@ -174,6 +176,8 @@ public class SharkComponentUsageTests {
                 It is important: Users must ensure correct data. Human users must ensure that those data are valid and
                 the sending person is really who their claims their is
                  */
+                this.numberOfEncounter++;
+                this.lastCredentialMessage = credentialMessage;
                 Log.writeLog(this, "going to issue a certificate");
                 this.sharkPKIComponent.acceptAndSignCredential(credentialMessage);
             } catch (IOException | ASAPSecurityException e) {
@@ -181,5 +185,114 @@ public class SharkComponentUsageTests {
             }
 
         }
+    }
+
+    /**
+     * If set, a component would send a credential message during encounter. This message is changed if a
+     * new key pair ist set. Only one message is sent. Old credential messages are removed.
+     */
+    @Test
+    public void sendCredentialMessageDuringEncounterAndChangeItWithNewKeyPair() throws SharkException, ASAPException,
+            IOException, InterruptedException {
+        ////////////////////////////////////////// ALICE /////////////////////////////////////////////////////////
+        /* it is a test - we use the test peer implementation
+         only use SharkPeer interface in your application and create a SharkPeerFS instance
+         That's for testing only
+         */
+        SharkTestPeerFS.removeFolder(ROOT_DIRECTORY);
+        SharkTestPeerFS aliceSharkPeer = new SharkTestPeerFS(ALICE_NAME, ALICE_FOLDER);
+
+        SharkPKIComponent aliceComponent = this.setupComponent(aliceSharkPeer);
+
+        // lets starts peer and its components before doing anythings else
+        aliceSharkPeer.start();
+
+        // send credential message whenever a new peer is encountered - would not sign one (there is no listener)
+        aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, true);
+
+        ////////////////////////////////////////// BOB ///////////////////////////////////////////////////////////
+        SharkTestPeerFS.removeFolder(BOB_FOLDER);
+        SharkTestPeerFS bobSharkPeer = new SharkTestPeerFS(BOB_NAME, BOB_FOLDER);
+        SharkPKIComponent bobComponent = this.setupComponent(bobSharkPeer);
+
+        // lets starts peer and its components before doing anythings else
+        bobSharkPeer.start();
+
+        /* Bob will not ask for a certificate but would issue on - set a listener
+         * usually - peers should do both - send and sign. This example splits those to parts for illustration
+         * and testing purposes
+         */
+        CredentialListenerExample bobCredentialListener = new CredentialListenerExample(bobComponent);
+        bobComponent.setSharkCredentialReceivedListener(bobCredentialListener);
+
+        ///////////////////////////////// Encounter #1 Alice - Bob ////////////////////////////////////////////////////
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start encounter >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        aliceSharkPeer.getASAPTestPeerFS().startEncounter(this.getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
+
+        // give them moment to exchange data
+        Thread.sleep(1000);
+        //Thread.sleep(Long.MAX_VALUE);
+        System.out.println("slept a moment");
+        aliceSharkPeer.getASAPTestPeerFS().stopEncounter(bobSharkPeer.getASAPTestPeerFS());
+
+        Assert.assertEquals(1, bobCredentialListener.numberOfEncounter);
+
+        // remember credential message
+        CredentialMessage firstBobCredential = bobCredentialListener.lastCredentialMessage;
+
+        /////////////////////////////////////////// Alice changes keypair /////////////////////////////////////////////
+        aliceComponent.generateKeyPair();
+        //Thread.sleep(Long.MAX_VALUE);
+
+        ///////////////////////////////// Encounter #2 Alice - Bob ////////////////////////////////////////////////////
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start encounter >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        aliceSharkPeer.getASAPTestPeerFS().startEncounter(this.getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
+
+        // give them moment to exchange data
+        Thread.sleep(1000);
+        //Thread.sleep(Long.MAX_VALUE);
+        System.out.println("slept a moment");
+        aliceSharkPeer.getASAPTestPeerFS().stopEncounter(bobSharkPeer.getASAPTestPeerFS());
+        Assert.assertEquals(2, bobCredentialListener.numberOfEncounter);
+
+        // remember credential message
+        CredentialMessage secondBobCredential = bobCredentialListener.lastCredentialMessage;
+
+        // both are different
+        Assert.assertNotEquals(firstBobCredential.getValidSince(), secondBobCredential.getValidSince());
+
+        ////////////////////////////////////////// CLARA ///////////////////////////////////////////////////////////
+        SharkTestPeerFS.removeFolder(CLARA_FOLDER);
+        SharkTestPeerFS claraSharkPeer = new SharkTestPeerFS(CLARA_NAME, CLARA_FOLDER);
+        SharkPKIComponent claraComponent = this.setupComponent(claraSharkPeer);
+
+        // lets starts peer and its components before doing anythings else
+        claraSharkPeer.start();
+        CredentialListenerExample claraCredentialListener = new CredentialListenerExample(claraComponent);
+        claraComponent.setSharkCredentialReceivedListener(claraCredentialListener);
+
+        ///////////////////////////////// Encounter #1 Alice - Clara ////////////////////////////////////////////////////
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start encounter >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        aliceSharkPeer.getASAPTestPeerFS().startEncounter(this.getPortNumber(), claraSharkPeer.getASAPTestPeerFS());
+
+        // give them moment to exchange data
+        Thread.sleep(1000);
+        //Thread.sleep(Long.MAX_VALUE);
+        System.out.println("slept a moment");
+        aliceSharkPeer.getASAPTestPeerFS().stopEncounter(claraSharkPeer.getASAPTestPeerFS());
+
+        Assert.assertEquals(1, claraCredentialListener.numberOfEncounter);
+
+        // remember credential message
+        CredentialMessage firstClaraCredential = claraCredentialListener.lastCredentialMessage;
+
+        // bob and claras last received credentials are the same
+        Assert.assertEquals(firstClaraCredential.getValidSince(), secondBobCredential.getValidSince());
+    }
+
+    private static int portnumber = 7000;
+    private int getPortNumber() {
+        portnumber++;
+        return portnumber;
     }
 }

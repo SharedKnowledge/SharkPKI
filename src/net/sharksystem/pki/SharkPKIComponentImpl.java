@@ -40,15 +40,22 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     private boolean behaviourSendCredentialFirstEncounter = false;
     private boolean certificateExpected = false;
 
-    public void setBehaviour(String behaviourName, boolean on) throws SharkUnknownBehaviourException {
+    public void setBehaviour(String behaviourName, boolean on) throws SharkUnknownBehaviourException, IOException, ASAPException {
         this.checkStatus();
         switch(behaviourName) {
             case BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER: {
+                // changed?
+                if(this.behaviourSendCredentialFirstEncounter == on) {
+                    Log.writeLog(this, "behaviour was already set that way - ignore: " + behaviourName);
+                    return;
+                }
                 this.behaviourSendCredentialFirstEncounter = on;
                 if(on) {
-                    this.asapPeer.addASAPEnvironmentChangesListener(this);
+                    // changed from off -> on
+                    this.sendCredentialMessage();
                 } else {
-                    this.asapPeer.removeASAPEnvironmentChangesListener(this);
+                    // changed from on -> off
+                    this.removeCredentialMessage();
                 }
                 break;
             }
@@ -203,10 +210,51 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
         return this.asapPKIStorage.getOwner();
     }
 
+    /**
+     * Remove credential messages from outbox. It used
+     * a) behaviour is changed to not issuing a credential during encounter or
+     * b) new keypair was created.
+     */
+    private void removeCredentialMessage() throws IOException, ASAPException {
+        Log.writeLog(this, "remove credential channel");
+        ASAPStorage credentialStorage = this.asapPeer.getASAPStorage(SharkPKIComponent.CREDENTIAL_APP_NAME);
+        credentialStorage.removeChannel(SharkPKIComponent.CREDENTIAL_URI);
+    }
+
+    /**
+     * Add credential messages to outbox. It used
+     * a) behaviour is changed to not issuing a credential during encounter or
+     * b) new keypair was created.
+     */
+    private void sendCredentialMessage() throws ASAPException, IOException {
+        Log.writeLog(this, "create credential message");
+        CredentialMessage credentialMessage = this.createCredentialMessage();
+        Log.writeLog(this, "credential message == " + credentialMessage);
+        this.asapPeer.sendASAPMessage(
+                SharkPKIComponent.CREDENTIAL_APP_NAME,
+                SharkPKIComponent.CREDENTIAL_URI,
+                credentialMessage.getMessageAsBytes());
+        Log.writeLog(this, "credential message sent");
+    }
+
     @Override
-    public void generateKeyPair() throws ASAPSecurityException {
+    public void createNewKeyPair() throws ASAPException, IOException {
         this.checkStatus();
         this.asapPKIStorage.generateKeyPair();
+
+        if(this.behaviourSendCredentialFirstEncounter) {
+            this.removeCredentialMessage();
+            this.sendCredentialMessage();
+        }
+    }
+
+    @Override
+    public void generateKeyPair() throws ASAPSecurityException {
+        try {
+            this.createNewKeyPair();
+        } catch (ASAPException | IOException asapException) {
+            throw new ASAPSecurityException("problems when creating key pair", asapException);
+        }
     }
 
     @Override
