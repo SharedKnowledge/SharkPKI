@@ -397,6 +397,16 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     }
 
     @Override
+    public void sendOnlineCredentialMessage() throws ASAPException, IOException {
+        this.checkStatus();
+        CredentialMessage credentialMessage = this.createCredentialMessage();
+        this.asapPeer.sendOnlineASAPMessage(
+                SharkPKIComponent.CREDENTIAL_APP_NAME,
+                SharkPKIComponent.CREDENTIAL_URI,
+                credentialMessage.getMessageAsBytes());
+    }
+
+    @Override
     public boolean syncNewReceivedCertificates() {
         this.checkStatus();
         return this.asapPKIStorage.incorporateReceivedCertificates();

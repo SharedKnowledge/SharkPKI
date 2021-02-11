@@ -262,6 +262,20 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
     CredentialMessage createCredentialMessage() throws ASAPSecurityException;
 
     /**
+     * Send a credential message to all peers which are actually in the neighbourhood. This method
+     * is not needed, though. You should consider setting the appropriate behaviour to allow this component
+     * to send a credential message as soon as it encounters another peers.
+     *
+     * Anyway, those messages can get lost. In that case: Call this method. Created credential message will
+     * not be stored with the local storage nor re-sent. It is sent (with best-effort) and dropped afterwards.
+     *
+     * @throws ASAPSecurityException
+     * @throws IOException
+     * @see #BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER
+     */
+    void sendOnlineCredentialMessage() throws ASAPException, IOException;
+
+    /**
      * Call this method if probably new certificates are received
      * @return true if certificate of a new person received - time to call store.
      */
