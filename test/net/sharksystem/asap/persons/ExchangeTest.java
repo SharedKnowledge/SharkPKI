@@ -1,5 +1,7 @@
 package net.sharksystem.asap.persons;
 
+import net.sharksystem.asap.pki.CredentialMessageInMemo;
+import net.sharksystem.pki.CredentialMessage;
 import net.sharksystem.pki.TestConstants;
 import net.sharksystem.asap.*;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
@@ -171,13 +173,13 @@ public class ExchangeTest {
                 if(messages.hasNext()) {
                     Log.writeLog(this, "create credential message object..");
 
-                    CredentialMessage credential = new CredentialMessage(messages.next());
+                    CredentialMessageInMemo credential = new CredentialMessageInMemo(messages.next());
 
                     Log.writeLog(this, "..created: " + credential);
 
                     ASAPCertificate newCert = ASAPCertificateStore.addAndSignPerson(
-                            credential.getOwnerID(),
-                            credential.getOwnerName(),
+                            credential.getSubjectID(),
+                            credential.getSubjectName(),
                             credential.getPublicKey(),
                             credential.getValidSince());
 

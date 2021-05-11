@@ -1,7 +1,8 @@
-package net.sharksystem.asap.persons;
+package net.sharksystem.asap.pki;
 
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.utils.DateTimeHelper;
+import net.sharksystem.pki.CredentialMessage;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -13,23 +14,23 @@ import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Random;
 
-public class CredentialMessage {
+public class CredentialMessageInMemo implements CredentialMessage {
     private final long validSince;
-    private CharSequence ownerID;
-    private CharSequence ownerName;
+    private CharSequence subjectID;
+    private CharSequence subjectName;
     private int randomInt;
     private PublicKey publicKey;
 
-    public CharSequence getOwnerID() { return this.ownerID; }
-    public CharSequence getOwnerName() { return this.ownerName; }
+    public CharSequence getSubjectID() { return this.subjectID; }
+    public CharSequence getSubjectName() { return this.subjectName; }
     public int getRandomInt() { return this.randomInt; }
     public long getValidSince() { return this.validSince; }
     public PublicKey getPublicKey() { return this.publicKey; }
 
-    public CredentialMessage(CharSequence ownerID, CharSequence ownerName,
-                             long validSince, PublicKey publicKey) {
-        this.ownerID = ownerID;
-        this.ownerName = ownerName;
+    public CredentialMessageInMemo(CharSequence subjectID, CharSequence subjectName,
+                                   long validSince, PublicKey publicKey) {
+        this.subjectID = subjectID;
+        this.subjectName = subjectName;
         this.validSince = validSince;
         this.publicKey = publicKey;
 
@@ -51,12 +52,12 @@ public class CredentialMessage {
         this.randomInt = sixDigitsInt;
     }
 
-    public CredentialMessage(byte[] serializedMessage) throws IOException, ASAPSecurityException {
+    public CredentialMessageInMemo(byte[] serializedMessage) throws IOException, ASAPSecurityException {
         ByteArrayInputStream bais = new ByteArrayInputStream(serializedMessage);
         DataInputStream dis = new DataInputStream(bais);
 
-        this.ownerID = dis.readUTF();
-        this.ownerName = dis.readUTF();
+        this.subjectID = dis.readUTF();
+        this.subjectName = dis.readUTF();
         this.randomInt = dis.readInt();
         this.validSince = dis.readLong();
 
@@ -84,8 +85,8 @@ public class CredentialMessage {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         DataOutputStream dos = new DataOutputStream(baos);
-        dos.writeUTF(this.ownerID.toString());
-        dos.writeUTF(this.ownerName.toString());
+        dos.writeUTF(this.subjectID.toString());
+        dos.writeUTF(this.subjectName.toString());
         dos.writeInt(this.randomInt);
         dos.writeLong(this.validSince);
 
@@ -119,11 +120,11 @@ public class CredentialMessage {
         StringBuilder sb = new StringBuilder();
 
         sb.append("name: ");
-        sb.append(this.ownerName);
+        sb.append(this.subjectName);
         sb.append(" | ");
 
         sb.append("id: ");
-        sb.append(this.ownerID);
+        sb.append(this.subjectID);
         sb.append(" | ");
 
         sb.append("validsince: ");

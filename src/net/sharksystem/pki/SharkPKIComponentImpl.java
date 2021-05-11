@@ -7,6 +7,7 @@ import net.sharksystem.asap.persons.*;
 import net.sharksystem.asap.pki.ASAPAbstractCertificateStore;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
+import net.sharksystem.asap.pki.CredentialMessageInMemo;
 import net.sharksystem.utils.Log;
 
 import javax.crypto.SecretKey;
@@ -91,7 +92,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
         Iterator<byte[]> messages = asapMessages.getMessages();
         while (messages.hasNext()) {
             try {
-                CredentialMessage credentialMessage = new CredentialMessage(messages.next());
+                CredentialMessageInMemo credentialMessage = new CredentialMessageInMemo(messages.next());
                 this.credentialReceivedListener.credentialReceived(credentialMessage);
             } catch (ASAPSecurityException e) {
                 Log.writeLog(this, "could not create credential message from asap message " +
@@ -292,8 +293,8 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
             throws IOException, ASAPSecurityException {
 
         this.checkStatus();
-        ASAPCertificate asapCertificate = this.asapPKIStorage.addAndSignPerson(credentialMessage.getOwnerID(),
-                credentialMessage.getOwnerName(),
+        ASAPCertificate asapCertificate = this.asapPKIStorage.addAndSignPerson(credentialMessage.getSubjectID(),
+                credentialMessage.getSubjectName(),
                 credentialMessage.getPublicKey(),
                 credentialMessage.getValidSince());
 

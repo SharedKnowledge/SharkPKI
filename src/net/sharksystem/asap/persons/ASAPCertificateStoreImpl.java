@@ -5,7 +5,9 @@ import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateImpl;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
+import net.sharksystem.asap.pki.CredentialMessageInMemo;
 import net.sharksystem.asap.utils.DateTimeHelper;
+import net.sharksystem.pki.CredentialMessage;
 import net.sharksystem.utils.Log;
 
 import java.io.*;
@@ -320,7 +322,7 @@ public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
     public CredentialMessage createCredentialMessage()
             throws ASAPSecurityException {
 
-        CredentialMessage credentialMessage = new CredentialMessage(
+        CredentialMessageInMemo credentialMessage = new CredentialMessageInMemo(
                 this.getOwnerID(), this.getOwnerName(), this.getKeysCreationTime(), this.getPublicKey());
 
         return credentialMessage;

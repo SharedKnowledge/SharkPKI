@@ -9,7 +9,6 @@ import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.persons.ASAPCertificateStore;
-import net.sharksystem.asap.persons.CredentialMessage;
 import net.sharksystem.asap.persons.PersonValuesImpl;
 
 import java.io.IOException;
@@ -231,9 +230,9 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
 
     /**
      * Add a certificate to this storage. That method is used to store an already existing certificate. There are
-     * rary circumstances in which an application needs this method. Certificates are exchange automatically by this
-     * component. A new certificate can only be produced by another method
-     * @see #acceptAndSignCredential(CredentialMessage)
+     * rare circumstances in which an application needs this method. Certificates are exchange automatically by this
+     * component.
+     * @see #acceptAndSignCredential(CredentialMessageInMemo)
      * @param asapCertificate
      * @throws IOException
      * @throws ASAPSecurityException

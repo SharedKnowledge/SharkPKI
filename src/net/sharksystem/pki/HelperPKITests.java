@@ -5,11 +5,10 @@ import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
 import net.sharksystem.asap.persons.ASAPCertificateStore;
 import net.sharksystem.asap.persons.ASAPCertificateStoreImpl;
-import net.sharksystem.asap.persons.CredentialMessage;
+import net.sharksystem.asap.pki.CredentialMessageInMemo;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import net.sharksystem.asap.pki.InMemoAbstractCertificateStore;
-import net.sharksystem.pki.SharkPKIComponent;
 
 import java.io.IOException;
 import java.util.Random;
@@ -49,7 +48,7 @@ public class HelperPKITests {
 
         // produce Francis' public key which isn't used but signed by target PKI
         asapPKI.acceptAndSignCredential(
-                new CredentialMessage(francisID, FRANCIS_NAME, now, francisStorage.getPublicKey()));
+                new CredentialMessageInMemo(francisID, FRANCIS_NAME, now, francisStorage.getPublicKey()));
 
         // Francis signs Gloria: cef(f) = 0.5 ia(g) = 5.0
         String gloriaID = idStart + GLORIA_NAME;

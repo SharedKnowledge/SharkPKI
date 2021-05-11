@@ -8,7 +8,7 @@ import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.crypto.ASAPCryptoAlgorithms;
-import net.sharksystem.asap.persons.CredentialMessage;
+import net.sharksystem.asap.pki.CredentialMessageInMemo;
 import net.sharksystem.utils.Log;
 import org.junit.Assert;
 import org.junit.Test;

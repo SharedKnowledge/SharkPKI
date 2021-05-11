@@ -2,6 +2,7 @@ package net.sharksystem.asap.persons;
 
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.pki.ASAPCertificate;
+import net.sharksystem.pki.CredentialMessage;
 
 import java.io.IOException;
 import java.io.InputStream;
