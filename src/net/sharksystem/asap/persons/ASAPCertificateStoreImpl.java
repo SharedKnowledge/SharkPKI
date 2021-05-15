@@ -127,7 +127,13 @@ public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
         // You are aware of yourself - I hope :)
         if(this.isMe(userID)) return OtherPerson.HIGHEST_IDENTITY_ASSURANCE_LEVEL;
 
-        return this.getPersonValues(userID).getIdentityAssurance();
+        try {
+            return this.getPersonValues(userID).getIdentityAssurance();
+        }
+        catch(ASAPSecurityException e) {
+            // not found - complete unreliable
+            return OtherPerson.LOWEST_IDENTITY_ASSURANCE_LEVEL;
+        }
     }
 
     public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID)
@@ -308,7 +314,8 @@ public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
     public void setSigningFailureRate(CharSequence personID, int failureRate) throws ASAPSecurityException {
         if (failureRate < OtherPerson.BEST_SIGNING_FAILURE_RATE
                 || failureRate > OtherPerson.WORST_SIGNING_FAILURE_RATE)
-            throw new ASAPSecurityException("failure rate you are trying to set is out of defined range");
+            throw new ASAPSecurityException("failure rate you are trying to set is out of defined range: "
+            + OtherPerson.WORST_SIGNING_FAILURE_RATE + " <= failureRate <= " + OtherPerson.BEST_SIGNING_FAILURE_RATE);
 
         this.getPersonValues(personID).setSigningFailureRate(failureRate);
         this.certificateStorage.syncIdentityAssurance();

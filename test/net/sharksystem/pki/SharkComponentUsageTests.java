@@ -24,6 +24,50 @@ public class SharkComponentUsageTests {
     public static final String BOB_FOLDER = SPECIFIC_ROOT_FOLDER + BOB_NAME;
     public static final String CLARA_FOLDER = SPECIFIC_ROOT_FOLDER + CLARA_NAME;
 
+    private static int portnumber = 7000;
+
+    private int getPortNumber() {
+        portnumber++;
+        return portnumber;
+    }
+
+    private class CredentialListenerExample implements SharkCredentialReceivedListener {
+        private final SharkPKIComponent sharkPKIComponent;
+        public int numberOfEncounter = 0;
+        public CredentialMessage lastCredentialMessage;
+
+        public CredentialListenerExample(SharkPKIComponent sharkPKIComponent) {
+            this.sharkPKIComponent = sharkPKIComponent;
+        }
+
+        @Override
+        public void credentialReceived(CredentialMessage credentialMessage) {
+            try {
+                /*
+                Absolutely not. No! Automatically signing a credential message which simply came along from an unknown
+                source is ridiculous. Never ever write an app like this. That's only for debugging. Only!
+                Don't even think things like: "Em, well, I just take is for a temporary solution, just to
+                illustrate that it works..." It works, alright. That is what this test is for.
+
+                Taking it as 'temporary' solution is most probably BS and you know that. Deal with security from the
+                beginning of your app development. Security is not anything you add 'sometimes later'. It is
+                part of your apps philosophy or it is not.
+                You will make the world a better place by embracing security. :)
+
+                It is important: Users must ensure correct data. Human users must ensure that those data are valid and
+                the sending person is really who their claims their is
+                 */
+                this.numberOfEncounter++;
+                this.lastCredentialMessage = credentialMessage;
+                Log.writeLog(this, "going to issue a certificate");
+                this.sharkPKIComponent.acceptAndSignCredential(credentialMessage);
+            } catch (IOException | ASAPSecurityException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
     private SharkPKIComponent setupComponent(SharkPeer sharkPeer)
             throws SharkException, ASAPSecurityException {
 
@@ -43,11 +87,11 @@ public class SharkComponentUsageTests {
     }
 
     /**
-     * ALice send her credential information to Bob and expects him to sign. Certificates issued by Bob must be
+     * Alice send her credential information to Bob and expects him to sign. Certificates issued by Bob must be
      * available on both sides.
-     *
+     * <p>
      * Problems / Bugs:
-     * credential is sent twice from Alice to Bob - it wrong but less important - Bob should deal it.
+     * credential is sent twice from Alice to Bob - it wrong but less important - Bob should deal with it.
      *
      * @throws SharkException
      * @throws ASAPSecurityException
@@ -148,43 +192,6 @@ public class SharkComponentUsageTests {
 
         // must be the same
         Assert.assertArrayEquals(messageBytes, receivedMessageBytes);
-    }
-
-    private class CredentialListenerExample implements SharkCredentialReceivedListener {
-        private final SharkPKIComponent sharkPKIComponent;
-        public int numberOfEncounter = 0;
-        public CredentialMessage lastCredentialMessage;
-
-        public CredentialListenerExample(SharkPKIComponent sharkPKIComponent) {
-            this.sharkPKIComponent = sharkPKIComponent;
-        }
-
-        @Override
-        public void credentialReceived(CredentialMessage credentialMessage) {
-            try {
-                /*
-                Absolutely not. No! Automatically signing a credential message which simply came along from an unknown
-                source is ridiculous. Never ever write an app like this. That's only for debugging. Only!
-                Don't even think things like: "Em, well, I just take is for a temporary solution, just to
-                illustrate that it works..." It works, alright. That is what this test is for.
-
-                Taking it as 'temporary' solution is most probably BS and you know that. Deal with security from the
-                beginning of your app development. Security is not anything you add 'sometimes later'. It is
-                part of your apps philosophy or it is not.
-                You will make the world a better place by embracing security. :)
-
-                It is important: Users must ensure correct data. Human users must ensure that those data are valid and
-                the sending person is really who their claims their is
-                 */
-                this.numberOfEncounter++;
-                this.lastCredentialMessage = credentialMessage;
-                Log.writeLog(this, "going to issue a certificate");
-                this.sharkPKIComponent.acceptAndSignCredential(credentialMessage);
-            } catch (IOException | ASAPSecurityException e) {
-                e.printStackTrace();
-            }
-
-        }
     }
 
     /**
@@ -290,9 +297,88 @@ public class SharkComponentUsageTests {
         Assert.assertEquals(firstClaraCredential.getValidSince(), secondBobCredential.getValidSince());
     }
 
-    private static int portnumber = 7000;
-    private int getPortNumber() {
-        portnumber++;
-        return portnumber;
+    /**
+     * This test runs without actual ASAP communication but using getter und setter of certificates.
+     * <br/><br/>
+     * Alice and Bob generate a credential messages. Both messages are acceptedAndSigned -> two certificates
+     * are created: Alice issues one for Bob and signs it and vice versa. Now, Bob does the same with Clara.
+     * <br/><br/>
+     * Finally, certificate issued by Bob for Alice is added to Clara's PKI.
+     * <br/><br/>
+     * Check identity assurance for each relation A-B (10 | 10), B-C (10 | 10) and A-C (0 | 90)
+     *
+     * @throws SharkException
+     * @throws ASAPException
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    @Test
+    public void testIdentityAssurance() throws SharkException, ASAPException,
+            IOException, InterruptedException {
+        ////////////////////////////////////////// ALICE /////////////////////////////////////////////////////////
+        /* it is a test - we use the test peer implementation
+         only use SharkPeer interface in your application and create a SharkPeerFS instance
+         That's for testing only
+         */
+        SharkTestPeerFS.removeFolder(ROOT_DIRECTORY);
+
+        SharkTestPeerFS aliceSharkPeer = new SharkTestPeerFS(ALICE_NAME, ALICE_FOLDER);
+        SharkPKIComponent alicePKI = this.setupComponent(aliceSharkPeer);
+        // lets starts peer and its components before doing anythings else
+        aliceSharkPeer.start();
+
+        SharkTestPeerFS bobSharkPeer = new SharkTestPeerFS(BOB_NAME, BOB_FOLDER);
+        SharkPKIComponent bobPKI = this.setupComponent(bobSharkPeer);
+        // lets starts peer and its components before doing anythings else
+        bobSharkPeer.start();
+
+        SharkTestPeerFS claraSharkPeer = new SharkTestPeerFS(CLARA_NAME, CLARA_FOLDER);
+        SharkPKIComponent claraPKI = this.setupComponent(claraSharkPeer);
+        // lets starts peer and its components before doing anythings else
+        claraSharkPeer.start();
+
+        CredentialMessage aliceCredentialMessage = alicePKI.createCredentialMessage();
+        CredentialMessage bobCredentialMessage = bobPKI.createCredentialMessage();
+
+        // Alice and Bob exchange and accept credential messages and issue certificates
+        ASAPCertificate aliceIssuedBobCert = alicePKI.acceptAndSignCredential(bobCredentialMessage);
+        ASAPCertificate bobIssuedAliceCert = bobPKI.acceptAndSignCredential(aliceCredentialMessage);
+
+        // Bob and Clara meet, accept credential messages and issue certificates
+        CredentialMessage claraCredentialMessage = claraPKI.createCredentialMessage();
+        ASAPCertificate claraIssuedBobCert = claraPKI.acceptAndSignCredential(bobCredentialMessage);
+        ASAPCertificate bobIssuedClaraCert = bobPKI.acceptAndSignCredential(claraCredentialMessage);
+
+        // Clara gets Bob issued cert for Alice
+        claraPKI.addCertificate(bobIssuedAliceCert);
+
+        // check identity assurance
+        int iaAliceSideBob = alicePKI.getIdentityAssurance(bobSharkPeer.getPeerID());
+        int iaAliceSideClara = alicePKI.getIdentityAssurance(claraSharkPeer.getPeerID());
+
+        int iaBobSideAlice = bobPKI.getIdentityAssurance(aliceSharkPeer.getPeerID());
+        int iaBobSideClara = bobPKI.getIdentityAssurance(claraSharkPeer.getPeerID());
+
+        int iaClaraSideAlice = claraPKI.getIdentityAssurance(aliceSharkPeer.getPeerID());
+        int iaClaraSideBob = claraPKI.getIdentityAssurance(bobSharkPeer.getPeerID());
+
+        Assert.assertEquals(10, iaAliceSideBob); // met
+        System.out.println("10 - okay, Alice met Bob");
+        Assert.assertEquals(0, iaAliceSideClara); // never seen, no certificate on Alice side
+        System.out.println("0 - okay, Alice knows nothing about Clara");
+        Assert.assertEquals(10, iaBobSideAlice); // met
+        System.out.println("10 - okay, Bob met Alice");
+        Assert.assertEquals(10, iaBobSideClara); // met
+        System.out.println("10 - okay, Bob met Clara");
+        Assert.assertEquals(5, iaClaraSideAlice); // got certificate from Bob, with default failure rate == 5
+        System.out.println("5 - okay, Clara has got a certificate issued by Bob (with failure rate 5)");
+        Assert.assertEquals(10, iaClaraSideBob); // met
+        System.out.println("10 - okay, Clara met Bob");
+
+        // change failure rate
+        claraPKI.setSigningFailureRate(bobSharkPeer.getPeerID(), 1); // best failure rate
+        iaClaraSideAlice = claraPKI.getIdentityAssurance(aliceSharkPeer.getPeerID()); // get again
+        Assert.assertEquals(9, iaClaraSideAlice); // must be better now
+        System.out.println("9 - okay, Clara has got a certificate issued by Bob (better failure rate (9) now)");
     }
 }

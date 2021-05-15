@@ -195,7 +195,7 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
     /**
      * Identity assurance is calculated by a chain of certificate. See Github Wiki for details.
      * @param userID
-     * @return best identity assurance or 10 if no assurance at all
+     * @return best identity assurance or 10 if no assurance at all, maybe not met before
      * @throws ASAPSecurityException
      */
     int getIdentityAssurance(CharSequence userID) throws ASAPSecurityException;
