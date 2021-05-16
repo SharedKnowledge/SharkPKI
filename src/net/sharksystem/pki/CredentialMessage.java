@@ -13,4 +13,6 @@ public interface CredentialMessage {
     long getValidSince();
 
     byte[] getMessageAsBytes() throws IOException;
+
+    int getRandomInt();
 }
