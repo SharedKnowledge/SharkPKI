@@ -79,8 +79,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     @Override
     public void asapMessagesReceived(ASAPMessages asapMessages,
                                      String senderE2E, // E2E part
-                                     String senderPoint2Point, boolean verified, boolean encrypted, // Point2Point part
-                                     EncounterConnectionType connectionType) throws IOException {
+                                     ASAPHop asapHop) throws IOException {
         if(this.credentialReceivedListener == null) {
             Log.writeLog(this, "received message but no listener - give up");
             return;
