@@ -1,5 +1,6 @@
 package net.sharksystem.asap.persons;
 
+import net.sharksystem.EncounterConnectionType;
 import net.sharksystem.asap.pki.CredentialMessageInMemo;
 import net.sharksystem.pki.CredentialMessage;
 import net.sharksystem.pki.TestConstants;
@@ -162,9 +163,11 @@ public class ExchangeTest {
         }
 
         @Override
-        public void chunkReceived(String format, String sender, String uri, int era) {
+        public void chunkReceived(String format, String senderE2E, String uri, int era,
+                                  String senderPoint2Point, boolean verified, boolean encrypted, // Point2Point part
+                                  EncounterConnectionType connectionType) {
             ASAPMessages asapMessages =
-                    Helper.getMessagesByChunkReceivedInfos(format, sender, uri, this.folderName, era);
+                    Helper.getMessagesByChunkReceivedInfos(format, senderE2E, uri, this.folderName, era);
 
             Iterator<byte[]> messages = null;
             try {
@@ -214,7 +217,9 @@ public class ExchangeTest {
         }
 
         @Override
-        public void chunkReceived(String format, String sender, String uri, int era) {
+        public void chunkReceived(String format, String senderE2E, String uri, int era,
+                                  String senderPoint2Point, boolean verified, boolean encrypted, // Point2Point part
+                                  EncounterConnectionType connectionType) {
             this.received = true;
             this.ASAPCertificateStore.incorporateReceivedCertificates();
         }
