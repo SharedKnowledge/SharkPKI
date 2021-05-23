@@ -20,6 +20,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import static net.sharksystem.pki.TestConstants.*;
@@ -163,7 +164,7 @@ public class ExchangeTest {
 
         @Override
         public void chunkReceived(String format, String senderE2E, String uri, int era,
-                                  ASAPHop asapHop) {
+                                  List<ASAPHop> asapHops) {
             ASAPMessages asapMessages =
                     Helper.getMessagesByChunkReceivedInfos(format, senderE2E, uri, this.folderName, era);
 
@@ -216,7 +217,7 @@ public class ExchangeTest {
 
         @Override
         public void chunkReceived(String format, String senderE2E, String uri, int era,
-                                  ASAPHop asapHop) {
+                                  List<ASAPHop> asapHops) {
             this.received = true;
             this.ASAPCertificateStore.incorporateReceivedCertificates();
         }

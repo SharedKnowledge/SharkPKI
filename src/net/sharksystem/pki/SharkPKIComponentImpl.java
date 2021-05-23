@@ -79,7 +79,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     @Override
     public void asapMessagesReceived(ASAPMessages asapMessages,
                                      String senderE2E, // E2E part
-                                     ASAPHop asapHop) throws IOException {
+                                     List<ASAPHop> asapHops) throws IOException {
         if(this.credentialReceivedListener == null) {
             Log.writeLog(this, "received message but no listener - give up");
             return;
