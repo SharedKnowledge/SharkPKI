@@ -114,7 +114,7 @@ public class SharkComponentUsageTests {
         aliceSharkPeer.start();
 
         // send credential message whenever a new peer is encountered - would not sign one (there is no listener)
-        aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, true);
+        //aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, true);
 
         ////////////////////////////////////////// BOB ///////////////////////////////////////////////////////////
         SharkTestPeerFS.removeFolder(BOB_FOLDER);
@@ -214,7 +214,7 @@ public class SharkComponentUsageTests {
         aliceSharkPeer.start();
 
         // send credential message whenever a new peer is encountered - would not sign one (there is no listener)
-        aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, true);
+        //aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, true);
 
         ////////////////////////////////////////// BOB ///////////////////////////////////////////////////////////
         SharkTestPeerFS.removeFolder(BOB_FOLDER);
