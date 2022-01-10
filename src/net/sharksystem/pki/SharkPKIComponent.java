@@ -70,7 +70,6 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * ASAPPeer and send a message. This component offers a method to produce a credential message.
      * <br/>
      * Default behaviour is off.
-     * @see #setBehaviour(String, boolean)
      * @see #createCredentialMessage()
      */
     String BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER = "certComponent_sendCredentialFirstEncounter";
@@ -232,7 +231,6 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * Add a certificate to this storage. That method is used to store an already existing certificate. There are
      * rare circumstances in which an application needs this method. Certificates are exchange automatically by this
      * component.
-     * @see #acceptAndSignCredential(CredentialMessageInMemo)
      * @param asapCertificate
      * @throws IOException
      * @throws ASAPSecurityException
@@ -273,6 +271,14 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * @see #BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER
      */
     void sendOnlineCredentialMessage() throws ASAPException, IOException;
+
+    /**
+     * TODO
+     * @param credentialMessage
+     * @throws ASAPException
+     * @throws IOException
+     */
+    void sendOnlineCredentialMessage(CredentialMessage credentialMessage) throws ASAPException, IOException;
 
     /**
      * Call this method if probably new certificates are received
