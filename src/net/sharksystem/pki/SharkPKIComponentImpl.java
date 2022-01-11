@@ -36,6 +36,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
         implements SharkComponent, ASAPKeyStore, SharkPKIComponent,
         ASAPMessageReceivedListener, ASAPEnvironmentChangesListener {
 
+    private CharSequence ownerName;
     private SharkCredentialReceivedListener credentialReceivedListener = null;
 
     private boolean behaviourSendCredentialFirstEncounter = false;
@@ -155,8 +156,12 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     private ASAPPeer asapPeer = null;
     private ASAPKeyStore asapKeyStore = null;
 
-    SharkPKIComponentImpl(ASAPKeyStore asapKeyStore) {
+    SharkPKIComponentImpl(ASAPKeyStore asapKeyStore, CharSequence ownerName) {
         this.asapKeyStore = asapKeyStore;
+        this.ownerName = ownerName;
+    }
+    SharkPKIComponentImpl(ASAPKeyStore asapKeyStore) {
+        this(asapKeyStore, null);
     }
 
     @Override
@@ -164,8 +169,9 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
         this.asapPeer = asapPeer;
         try {
             ASAPStorage asapStorage = asapPeer.getASAPStorage(ASAPCertificateStorage.PKI_APP_NAME);
+            CharSequence peerName = this.ownerName != null ? this.ownerName : asapPeer.getPeerID();
             this.asapCertificateStorage =
-                new ASAPAbstractCertificateStore(asapStorage, asapPeer.getPeerID(), asapPeer.getPeerID());
+                new ASAPAbstractCertificateStore(asapStorage, asapPeer.getPeerID(), peerName);
 
             if(this.asapKeyStore == null) {
                 this.asapKeyStore = new InMemoASAPKeyStore(asapPeer.getPeerID());
