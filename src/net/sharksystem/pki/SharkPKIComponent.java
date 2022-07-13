@@ -259,6 +259,15 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
     CredentialMessage createCredentialMessage() throws ASAPSecurityException;
 
     /**
+     * Create a credential message including extra data. Those data are opaque to this
+     * library and can be used by an application to add security features.
+     * @param extraData
+     * @return
+     * @throws ASAPSecurityException
+     */
+    CredentialMessage createCredentialMessage(byte[] extraData) throws ASAPSecurityException;
+
+    /**
      * Send a credential message to all peers which are actually in the neighbourhood. This method
      * is not needed, though. You should consider setting the appropriate behaviour to allow this component
      * to send a credential message as soon as it encounters another peers.

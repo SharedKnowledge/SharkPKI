@@ -211,4 +211,7 @@ public interface ASAPCertificateStore {
      * @throws IOException
      */
     void load(InputStream os) throws IOException;
+
+    CredentialMessage createCredentialMessage(byte[] extraData) throws ASAPSecurityException;
+
 }

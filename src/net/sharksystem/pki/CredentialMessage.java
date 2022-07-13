@@ -15,4 +15,10 @@ public interface CredentialMessage {
     byte[] getMessageAsBytes() throws IOException;
 
     int getRandomInt();
+
+    /**
+     *
+     * @return extra data set by application - can be null
+     */
+    byte[] getExtraData();
 }

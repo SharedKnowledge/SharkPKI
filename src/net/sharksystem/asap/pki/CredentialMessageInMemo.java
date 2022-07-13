@@ -1,6 +1,8 @@
 package net.sharksystem.asap.pki;
 
+import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
+import net.sharksystem.asap.utils.ASAPSerialization;
 import net.sharksystem.asap.utils.DateTimeHelper;
 import net.sharksystem.pki.CredentialMessage;
 
@@ -19,19 +21,27 @@ public class CredentialMessageInMemo implements CredentialMessage {
     private CharSequence subjectID;
     private CharSequence subjectName;
     private int randomInt;
+    private byte[] extraData;
     private PublicKey publicKey;
 
     public CharSequence getSubjectID() { return this.subjectID; }
     public CharSequence getSubjectName() { return this.subjectName; }
     public int getRandomInt() { return this.randomInt; }
     public long getValidSince() { return this.validSince; }
+    public byte[] getExtraData() { return this.extraData; }
     public PublicKey getPublicKey() { return this.publicKey; }
 
     public CredentialMessageInMemo(CharSequence subjectID, CharSequence subjectName,
-                                   long validSince, PublicKey publicKey) {
+                   long validSince, PublicKey publicKey) {
+        this(subjectID, subjectName, validSince, publicKey, null);
+    }
+
+    public CredentialMessageInMemo(CharSequence subjectID, CharSequence subjectName,
+                   long validSince, PublicKey publicKey, byte[] extraData) {
         this.subjectID = subjectID;
         this.subjectName = subjectName;
         this.validSince = validSince;
+        this.extraData = extraData;
         this.publicKey = publicKey;
 
         int randomStart = ((new Random(System.currentTimeMillis())).nextInt());
@@ -52,7 +62,7 @@ public class CredentialMessageInMemo implements CredentialMessage {
         this.randomInt = sixDigitsInt;
     }
 
-    public CredentialMessageInMemo(byte[] serializedMessage) throws IOException, ASAPSecurityException {
+    public CredentialMessageInMemo(byte[] serializedMessage) throws IOException, ASAPException {
         ByteArrayInputStream bais = new ByteArrayInputStream(serializedMessage);
         DataInputStream dis = new DataInputStream(bais);
 
@@ -60,6 +70,8 @@ public class CredentialMessageInMemo implements CredentialMessage {
         this.subjectName = dis.readUTF();
         this.randomInt = dis.readInt();
         this.validSince = dis.readLong();
+        this.extraData = ASAPSerialization.readByteArray(bais);
+        if(this.extraData != null && this.extraData.length < 1) this.extraData = null;
 
         // public key
         String algorithm = dis.readUTF(); // read public key algorithm
@@ -89,6 +101,7 @@ public class CredentialMessageInMemo implements CredentialMessage {
         dos.writeUTF(this.subjectName.toString());
         dos.writeInt(this.randomInt);
         dos.writeLong(this.validSince);
+        ASAPSerialization.writeByteArray(this.extraData, baos);
 
         // public key
         dos.writeUTF(this.publicKey.getAlgorithm()); // write public key algorithm
@@ -117,6 +130,14 @@ public class CredentialMessageInMemo implements CredentialMessage {
 
         sb.append("randInt: ");
         sb.append(this.randomInt);
+        sb.append(" | ");
+
+        sb.append("#extra byte: ");
+        if(this.extraData == null || this.extraData.length < 1) {
+            sb.append("0");
+        } else {
+            sb.append(this.extraData.length);
+        }
         sb.append(" | ");
 
         sb.append("publicKey: ");

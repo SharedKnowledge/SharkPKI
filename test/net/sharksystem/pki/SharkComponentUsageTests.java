@@ -22,6 +22,7 @@ public class SharkComponentUsageTests {
     public static final String ALICE_FOLDER = SPECIFIC_ROOT_FOLDER + ALICE_NAME;
     public static final String BOB_FOLDER = SPECIFIC_ROOT_FOLDER + BOB_NAME;
     public static final String CLARA_FOLDER = SPECIFIC_ROOT_FOLDER + CLARA_NAME;
+    public static final byte[] ARBITRARY_BYTES = new byte[] {4, 8, 15, 16, 23, 42};
 
     private static int portnumber = 7000;
 
@@ -336,7 +337,7 @@ public class SharkComponentUsageTests {
         // lets starts peer and its components before doing anythings else
         claraSharkPeer.start();
 
-        CredentialMessage aliceCredentialMessage = alicePKI.createCredentialMessage();
+        CredentialMessage aliceCredentialMessage = alicePKI.createCredentialMessage(ARBITRARY_BYTES);
         CredentialMessage bobCredentialMessage = bobPKI.createCredentialMessage();
 
         // Alice and Bob exchange and accept credential messages and issue certificates

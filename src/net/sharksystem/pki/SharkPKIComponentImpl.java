@@ -97,7 +97,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
             try {
                 CredentialMessageInMemo credentialMessage = new CredentialMessageInMemo(messages.next());
                 this.credentialReceivedListener.credentialReceived(credentialMessage);
-            } catch (ASAPSecurityException e) {
+            } catch (ASAPException e) {
                 Log.writeLog(this, "could not create credential message from asap message " +
                         "- seems to be a bug - check serialization of credential messaging");
             }
@@ -403,6 +403,13 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     public CredentialMessage createCredentialMessage() throws ASAPSecurityException {
         this.checkStatus();
         return this.asapPKIStorage.createCredentialMessage();
+    }
+
+    @Override
+    public CredentialMessage createCredentialMessage(byte[] extraData) throws ASAPSecurityException {
+        this.checkStatus();
+        // TODO
+        return this.asapPKIStorage.createCredentialMessage(extraData);
     }
 
     @Override

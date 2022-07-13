@@ -335,6 +335,15 @@ public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
         return credentialMessage;
     }
 
+
+    @Override
+    public CredentialMessage createCredentialMessage(byte[] extraData) throws ASAPSecurityException {
+        CredentialMessageInMemo credentialMessage = new CredentialMessageInMemo(
+                this.getOwnerID(), this.getOwnerName(), this.getKeysCreationTime(), this.getPublicKey(), extraData);
+
+        return credentialMessage;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //                                             persistence                                                    //
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
