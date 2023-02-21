@@ -42,6 +42,7 @@ public class SharkComponentUsageTests {
 
         @Override
         public void credentialReceived(CredentialMessage credentialMessage) {
+            Log.writeLog(this, "credentialReceived called");
             try {
                 /*
                 Absolutely not. No! Automatically signing a credential message which simply came along from an unknown
@@ -64,7 +65,6 @@ public class SharkComponentUsageTests {
             } catch (IOException | ASAPSecurityException e) {
                 e.printStackTrace();
             }
-
         }
     }
 
@@ -111,7 +111,7 @@ public class SharkComponentUsageTests {
 
         SharkPKIComponent aliceComponent = this.setupComponent(aliceSharkPeer);
 
-        // lets starts peer and its components before doing anythings else
+        // lets starts peer and its components before doing anything else
         aliceSharkPeer.start();
 
         // send credential message whenever a new peer is encountered - would not sign one (there is no listener)
@@ -125,7 +125,7 @@ public class SharkComponentUsageTests {
         // lets starts peer and its components before doing anythings else
         bobSharkPeer.start();
 
-        /* Bob will not ask for a certificate but would issue on - set a listener
+        /* Bob will not ask for a certificate but would issue but set a listener
          * usually - peers should do both - send and sign. This example splits those to parts for illustration
          * and testing purposes
          */

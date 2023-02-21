@@ -132,7 +132,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
                     Log.writeLog(this, "create credential message");
                     CredentialMessage credentialMessage = this.createCredentialMessage();
                     Log.writeLog(this, "credential message == " + credentialMessage);
-                    this.asapPeer.sendOnlineASAPMessage(ASAPCertificateStore.CREDENTIAL_APP_NAME,
+                    this.asapPeer.sendTransientASAPMessage(ASAPCertificateStore.CREDENTIAL_APP_NAME,
                             SharkPKIComponent.CREDENTIAL_URI,
                             credentialMessage.getMessageAsBytes());
                     Log.writeLog(this, "credential message sent");
@@ -310,7 +310,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
 
         // spread the news to all peers only
         try {
-            this.asapPeer.sendOnlineASAPMessage(ASAPCertificateStorage.PKI_APP_NAME,
+            this.asapPeer.sendTransientASAPMessage(ASAPCertificateStorage.PKI_APP_NAME,
                     ASAPCertificate.ASAP_CERTIFICATE_URI, asapCertificate.asBytes());
 
         } catch (ASAPException e) {
@@ -415,7 +415,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     @Override
     public void sendOnlineCredentialMessage(CredentialMessage credentialMessage) throws ASAPException, IOException {
         this.checkStatus();
-        this.asapPeer.sendOnlineASAPMessage(
+        this.asapPeer.sendTransientASAPMessage(
                 SharkPKIComponent.CREDENTIAL_APP_NAME,
                 SharkPKIComponent.CREDENTIAL_URI,
                 credentialMessage.getMessageAsBytes());
@@ -425,7 +425,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     public void sendOnlineCredentialMessage() throws ASAPException, IOException {
         this.checkStatus();
         CredentialMessage credentialMessage = this.createCredentialMessage();
-        this.asapPeer.sendOnlineASAPMessage(
+        this.asapPeer.sendTransientASAPMessage(
                 SharkPKIComponent.CREDENTIAL_APP_NAME,
                 SharkPKIComponent.CREDENTIAL_URI,
                 credentialMessage.getMessageAsBytes());

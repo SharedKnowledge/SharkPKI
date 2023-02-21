@@ -11,6 +11,7 @@ import net.sharksystem.asap.pki.ASAPAbstractCertificateStore;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateImpl;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
+import net.sharksystem.utils.fs.FSUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,7 +37,7 @@ public class ASAPCertificateStoreTests {
 
     @Test
     public void identityAssuranceCalculationTest() throws IOException, ASAPException {
-        ASAPEngineFS.removeFolder(SPECIFIC_ROOT_DIRECTORY);
+        FSUtils.removeFolder(SPECIFIC_ROOT_DIRECTORY);
 
         long now = System.currentTimeMillis();
 
@@ -139,7 +140,7 @@ public class ASAPCertificateStoreTests {
             IOException, ASAPException, NoSuchAlgorithmException, SignatureException,
             InvalidKeyException, ASAPSecurityException {
 
-        ASAPEngineFS.removeFolder(SPECIFIC_ROOT_DIRECTORY);
+        FSUtils.removeFolder(SPECIFIC_ROOT_DIRECTORY);
 
         long now = System.currentTimeMillis();
 
@@ -182,7 +183,7 @@ public class ASAPCertificateStoreTests {
             IOException, ASAPException, NoSuchAlgorithmException, SignatureException,
             InvalidKeyException, ASAPSecurityException {
 
-        ASAPEngineFS.removeFolder(SPECIFIC_ROOT_DIRECTORY);
+        FSUtils.removeFolder(SPECIFIC_ROOT_DIRECTORY);
 
         long now = System.currentTimeMillis();
 
@@ -192,7 +193,8 @@ public class ASAPCertificateStoreTests {
         ASAPCertificateStorage asapAliceCertificateStorage =
                 new ASAPAbstractCertificateStore(aliceASAPStorage, ALICE_ID, ALICE_NAME);
         ASAPKeyStore aliceCryptoStorage = new InMemoASAPKeyStore(ALICE_ID);
-        ASAPCertificateStore aliceASAPCertificateStore = new ASAPCertificateStoreImpl(asapAliceCertificateStorage, aliceCryptoStorage);
+        ASAPCertificateStore aliceASAPCertificateStore =
+                new ASAPCertificateStoreImpl(asapAliceCertificateStorage, aliceCryptoStorage);
 
         // setup bob
         ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
@@ -200,7 +202,8 @@ public class ASAPCertificateStoreTests {
         ASAPCertificateStorage asapBobCertificateStorage =
                 new ASAPAbstractCertificateStore(aliceASAPStorage, BOB_ID, BOB_NAME);
         ASAPKeyStore bobCryptoStorage = new InMemoASAPKeyStore(BOB_ID);
-        ASAPCertificateStore bobASAPCertificateStore = new ASAPCertificateStoreImpl(asapBobCertificateStorage, bobCryptoStorage);
+        ASAPCertificateStore bobASAPCertificateStore =
+                new ASAPCertificateStoreImpl(asapBobCertificateStorage, bobCryptoStorage);
 
         // simulation - Bob must send its credentials in some way to Alice - assume that happened
         CharSequence bobID = bobASAPCertificateStore.getOwnerID();

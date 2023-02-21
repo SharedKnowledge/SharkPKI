@@ -1,6 +1,8 @@
 package net.sharksystem.asap.persons;
 
+import net.sharksystem.asap.cmdline.TCPStream;
 import net.sharksystem.asap.pki.CredentialMessageInMemo;
+import net.sharksystem.asap.utils.ASAPLogHelper;
 import net.sharksystem.pki.CredentialMessage;
 import net.sharksystem.pki.TestConstants;
 import net.sharksystem.asap.*;
@@ -8,12 +10,11 @@ import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
 import net.sharksystem.asap.engine.*;
 import net.sharksystem.asap.utils.ASAPPeerHandleConnectionThread;
-import net.sharksystem.asap.utils.Helper;
-import net.sharksystem.cmdline.TCPStream;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import net.sharksystem.asap.pki.ASAPAbstractCertificateStore;
 import net.sharksystem.utils.Log;
+import net.sharksystem.utils.fs.FSUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -40,8 +41,8 @@ public class ExchangeTest {
         //                                        prepare storages                                       //
         ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-        ASAPEngineFS.removeFolder(ALICE_ROOT_FOLDER); // clean previous version before
-        ASAPEngineFS.removeFolder(BOB_ROOT_FOLDER); // clean previous version before
+        FSUtils.removeFolder(ALICE_ROOT_FOLDER); // clean previous version before
+        FSUtils.removeFolder(BOB_ROOT_FOLDER); // clean previous version before
 
         // setup alice
         ASAPInternalStorage aliceStorage = ASAPEngineFS.getASAPStorage(
@@ -124,7 +125,7 @@ public class ExchangeTest {
         CredentialMessage credentialMessage = aliceASAPCertificateStore.createCredentialMessage();
 
         // send it to bob - without traces in asap storages
-        alicePeer.sendOnlineASAPAssimilateMessage(ASAPCertificateStore.CREDENTIAL_APP_NAME,
+        alicePeer.sendTransientASAPAssimilateMessage(ASAPCertificateStore.CREDENTIAL_APP_NAME,
                 ASAPCertificateStore.CREDENTIAL_URI, credentialMessage.getMessageAsBytes());
 
         // wait until communication probably ends
@@ -152,7 +153,7 @@ public class ExchangeTest {
         Thread.sleep(1000);
     }
 
-    private class SignCredentialAndReply implements ASAPChunkReceivedListener {
+    private class SignCredentialAndReply implements ASAPChunkAssimilatedListener {
         private final String folderName;
         private final ASAPCertificateStore ASAPCertificateStore;
         private ASAPInternalPeer asapPeer;
@@ -163,10 +164,11 @@ public class ExchangeTest {
         }
 
         @Override
-        public void chunkReceived(String format, String senderE2E, String uri, int era,
+        public void chunkStored(String format, String senderE2E, String uri, int era,
                                   List<ASAPHop> asapHops) {
+            Log.writeLog(this, "chunked stored called");
             ASAPMessages asapMessages =
-                    Helper.getMessagesByChunkReceivedInfos(format, senderE2E, uri, this.folderName, era);
+                    ASAPLogHelper.getMessagesByChunkReceivedInfos(format, senderE2E, uri, this.folderName, era);
 
             Iterator<byte[]> messages = null;
             try {
@@ -202,12 +204,49 @@ public class ExchangeTest {
             }
         }
 
+        @Override
+        public void transientMessagesReceived(ASAPMessages asapMessages, ASAPHop asapHop) throws IOException {
+            Log.writeLog(this, "transientMessagesReceived");
+            Log.writeLog(this, "#asap messages: " + asapMessages.size());
+            Iterator<byte[]> messages = asapMessages.getMessages();
+            if(messages.hasNext()) {
+                Log.writeLog(this, "create credential message object..");
+
+                try {
+                    CredentialMessageInMemo credential = null;
+                    credential = new CredentialMessageInMemo(messages.next());
+
+                    Log.writeLog(this, "..created: " + credential);
+
+                    ASAPCertificate newCert = ASAPCertificateStore.addAndSignPerson(
+                            credential.getSubjectID(),
+                            credential.getSubjectName(),
+                            credential.getPublicKey(),
+                            credential.getValidSince());
+
+                    // return newly created certificate
+                    Log.writeLog(this, "try to get asap engine for "
+                            + ASAPCertificateStorage.PKI_APP_NAME);
+
+                    ASAPEngine asapCertEngine = asapPeer.getASAPEngine(ASAPCertificateStorage.PKI_APP_NAME);
+
+                    Log.writeLog(this,
+                            "right before sending certificate as ASAP Message");
+                    asapCertEngine.activateOnlineMessages(asapPeer);
+                    asapCertEngine.add(ASAPCertificate.ASAP_CERTIFICATE_URI, newCert.asBytes());
+                } catch (Exception e) {
+                    Log.writeLog(this, "problems when handling incoming credential: "
+                            + e.getLocalizedMessage());
+                }
+            }
+        }
+
         public void setAsapPeer(ASAPInternalPeer asapPeer) {
             this.asapPeer = asapPeer;
         }
     }
 
-    private class CredentialReceiver implements ASAPChunkReceivedListener {
+    private class CredentialReceiver implements ASAPChunkAssimilatedListener {
         private final ASAPCertificateStore ASAPCertificateStore;
         boolean received = false;
 
@@ -216,8 +255,16 @@ public class ExchangeTest {
         }
 
         @Override
-        public void chunkReceived(String format, String senderE2E, String uri, int era,
+        public void chunkStored(String format, String senderE2E, String uri, int era,
                                   List<ASAPHop> asapHops) {
+            Log.writeLog(this, "chunkStored");
+            this.received = true;
+            this.ASAPCertificateStore.incorporateReceivedCertificates();
+        }
+
+        @Override
+        public void transientMessagesReceived(ASAPMessages asapMessages, ASAPHop asapHop) throws IOException {
+            Log.writeLog(this, "transientMessageReceived");
             this.received = true;
             this.ASAPCertificateStore.incorporateReceivedCertificates();
         }
