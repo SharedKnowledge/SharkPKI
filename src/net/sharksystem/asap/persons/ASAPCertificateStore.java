@@ -31,8 +31,8 @@ import java.util.List;
  * a peer (person) to th list: By creating a certificate or by receiving an existing certificate.
  */
 public interface ASAPCertificateStore {
-    String CREDENTIAL_APP_NAME = "SN2Credentials";
-    CharSequence CREDENTIAL_URI = "sn2://credential";
+    String CREDENTIAL_APP_NAME = "SharkCredentials";
+    CharSequence CREDENTIAL_URI = "asapShark://credential";
 
     /**
      *

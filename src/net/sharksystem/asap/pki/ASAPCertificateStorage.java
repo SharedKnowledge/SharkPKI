@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 public interface ASAPCertificateStorage {
-    String PKI_APP_NAME = "ASAPCertificates";
+    String PKI_APP_NAME = "ASAPSharkCertificates";
 
     /**
      *

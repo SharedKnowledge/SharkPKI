@@ -142,6 +142,13 @@ public class SharkComponentUsageTests {
 
         /////////////////////////////////////////// Tests  /////////////////////////////////////////////////////////
 
+        /* What happened:
+        a) Alice and Bob sent credential messages; because: default behaviour: sent credential if we do not have yet a
+        certificate issued by a peer we met
+        b) Only Bob has a registered credential received listener in place. It creates a certificate and sends it back.
+        c) as a result: There is a certificate for subject Alice issued by Bob
+         */
+
         // Bob must have a certificate of Alice - he issued it by himself
         Collection<ASAPCertificate> certificatesByIssuer = bobComponent.getCertificatesByIssuer(BOB_NAME);
         Assert.assertNotNull(certificatesByIssuer);
@@ -211,7 +218,7 @@ public class SharkComponentUsageTests {
 
         SharkPKIComponent aliceComponent = this.setupComponent(aliceSharkPeer);
 
-        // lets starts peer and its components before doing anythings else
+        // lets starts peer and its components before doing anything else
         aliceSharkPeer.start();
 
         // send credential message whenever a new peer is encountered - would not sign one (there is no listener)
@@ -222,7 +229,7 @@ public class SharkComponentUsageTests {
         SharkTestPeerFS bobSharkPeer = new SharkTestPeerFS(BOB_NAME, BOB_FOLDER);
         SharkPKIComponent bobComponent = this.setupComponent(bobSharkPeer);
 
-        // lets starts peer and its components before doing anythings else
+        // lets starts peer and its components before doing anything else
         bobSharkPeer.start();
 
         /* Bob will not ask for a certificate but would issue on - set a listener

@@ -39,7 +39,8 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     private CharSequence ownerName;
     private SharkCredentialReceivedListener credentialReceivedListener = null;
 
-    private boolean behaviourSendCredentialFirstEncounter = false;
+    public boolean BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER_DEFAULT = true;
+    private boolean behaviourSendCredentialFirstEncounter = BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER_DEFAULT;
     private boolean certificateExpected = false;
 
     public void setBehaviour(String behaviourName, boolean on) throws SharkUnknownBehaviourException, IOException, ASAPException {
@@ -127,7 +128,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
 
             if (!found && this.behaviourSendCredentialFirstEncounter) {
                 Log.writeLog(this, this.asapPeer.getPeerID().toString(),
-                        "going to ask a peer to signing a certificate: " + peerID);
+                        "ask a peer to issue a certificate for me. other peer: " + peerID);
                 try {
                     Log.writeLog(this, "create credential message");
                     CredentialMessage credentialMessage = this.createCredentialMessage();
@@ -179,6 +180,8 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
 
             this.asapPKIStorage = new FullAsapPKIStorage(this.asapCertificateStorage, this.asapKeyStore);
 
+            // get notified about new peer in the neighbourhood
+            this.asapPeer.addASAPEnvironmentChangesListener(this);
         } catch (IOException | ASAPException e) {
             throw new SharkException(e);
         }
