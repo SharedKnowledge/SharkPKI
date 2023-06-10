@@ -42,7 +42,8 @@ public class SharkComponentUsageTests {
 
         @Override
         public void credentialReceived(CredentialMessage credentialMessage) {
-            Log.writeLog(this, "credentialReceived called");
+            Log.writeLog(this, this.sharkPKIComponent.getOwnerID(), "credential received:\n"
+                    + credentialMessage);
             try {
                 /*
                 Absolutely not. No! Automatically signing a credential message which simply came along from an unknown
@@ -52,15 +53,15 @@ public class SharkComponentUsageTests {
 
                 Taking it as 'temporary' solution is most probably BS and you know that. Deal with security from the
                 beginning of your app development. Security is not anything you add 'sometimes later'. It is
-                part of your apps philosophy or it is not.
+                part of your app philosophy or not.
                 You will make the world a better place by embracing security. :)
 
                 It is important: Users must ensure correct data. Human users must ensure that those data are valid and
-                the sending person is really who their claims their is
+                the sending person is really who s/he claims to be.
                  */
                 this.numberOfEncounter++;
                 this.lastCredentialMessage = credentialMessage;
-                Log.writeLog(this, "going to issue a certificate");
+                Log.writeLog(this, this.sharkPKIComponent.getOwnerID(), "going to issue a certificate");
                 this.sharkPKIComponent.acceptAndSignCredential(credentialMessage);
             } catch (IOException | ASAPSecurityException e) {
                 e.printStackTrace();
@@ -122,7 +123,7 @@ public class SharkComponentUsageTests {
         SharkTestPeerFS bobSharkPeer = new SharkTestPeerFS(BOB_NAME, BOB_FOLDER);
         SharkPKIComponent bobComponent = this.setupComponent(bobSharkPeer);
 
-        // lets starts peer and its components before doing anythings else
+        // lets starts peer and its components before doing anything else
         bobSharkPeer.start();
 
         /* Bob will not ask for a certificate but would issue but set a listener
@@ -240,7 +241,9 @@ public class SharkComponentUsageTests {
         bobComponent.setSharkCredentialReceivedListener(bobCredentialListener);
 
         ///////////////////////////////// Encounter #1 Alice - Bob ////////////////////////////////////////////////////
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start encounter >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>> start encounter Alice - Bob >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         aliceSharkPeer.getASAPTestPeerFS().startEncounter(this.getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
 
         // give them moment to exchange data
@@ -259,7 +262,9 @@ public class SharkComponentUsageTests {
         //Thread.sleep(Long.MAX_VALUE);
 
         ///////////////////////////////// Encounter #2 Alice - Bob ////////////////////////////////////////////////////
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start encounter >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>> start encounter Alice - Bob #2 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         aliceSharkPeer.getASAPTestPeerFS().startEncounter(this.getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
 
         // give them moment to exchange data
@@ -280,13 +285,15 @@ public class SharkComponentUsageTests {
         SharkTestPeerFS claraSharkPeer = new SharkTestPeerFS(CLARA_NAME, CLARA_FOLDER);
         SharkPKIComponent claraComponent = this.setupComponent(claraSharkPeer);
 
-        // lets starts peer and its components before doing anythings else
+        // lets starts peer and its components before doing anything else
         claraSharkPeer.start();
         CredentialListenerExample claraCredentialListener = new CredentialListenerExample(claraComponent);
         claraComponent.setSharkCredentialReceivedListener(claraCredentialListener);
 
-        ///////////////////////////////// Encounter #1 Alice - Clara ////////////////////////////////////////////////////
-        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start encounter >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        ///////////////////////////////// Encounter #3 Alice - Clara ////////////////////////////////////////////////////
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>> start encounter Alice - Clara >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         aliceSharkPeer.getASAPTestPeerFS().startEncounter(this.getPortNumber(), claraSharkPeer.getASAPTestPeerFS());
 
         // give them moment to exchange data

@@ -67,7 +67,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //                                      behaviour related listeners                                        //
+    //                                      credential message received                                        //
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Override
@@ -75,7 +75,9 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
         this.checkStatus();
         this.credentialReceivedListener = listener;
 
-        this.asapPeer.addASAPMessageReceivedListener(ASAPCertificateStore.CREDENTIAL_APP_NAME, this);
+        // add listener - even if null - it is handled as reset
+        this.asapPeer.addASAPMessageReceivedListener(
+                ASAPCertificateStore.CREDENTIAL_APP_NAME, this);
     }
 
     @Override
@@ -89,7 +91,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
 
         CharSequence uri = asapMessages.getURI();
         if(uri == null || !uri.toString().equalsIgnoreCase(SharkPKIComponent.CREDENTIAL_URI.toString())) {
-            Log.writeLog(this, "received message but wrong uri: " + uri);
+            Log.writeLog(this, "received message, expect credential message, got instead: " + uri);
             return;
         }
 
@@ -311,9 +313,9 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
 
         this.asapCertificateStorage.dropInMemoCache();
 
-        // spread the news to all peers only
+        // spread the news - we have got a new certificate
         try {
-            this.asapPeer.sendTransientASAPMessage(ASAPCertificateStorage.PKI_APP_NAME,
+            this.asapPeer.sendASAPMessage(ASAPCertificateStorage.PKI_APP_NAME,
                     ASAPCertificate.ASAP_CERTIFICATE_URI, asapCertificate.asBytes());
 
         } catch (ASAPException e) {

@@ -19,7 +19,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * This component provides several information and methods:
+ * This component provides some information and methods:
  *
  * <ul>
  *     <li>A list of peers (actually real persons which are assumed to be owners of an encountered peer (device))</li>

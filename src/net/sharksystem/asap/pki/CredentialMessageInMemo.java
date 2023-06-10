@@ -124,7 +124,7 @@ public class CredentialMessageInMemo implements CredentialMessage {
         sb.append(this.subjectID);
         sb.append(" | ");
 
-        sb.append("validsince: ");
+        sb.append("valid since: ");
         sb.append(DateTimeHelper.long2DateString(this.validSince));
         sb.append(" | ");
 
