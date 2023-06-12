@@ -35,6 +35,6 @@ public class EncryptionTests {
 
         byte[] encryptedData4Francis =
                 ASAPCryptoAlgorithms.produceEncryptedMessagePackage(
-                        TestHelper.ARBITRARY_BYTES, francisID, asapKeyStore);
+                        TestHelper.LOST_BYTES, francisID, asapKeyStore);
     }
 }

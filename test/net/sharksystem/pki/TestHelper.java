@@ -12,7 +12,7 @@ public class TestHelper {
     public static final String ALICE_FOLDER = SPECIFIC_ROOT_FOLDER + ALICE_NAME;
     public static final String BOB_FOLDER = SPECIFIC_ROOT_FOLDER + BOB_NAME;
     public static final String CLARA_FOLDER = SPECIFIC_ROOT_FOLDER + CLARA_NAME;
-    public static final byte[] ARBITRARY_BYTES = new byte[] {4, 8, 15, 16, 23, 42};
+    public static final byte[] LOST_BYTES = new byte[] {4, 8, 15, 16, 23, 42};
 
     private static int portnumber = 7000;
 

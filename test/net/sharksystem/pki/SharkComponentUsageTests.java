@@ -1,6 +1,5 @@
 package net.sharksystem.pki;
 
-import net.sharksystem.SharkComponent;
 import net.sharksystem.SharkException;
 import net.sharksystem.SharkPeer;
 import net.sharksystem.SharkTestPeerFS;
@@ -327,7 +326,7 @@ public class SharkComponentUsageTests {
         // lets starts peer and its components before doing anything else
         claraSharkPeer.start();
 
-        CredentialMessage aliceCredentialMessage = alicePKI.createCredentialMessage(ARBITRARY_BYTES);
+        CredentialMessage aliceCredentialMessage = alicePKI.createCredentialMessage(LOST_BYTES);
         CredentialMessage bobCredentialMessage = bobPKI.createCredentialMessage();
 
         // Alice and Bob exchange and accept credential messages and issue certificates
