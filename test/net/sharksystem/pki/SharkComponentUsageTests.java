@@ -16,21 +16,9 @@ import java.io.IOException;
 import java.util.Collection;
 
 import static net.sharksystem.pki.TestConstants.*;
+import static net.sharksystem.pki.TestHelper.*;
 
 public class SharkComponentUsageTests {
-    public static final String SPECIFIC_ROOT_FOLDER = ROOT_DIRECTORY + "sharkComponentTests/";
-    public static final String ALICE_FOLDER = SPECIFIC_ROOT_FOLDER + ALICE_NAME;
-    public static final String BOB_FOLDER = SPECIFIC_ROOT_FOLDER + BOB_NAME;
-    public static final String CLARA_FOLDER = SPECIFIC_ROOT_FOLDER + CLARA_NAME;
-    public static final byte[] ARBITRARY_BYTES = new byte[] {4, 8, 15, 16, 23, 42};
-
-    private static int portnumber = 7000;
-
-    private int getPortNumber() {
-        portnumber++;
-        return portnumber;
-    }
-
     private class CredentialListenerExample implements SharkCredentialReceivedListener {
         private final SharkPKIComponent sharkPKIComponent;
         public int numberOfEncounter = 0;
@@ -70,21 +58,9 @@ public class SharkComponentUsageTests {
     }
 
     private SharkPKIComponent setupComponent(SharkPeer sharkPeer)
-            throws SharkException, ASAPSecurityException {
+            throws SharkException {
 
-        // create a component factory
-        SharkPKIComponentFactory certificateComponentFactory = new SharkPKIComponentFactory();
-
-        // register this component with shark peer - note: we use interface SharkPeer
-        sharkPeer.addComponent(certificateComponentFactory, SharkPKIComponent.class);
-
-        // get component instance
-        SharkComponent component = sharkPeer.getComponent(SharkPKIComponent.class);
-
-        // project "clean code" :) we only use interfaces - unfortunately casting is unavoidable
-        SharkPKIComponent sharkPKIComponent = (SharkPKIComponent) component;
-
-        return sharkPKIComponent;
+        return TestHelper.setupComponent(sharkPeer);
     }
 
     /**
@@ -134,7 +110,7 @@ public class SharkComponentUsageTests {
 
         ///////////////////////////////// Encounter Alice - Bob ////////////////////////////////////////////////////
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start encounter >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        aliceSharkPeer.getASAPTestPeerFS().startEncounter(this.getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
+        aliceSharkPeer.getASAPTestPeerFS().startEncounter(getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
 
         // give them moment to exchange data
         Thread.sleep(1000);
@@ -244,7 +220,7 @@ public class SharkComponentUsageTests {
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>> start encounter Alice - Bob >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        aliceSharkPeer.getASAPTestPeerFS().startEncounter(this.getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
+        aliceSharkPeer.getASAPTestPeerFS().startEncounter(getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
 
         // give them moment to exchange data
         Thread.sleep(1000);
@@ -265,7 +241,7 @@ public class SharkComponentUsageTests {
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>> start encounter Alice - Bob #2 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        aliceSharkPeer.getASAPTestPeerFS().startEncounter(this.getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
+        aliceSharkPeer.getASAPTestPeerFS().startEncounter(getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
 
         // give them moment to exchange data
         Thread.sleep(1000);
@@ -294,7 +270,7 @@ public class SharkComponentUsageTests {
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>> start encounter Alice - Clara >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
-        aliceSharkPeer.getASAPTestPeerFS().startEncounter(this.getPortNumber(), claraSharkPeer.getASAPTestPeerFS());
+        aliceSharkPeer.getASAPTestPeerFS().startEncounter(getPortNumber(), claraSharkPeer.getASAPTestPeerFS());
 
         // give them moment to exchange data
         Thread.sleep(1000);
@@ -338,17 +314,17 @@ public class SharkComponentUsageTests {
 
         SharkTestPeerFS aliceSharkPeer = new SharkTestPeerFS(ALICE_NAME, ALICE_FOLDER);
         SharkPKIComponent alicePKI = this.setupComponent(aliceSharkPeer);
-        // lets starts peer and its components before doing anythings else
+        // lets starts peer and its components before doing anything else
         aliceSharkPeer.start();
 
         SharkTestPeerFS bobSharkPeer = new SharkTestPeerFS(BOB_NAME, BOB_FOLDER);
         SharkPKIComponent bobPKI = this.setupComponent(bobSharkPeer);
-        // lets starts peer and its components before doing anythings else
+        // lets starts peer and its components before doing anything else
         bobSharkPeer.start();
 
         SharkTestPeerFS claraSharkPeer = new SharkTestPeerFS(CLARA_NAME, CLARA_FOLDER);
         SharkPKIComponent claraPKI = this.setupComponent(claraSharkPeer);
-        // lets starts peer and its components before doing anythings else
+        // lets starts peer and its components before doing anything else
         claraSharkPeer.start();
 
         CredentialMessage aliceCredentialMessage = alicePKI.createCredentialMessage(ARBITRARY_BYTES);

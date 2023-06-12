@@ -19,7 +19,11 @@ public class HelperPKITests {
     public static final CharSequence HASSAN_NAME = "Hassan";
     public static final CharSequence IRIS_NAME = "Iris";
 
-    public static void fillWithExampleData(SharkPKIComponent asapPKI)
+    public static String getPeerID(String idStart, CharSequence peerName) {
+        return idStart + peerName;
+    }
+
+    public static String fillWithExampleData(SharkPKIComponent asapPKI)
             throws ASAPSecurityException, IOException {
 
         ASAPCertificateStorage certificateStorage;
@@ -35,7 +39,7 @@ public class HelperPKITests {
         ASAPCertificateStore gloriaStorage = null, hassanStorage = null, irisStorage;
 
         // Owner signs Francis ia(F): 10
-        String francisID = idStart + FRANCIS_NAME;
+        String francisID = getPeerID(idStart, FRANCIS_NAME);
 
         // asap storage - certificate container
         certificateStorage = new InMemoAbstractCertificateStore(francisID, FRANCIS_NAME);
@@ -51,7 +55,7 @@ public class HelperPKITests {
                 new CredentialMessageInMemo(francisID, FRANCIS_NAME, now, francisStorage.getPublicKey()));
 
         // Francis signs Gloria: cef(f) = 0.5 ia(g) = 5.0
-        String gloriaID = idStart + GLORIA_NAME;
+        String gloriaID = getPeerID(idStart,  GLORIA_NAME);
         certificateStorage = new InMemoAbstractCertificateStore(gloriaID, GLORIA_NAME);
         ASAPKeyStore gloriaCryptoStorage = new InMemoASAPKeyStore(GLORIA_NAME);
         gloriaStorage = new ASAPCertificateStoreImpl(certificateStorage, gloriaCryptoStorage);
@@ -63,7 +67,7 @@ public class HelperPKITests {
         asapPKI.addCertificate(asapCertificate);
 
         // Gloria signs Hassan: cef(g) = 0.5 ia(h) = 2.5 == 3
-        String hassanID = idStart + HASSAN_NAME;
+        String hassanID = getPeerID(idStart, HASSAN_NAME);
         certificateStorage = new InMemoAbstractCertificateStore(hassanID, HASSAN_NAME);
         ASAPKeyStore hassanCryptoStorage = new InMemoASAPKeyStore(HASSAN_NAME);
         hassanStorage = new ASAPCertificateStoreImpl(certificateStorage, hassanCryptoStorage);
@@ -74,7 +78,7 @@ public class HelperPKITests {
         asapPKI.addCertificate(asapCertificate);
 
         // Hassan signs Iris: cef(h) = 0.5: ia(i) = 1.25 == 1
-        String irisID = idStart + IRIS_NAME;
+        String irisID = getPeerID(idStart, IRIS_NAME);
         certificateStorage = new InMemoAbstractCertificateStore(irisID, IRIS_NAME);
         ASAPKeyStore irisCryptoStorage = new InMemoASAPKeyStore(IRIS_NAME);
         irisStorage = new ASAPCertificateStoreImpl(certificateStorage, irisCryptoStorage);
@@ -82,5 +86,7 @@ public class HelperPKITests {
         asapCertificate = hassanStorage.addAndSignPerson(irisID, IRIS_NAME, irisStorage.getPublicKey(), now);
         // store certificate(issuer: Hassan, subject: Iris)
         asapPKI.addCertificate(asapCertificate);
+
+        return idStart;
     }
 }
