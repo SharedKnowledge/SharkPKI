@@ -87,6 +87,11 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      */
     void setSharkCredentialReceivedListener(SharkCredentialReceivedListener listener);
 
+    /**
+     *
+     * @return ASAP Keystore used by this instance
+     */
+    ASAPKeyStore getASAPKeyStore();
 
     /**
      * Use this method to issue a new certificate based on a received message.
