@@ -98,6 +98,7 @@ public class SharkComponentUsageTests {
 
         // send credential message whenever a new peer is encountered - would not sign one (there is no listener)
         aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, false);
+        bobComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, false);
 
         /* Bob will not ask for a certificate but would issue but set a listener
          * usually - peers should do both - send and sign. This example splits those to parts for illustration
