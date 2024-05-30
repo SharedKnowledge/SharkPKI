@@ -96,7 +96,7 @@ public class SharkComponentUsageTests {
             IOException, InterruptedException, SharkUnknownBehaviourException {
         this.setUpAndStartAliceAndBob();
 
-        // send credential message whenever a new peer is encountered - would not sign one (there is no listener)
+        // do not send credential message whenever a new peer is encountered
         aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, false);
         bobComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, false);
 
@@ -113,6 +113,9 @@ public class SharkComponentUsageTests {
 
         aliceComponent.sendOnlineCredentialMessage();
         Thread.sleep(200);
+
+        aliceSharkPeer.getASAPTestPeerFS().stopEncounter(bobSharkPeer.getASAPTestPeerFS());
+        System.out.println("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< stop encounter <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
 
         ////// expectations... Bob signed the credentials and created a certificate which ended up at alice side
         // more tests in sendReceiveCredentialSignAndAddNewCertificate
