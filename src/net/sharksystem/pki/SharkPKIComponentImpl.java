@@ -89,6 +89,16 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     public void asapMessagesReceived(ASAPMessages asapMessages,
                                      String senderE2E, // E2E part
                                      List<ASAPHop> asapHops) throws IOException {
+
+        switch(asapMessages.getFormat().toString()) {
+            case SharkPKIComponent.PKI_APP_NAME:
+                Log.writeLog(this, "certificate received - done / TODO");
+                return;
+            case SharkPKIComponent.CREDENTIAL_APP_NAME:
+                Log.writeLog(this, "credential received - handle");
+                break;
+        }
+
         if(this.credentialReceivedListener == null) {
             Log.writeLog(this, "received message but no listener - give up");
             return;
@@ -189,6 +199,8 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
 
             // get notified about new peer in the neighbourhood
             this.asapPeer.addASAPEnvironmentChangesListener(this);
+
+            this.asapPeer.addASAPMessageReceivedListener(SharkPKIComponent.PKI_APP_NAME, this);
         } catch (IOException | ASAPException e) {
             throw new SharkException(e);
         }

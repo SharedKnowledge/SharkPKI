@@ -3,6 +3,7 @@ package net.sharksystem.pki;
 import net.sharksystem.SharkException;
 import net.sharksystem.SharkPeer;
 import net.sharksystem.SharkTestPeerFS;
+import net.sharksystem.SharkUnknownBehaviourException;
 import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.pki.ASAPCertificate;
@@ -48,6 +49,7 @@ public class SharkComponentUsageTests {
                  */
                 this.numberOfEncounter++;
                 this.lastCredentialMessage = credentialMessage;
+                Log.writeLog(this, this.sharkPKIComponent.getOwnerID(), ">>>>>>>>>> DO THE UNDOABLE - ISSUE CERTIFICATE WITHOUT CHECKING USER IDENTITY");
                 Log.writeLog(this, this.sharkPKIComponent.getOwnerID(), "going to issue a certificate");
                 this.sharkPKIComponent.acceptAndSignCredential(credentialMessage);
             } catch (IOException | ASAPSecurityException e) {
@@ -60,6 +62,64 @@ public class SharkComponentUsageTests {
             throws SharkException {
 
         return TestHelper.setupComponent(sharkPeer);
+    }
+
+    SharkTestPeerFS aliceSharkPeer, bobSharkPeer;
+    SharkPKIComponentImpl aliceComponent, bobComponent;
+
+    private void setUpAndStartAliceAndBob() throws SharkException, InterruptedException {
+        ////////////////////////////////////////// ALICE /////////////////////////////////////////////////////////
+        /* it is a test - we use the test peer implementation
+         only use SharkPeer interface in your application and create a SharkPeerFS instance
+         That's for testing only
+         */
+        String folderName = net.sharksystem.utils.testsupport.TestHelper.getUniqueFolderName("pkiTest");
+        folderName = ROOT_DIRECTORY + folderName;
+        SharkTestPeerFS.removeFolder(folderName);
+
+        ///////// Alice
+        aliceSharkPeer = new SharkTestPeerFS(ALICE_NAME, folderName + "/" + ALICE_ID);
+        // cast to use this undocumented setBehaviour feature
+        aliceComponent = (SharkPKIComponentImpl) this.setupComponent(aliceSharkPeer);
+        aliceSharkPeer.start();
+
+        ////////////////////////////////////////// BOB ///////////////////////////////////////////////////////////
+        bobSharkPeer = new SharkTestPeerFS(BOB_NAME, folderName + "/" + BOB_ID);
+        bobComponent = (SharkPKIComponentImpl) this.setupComponent(bobSharkPeer);
+        bobSharkPeer.start();
+
+        Thread.sleep(200);
+    }
+
+    @Test
+    public void sendCredentialMessageExplicitAndExpectSignedCertificate() throws SharkException, ASAPException,
+            IOException, InterruptedException, SharkUnknownBehaviourException {
+        this.setUpAndStartAliceAndBob();
+
+        // send credential message whenever a new peer is encountered - would not sign one (there is no listener)
+        aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, false);
+
+        /* Bob will not ask for a certificate but would issue but set a listener
+         * usually - peers should do both - send and sign. This example splits those to parts for illustration
+         * and testing purposes
+         */
+        bobComponent.setSharkCredentialReceivedListener(new CredentialListenerExample(bobComponent));
+
+        ///////////////////////////////// Encounter Alice - Bob ////////////////////////////////////////////////////
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start encounter >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        aliceSharkPeer.getASAPTestPeerFS().startEncounter(getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
+        Thread.sleep(200);
+
+        aliceComponent.sendOnlineCredentialMessage();
+        Thread.sleep(200);
+
+        ////// expectations... Bob signed the credentials and created a certificate which ended up at alice side
+        // more tests in sendReceiveCredentialSignAndAddNewCertificate
+
+        // some more usage examples
+        Collection<ASAPCertificate> certificatesByIssuer = aliceComponent.getCertificatesByIssuer(BOB_NAME);
+        Assert.assertNotNull(certificatesByIssuer);
+        Assert.assertEquals(1, certificatesByIssuer.size());
     }
 
     /**
@@ -77,29 +137,10 @@ public class SharkComponentUsageTests {
     @Test
     public void sendReceiveCredentialSignAndAddNewCertificate() throws SharkException, ASAPException,
             IOException, InterruptedException {
-        ////////////////////////////////////////// ALICE /////////////////////////////////////////////////////////
-        /* it is a test - we use the test peer implementation
-         only use SharkPeer interface in your application and create a SharkPeerFS instance
-         That's for testing only
-         */
-        SharkTestPeerFS.removeFolder(ROOT_DIRECTORY);
-        SharkTestPeerFS aliceSharkPeer = new SharkTestPeerFS(ALICE_NAME, ALICE_FOLDER);
-
-        SharkPKIComponent aliceComponent = this.setupComponent(aliceSharkPeer);
-
-        // lets starts peer and its components before doing anything else
-        aliceSharkPeer.start();
+        this.setUpAndStartAliceAndBob();
 
         // send credential message whenever a new peer is encountered - would not sign one (there is no listener)
         // aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, true);
-
-        ////////////////////////////////////////// BOB ///////////////////////////////////////////////////////////
-        SharkTestPeerFS.removeFolder(BOB_FOLDER);
-        SharkTestPeerFS bobSharkPeer = new SharkTestPeerFS(BOB_NAME, BOB_FOLDER);
-        SharkPKIComponent bobComponent = this.setupComponent(bobSharkPeer);
-
-        // lets starts peer and its components before doing anything else
-        bobSharkPeer.start();
 
         /* Bob will not ask for a certificate but would issue but set a listener
          * usually - peers should do both - send and sign. This example splits those to parts for illustration

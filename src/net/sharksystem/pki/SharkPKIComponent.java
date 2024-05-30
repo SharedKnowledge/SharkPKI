@@ -101,8 +101,9 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * <br/>Create a certificate if users of your application are doubtlessly ensure correctness of identity of the
      * sending person.
      *
-     * @param credentialMessage message for which your are going to sign and disseminate a certificate for. Be careful!
-     *                         Your reputation as developer and reputation of your users are on stake here.
+     * @param credentialMessage You are going to ask this component to certify that those credential information are
+     *                          accurate. Be very careful! Your reputation as developer, your application and all
+     *                          of your users are on stake here.
      * @return created certificate. You do not have to deal with it. This component automatically exchanges certificate.
      * @throws ASAPSecurityException
      * @throws IOException
