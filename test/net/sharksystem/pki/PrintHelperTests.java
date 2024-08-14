@@ -11,13 +11,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
 
-import static net.sharksystem.pki.HelperPKITests.FRANCIS_NAME;
 import static net.sharksystem.pki.TestConstants.ALICE_NAME;
 import static net.sharksystem.pki.TestConstants.ROOT_DIRECTORY;
 import static net.sharksystem.pki.TestHelper.ALICE_FOLDER;
 import static net.sharksystem.pki.TestHelper.setupComponent;
 
-public class PrintCertificates {
+public class PrintHelperTests {
 
     @Test
     public void encryptAndDecrypt() throws SharkException, IOException {

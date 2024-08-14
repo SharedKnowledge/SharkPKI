@@ -3,6 +3,7 @@ package net.sharksystem.asap.persons;
 import net.sharksystem.asap.cmdline.TCPStream;
 import net.sharksystem.asap.pki.CredentialMessageInMemo;
 import net.sharksystem.asap.utils.ASAPLogHelper;
+import net.sharksystem.fs.FSUtils;
 import net.sharksystem.pki.CredentialMessage;
 import net.sharksystem.pki.TestConstants;
 import net.sharksystem.asap.*;
@@ -14,7 +15,6 @@ import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import net.sharksystem.asap.pki.ASAPAbstractCertificateStore;
 import net.sharksystem.utils.Log;
-import net.sharksystem.utils.fs.FSUtils;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -1,6 +1,7 @@
 package net.sharksystem.pki;
 
 import net.sharksystem.asap.pki.ASAPCertificate;
+import net.sharksystem.asap.utils.DateTimeHelper;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -23,8 +24,6 @@ public class PKIHelper {
     }
 
     public static String asapCert2String(ASAPCertificate certificate) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS z");
-
         StringBuilder sb = new StringBuilder();
         sb.append("issued from: ");
         sb.append("id: ");
@@ -39,9 +38,26 @@ public class PKIHelper {
         sb.append("name: ");
         sb.append(certificate.getSubjectName());
         sb.append("\nvalid since: ");
-        sb.append(dateFormat.format(certificate.getValidSince().getTime()));
+        sb.append(net.sharksystem.utils.Utils.calendar2String(certificate.getValidSince()));
         sb.append("\nvalid until: ");
-        sb.append(dateFormat.format(certificate.getValidUntil().getTime()));
+        sb.append(net.sharksystem.utils.Utils.calendar2String(certificate.getValidUntil()));
+
+        return sb.toString();
+    }
+
+    public static String credentialMessage2String(CredentialMessage credentialMessage) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("send from potential subject: ");
+        sb.append("id: ");
+        sb.append(credentialMessage.getSubjectID());
+        sb.append(" | ");
+        sb.append("name: ");
+        sb.append(credentialMessage.getSubjectName());
+        sb.append("\nproposed valid since: ");
+        sb.append(DateTimeHelper.long2DateString(credentialMessage.getValidSince()));
+        sb.append("\nrandom number: ");
+        sb.append(credentialMessage.getRandomInt());
+        sb.append("\nTODO - add public key fingerprint (project SharPKI (net.sharksystem.pki.PKIHelper)");
 
         return sb.toString();
     }

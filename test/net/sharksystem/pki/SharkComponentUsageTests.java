@@ -8,6 +8,7 @@ import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.crypto.ASAPCryptoAlgorithms;
+import net.sharksystem.fs.FSUtils;
 import net.sharksystem.utils.Log;
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,7 +32,7 @@ public class SharkComponentUsageTests {
         @Override
         public void credentialReceived(CredentialMessage credentialMessage) {
             Log.writeLog(this, this.sharkPKIComponent.getOwnerID(), "credential received:\n"
-                    + credentialMessage);
+                    + PKIHelper.credentialMessage2String(credentialMessage));
             try {
                 /*
                 Absolutely not. No! Automatically signing a credential message which simply came along from an unknown
@@ -233,7 +234,7 @@ public class SharkComponentUsageTests {
          only use SharkPeer interface in your application and create a SharkPeerFS instance
          That's for testing only
          */
-        SharkTestPeerFS.removeFolder(ROOT_DIRECTORY);
+        FSUtils.removeFolder(ROOT_DIRECTORY);
         SharkTestPeerFS aliceSharkPeer = new SharkTestPeerFS(ALICE_NAME, ALICE_FOLDER);
 
         SharkPKIComponent aliceComponent = this.setupComponent(aliceSharkPeer);
@@ -245,7 +246,7 @@ public class SharkComponentUsageTests {
         //aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, true);
 
         ////////////////////////////////////////// BOB ///////////////////////////////////////////////////////////
-        SharkTestPeerFS.removeFolder(BOB_FOLDER);
+        FSUtils.removeFolder(BOB_FOLDER);
         SharkTestPeerFS bobSharkPeer = new SharkTestPeerFS(BOB_NAME, BOB_FOLDER);
         SharkPKIComponent bobComponent = this.setupComponent(bobSharkPeer);
 
