@@ -39,7 +39,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     private CharSequence ownerName;
     private SharkCredentialReceivedListener credentialReceivedListener = null;
 
-    public boolean BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER_DEFAULT = true;
+    public boolean BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER_DEFAULT = false;
     private boolean behaviourSendCredentialFirstEncounter = BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER_DEFAULT;
     private boolean certificateExpected = false;
 
@@ -458,6 +458,16 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
         this.checkStatus();
         CredentialMessage credentialMessage = this.createCredentialMessage();
         this.asapPeer.sendTransientASAPMessage(
+                SharkPKIComponent.CREDENTIAL_APP_NAME,
+                SharkPKIComponent.CREDENTIAL_URI,
+                credentialMessage.getMessageAsBytes());
+    }
+
+    public void sendOnlineCredentialMessage(CharSequence peerID) throws ASAPException, IOException {
+        this.checkStatus();
+        CredentialMessage credentialMessage = this.createCredentialMessage();
+        this.asapPeer.sendTransientASAPMessage(
+                peerID,
                 SharkPKIComponent.CREDENTIAL_APP_NAME,
                 SharkPKIComponent.CREDENTIAL_URI,
                 credentialMessage.getMessageAsBytes());

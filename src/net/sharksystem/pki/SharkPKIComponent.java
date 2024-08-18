@@ -227,7 +227,7 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
     /**
      * @param issuerID
      * @return all certificates issued by this peer.
-     * @throws ASAPSecurityException
+     * @throws ASAPSecurityException if certificate cannot be found
      */
     Collection<ASAPCertificate> getCertificatesByIssuer(CharSequence issuerID) throws ASAPSecurityException;
     ASAPCertificate getCertificateByIssuerAndSubject(CharSequence issuerID, CharSequence subjectID)
@@ -286,6 +286,15 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * @see #BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER
      */
     void sendOnlineCredentialMessage() throws ASAPException, IOException;
+
+    /**
+     * Send a credential message to a specific peer. An ASAPException is thrown if there is no running encounter
+     * with that peer.
+     * @param peerID
+     * @throws ASAPException
+     * @throws IOException
+     */
+    void sendOnlineCredentialMessage(CharSequence peerID) throws ASAPException, IOException;
 
     /**
      * TODO

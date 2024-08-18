@@ -1,5 +1,6 @@
 package net.sharksystem.asap.persons;
 
+import net.sharksystem.fs.FSUtils;
 import net.sharksystem.pki.TestConstants;
 import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
@@ -11,7 +12,6 @@ import net.sharksystem.asap.pki.ASAPAbstractCertificateStore;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateImpl;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
-import net.sharksystem.utils.fs.FSUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
