@@ -1,5 +1,6 @@
 package net.sharksystem.pki;
 
+import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
@@ -24,7 +25,7 @@ public class HelperPKITests {
     }
 
     public static String fillWithExampleData(SharkPKIComponent asapPKI)
-            throws ASAPSecurityException, IOException {
+            throws ASAPException, IOException {
 
         ASAPCertificateStorage certificateStorage;
         long now = System.currentTimeMillis();

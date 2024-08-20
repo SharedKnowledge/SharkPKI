@@ -3,6 +3,8 @@ package net.sharksystem.pki;
 import net.sharksystem.SharkComponent;
 import net.sharksystem.SharkException;
 import net.sharksystem.SharkPeer;
+import net.sharksystem.asap.crypto.ASAPKeyStore;
+import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
 
 import static net.sharksystem.pki.TestConstants.*;
 import static net.sharksystem.pki.TestConstants.CLARA_NAME;
@@ -21,9 +23,10 @@ public class TestHelper {
         return portnumber;
     }
 
-    public static SharkPKIComponent setupComponent(SharkPeer sharkPeer) throws SharkException {
+    public static SharkPKIComponent setupComponent(CharSequence peerID, SharkPeer sharkPeer) throws SharkException {
+        ASAPKeyStore asapKeyStore = new InMemoASAPKeyStore(peerID);
         // create a component factory
-        SharkPKIComponentFactory certificateComponentFactory = new SharkPKIComponentFactory();
+        SharkPKIComponentFactory certificateComponentFactory = new SharkPKIComponentFactory(asapKeyStore);
 
         // register this component with shark peer - note: we use interface SharkPeer
         sharkPeer.addComponent(certificateComponentFactory, SharkPKIComponent.class);

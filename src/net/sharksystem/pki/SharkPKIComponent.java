@@ -17,6 +17,7 @@ import java.io.OutputStream;
 import java.security.*;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This component provides some information and methods:
@@ -179,7 +180,7 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * @return Information of person at position
      * @throws ASAPSecurityException
      */
-    PersonValuesImpl getPersonValuesByPosition(int position) throws ASAPSecurityException;
+    PersonValues getPersonValuesByPosition(int position) throws ASAPSecurityException;
 
     /**
      * Get information about a peer by id
@@ -188,6 +189,8 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * @throws ASAPSecurityException if no peer found with this id
      */
     PersonValues getPersonValuesByID(CharSequence peerID) throws ASAPSecurityException;
+
+    Set<PersonValues> getPersonValuesByName(CharSequence peerName) throws ASAPException;
 
     /**
      * This component keeps an ordered list of known peers
@@ -241,7 +244,7 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * @throws IOException
      * @throws ASAPSecurityException
      */
-    void addCertificate(ASAPCertificate asapCertificate) throws IOException, ASAPSecurityException;
+    void addCertificate(ASAPCertificate asapCertificate) throws IOException, ASAPException;
 
     /**
      * It is assumed this certificate is issued by storage owner. This is verified with this method or not.
@@ -285,7 +288,7 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * @throws IOException
      * @see #BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER
      */
-    void sendOnlineCredentialMessage() throws ASAPException, IOException;
+    void sendTransientCredentialMessage() throws ASAPException, IOException;
 
     /**
      * Send a credential message to a specific peer. An ASAPException is thrown if there is no running encounter
@@ -294,7 +297,7 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * @throws ASAPException
      * @throws IOException
      */
-    void sendOnlineCredentialMessage(CharSequence peerID) throws ASAPException, IOException;
+    void sendTransientCredentialMessage(CharSequence peerID) throws ASAPException, IOException;
 
     /**
      * TODO
@@ -302,25 +305,13 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * @throws ASAPException
      * @throws IOException
      */
-    void sendOnlineCredentialMessage(CredentialMessage credentialMessage) throws ASAPException, IOException;
+    void sendTransientCredentialMessage(CredentialMessage credentialMessage) throws ASAPException, IOException;
 
     /**
      * Call this method if probably new certificates are received
      * @return true if certificate of a new person received - time to call store.
      */
-    boolean syncNewReceivedCertificates();
+    boolean syncNewReceivedCertificates() throws IOException, ASAPException;
 
-    /**
-     * Store content of this component into an external medium.
-     * @param os
-     * @throws IOException
-     */
-    void store(OutputStream os) throws IOException;
-
-    /**
-     * Recreate this component from an external medium.
-     * @param os
-     * @throws IOException
-     */
-    void load(InputStream os) throws IOException;
+    void saveMemento();
 }

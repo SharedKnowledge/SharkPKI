@@ -9,8 +9,7 @@ import org.junit.Test;
 import java.io.IOException;
 import java.security.PublicKey;
 
-import static net.sharksystem.pki.TestConstants.ALICE_NAME;
-import static net.sharksystem.pki.TestConstants.ROOT_DIRECTORY;
+import static net.sharksystem.pki.TestConstants.*;
 import static net.sharksystem.pki.TestHelper.ALICE_FOLDER;
 import static net.sharksystem.pki.TestHelper.setupComponent;
 
@@ -24,8 +23,8 @@ public class EncryptionTests {
     public void encryptAndDecrypt() throws SharkException, IOException {
         SharkTestPeerFS.removeFolder(ROOT_DIRECTORY);
         SharkTestPeerFS aliceSharkPeer = new SharkTestPeerFS(ALICE_NAME, ALICE_FOLDER);
-        SharkPKIComponent alicePKI = setupComponent(aliceSharkPeer);
-        aliceSharkPeer.start();
+        SharkPKIComponent alicePKI = setupComponent(ALICE_ID, aliceSharkPeer);
+        aliceSharkPeer.start(ALICE_ID);
 
         String idStart = HelperPKITests.fillWithExampleData(alicePKI);
 

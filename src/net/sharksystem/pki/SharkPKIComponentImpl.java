@@ -11,14 +11,9 @@ import net.sharksystem.asap.pki.CredentialMessageInMemo;
 import net.sharksystem.utils.Log;
 
 import javax.crypto.SecretKey;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.security.*;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Shark component facade of this certificate / PKI component
@@ -178,15 +173,17 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     //                                             startup                                                     //
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public static final String SHARK_PKI_DATA_KEY = "sharkPKIData";
     private FullAsapPKIStorage asapPKIStorage = null;
     private ASAPAbstractCertificateStore asapCertificateStorage;
     private ASAPPeer asapPeer = null;
-    private ASAPKeyStore asapKeyStore = null;
+    private final ASAPKeyStore asapKeyStore;
 
     SharkPKIComponentImpl(ASAPKeyStore asapKeyStore, CharSequence ownerName) {
         this.asapKeyStore = asapKeyStore;
         this.ownerName = ownerName;
     }
+
     SharkPKIComponentImpl(ASAPKeyStore asapKeyStore) {
         this(asapKeyStore, null);
     }
@@ -194,23 +191,33 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     @Override
     public void onStart(ASAPPeer asapPeer) throws SharkException {
         this.asapPeer = asapPeer;
+
         try {
             ASAPStorage asapStorage = asapPeer.getASAPStorage(ASAPCertificateStorage.PKI_APP_NAME);
             CharSequence peerName = this.ownerName != null ? this.ownerName : asapPeer.getPeerID();
             this.asapCertificateStorage =
                 new ASAPAbstractCertificateStore(asapStorage, asapPeer.getPeerID(), peerName);
 
+            /* // it is set during construction
             if(this.asapKeyStore == null) {
                 this.asapKeyStore = new InMemoASAPKeyStore(asapPeer.getPeerID());
             }
-
+*/
             this.asapPKIStorage = new FullAsapPKIStorage(this.asapCertificateStorage, this.asapKeyStore);
+
+            try {
+                this.asapPKIStorage.setExtraDataMementoStorage(SHARK_PKI_DATA_KEY, this.asapPeer.getExtraData());
+                this.asapPKIStorage.restoreMemento(this.asapPeer.getExtra(SHARK_PKI_DATA_KEY));
+                Log.writeLog(this, "restored memento");
+            } catch (IOException e) {
+                throw new SharkException(e);
+            }
 
             // get notified about new peer in the neighbourhood
             this.asapPeer.addASAPEnvironmentChangesListener(this);
 
             this.asapPeer.addASAPMessageReceivedListener(SharkPKIComponent.PKI_APP_NAME, this);
-            //Log.writeLog(this, "did onStart");
+
         } catch (IOException | ASAPException e) {
             throw new SharkException(e);
         }
@@ -372,7 +379,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     }
 
     @Override
-    public PersonValuesImpl getPersonValuesByPosition(int position) throws ASAPSecurityException {
+    public PersonValues getPersonValuesByPosition(int position) throws ASAPSecurityException {
         this.checkStatus();
         return this.asapPKIStorage.getPersonValuesByPosition(position);
     }
@@ -381,6 +388,20 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     public PersonValues getPersonValuesByID(CharSequence peerID) throws ASAPSecurityException {
         this.checkStatus();
         return this.asapPKIStorage.getPersonValues(peerID);
+    }
+
+    public Set<PersonValues> getPersonValuesByName(CharSequence peerName) throws ASAPException {
+        this.checkStatus();
+        if(this.getNumberOfPersons() < 1) throw new ASAPException("no peers at all");
+        Set<PersonValues> personValuesSet = new HashSet<>();
+        for(int i = 0; i < this.getNumberOfPersons(); i++) {
+            PersonValues personValuesByPosition = this.getPersonValuesByPosition(i);
+            if(peerName.toString().equalsIgnoreCase(personValuesByPosition.toString())) {
+                personValuesSet.add(personValuesByPosition);
+            }
+        }
+        if(personValuesSet.isEmpty()) throw new ASAPException("there is not peer with name " + peerName);
+        return personValuesSet;
     }
 
     @Override
@@ -420,9 +441,10 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     }
 
     @Override
-    public void addCertificate(ASAPCertificate asapCertificate) throws IOException, ASAPSecurityException {
+    public void addCertificate(ASAPCertificate asapCertificate) throws IOException, ASAPException {
         this.checkStatus();
         this.asapPKIStorage.addCertificate(asapCertificate);
+        this.saveMemento();
     }
 
     @Override
@@ -445,7 +467,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     }
 
     @Override
-    public void sendOnlineCredentialMessage(CredentialMessage credentialMessage) throws ASAPException, IOException {
+    public void sendTransientCredentialMessage(CredentialMessage credentialMessage) throws ASAPException, IOException {
         this.checkStatus();
         this.asapPeer.sendTransientASAPMessage(
                 SharkPKIComponent.CREDENTIAL_APP_NAME,
@@ -454,7 +476,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     }
 
     @Override
-    public void sendOnlineCredentialMessage() throws ASAPException, IOException {
+    public void sendTransientCredentialMessage() throws ASAPException, IOException {
         this.checkStatus();
         CredentialMessage credentialMessage = this.createCredentialMessage();
         this.asapPeer.sendTransientASAPMessage(
@@ -463,7 +485,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
                 credentialMessage.getMessageAsBytes());
     }
 
-    public void sendOnlineCredentialMessage(CharSequence peerID) throws ASAPException, IOException {
+    public void sendTransientCredentialMessage(CharSequence peerID) throws ASAPException, IOException {
         this.checkStatus();
         CredentialMessage credentialMessage = this.createCredentialMessage();
         this.asapPeer.sendTransientASAPMessage(
@@ -474,21 +496,15 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     }
 
     @Override
-    public boolean syncNewReceivedCertificates() {
+    public boolean syncNewReceivedCertificates() throws IOException, ASAPException {
         this.checkStatus();
-        return this.asapPKIStorage.incorporateReceivedCertificates();
+        boolean retVal = this.asapPKIStorage.incorporateReceivedCertificates();
+        this.saveMemento();
+        return retVal;
     }
 
-    @Override
-    public void store(OutputStream os) throws IOException {
-        this.checkStatus();
-        this.asapPKIStorage.store(os);
-    }
-
-    @Override
-    public void load(InputStream is) throws IOException {
-        this.checkStatus();
-        this.asapPKIStorage.load(is);
+    public void saveMemento() {
+        this.asapPKIStorage.save();
     }
 
     @Override

@@ -1,5 +1,6 @@
 package net.sharksystem.asap.persons;
 
+import net.sharksystem.SharkException;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.pki.ASAPCertificate;
@@ -8,6 +9,7 @@ import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import net.sharksystem.asap.pki.CredentialMessageInMemo;
 import net.sharksystem.asap.utils.DateTimeHelper;
 import net.sharksystem.pki.CredentialMessage;
+import net.sharksystem.pki.PKIHelper;
 import net.sharksystem.utils.Log;
 
 import java.io.*;
@@ -84,6 +86,11 @@ public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
     //////////////////////////////////////////////////////////////////////////////////////////////
 
     public PersonValuesImpl getPersonValues(CharSequence userID) throws ASAPSecurityException {
+        ///////////////// debug
+        Log.writeLog(this, "getPersonalValues of " + userID);
+        Log.writeLog(this, this.getPersonsListAsString());
+        ///////////////// debug
+
         for (PersonValuesImpl personValues : this.personsList) {
             if (personValues.getUserID().toString().equalsIgnoreCase(userID.toString())) {
                 return personValues;
@@ -147,6 +154,27 @@ public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
         return this.certificateStorage.getOwnerID();
     }
 
+    protected String getPersonsListAsString() {
+        if(this.personsList == null) return "no personsList object (null)";
+        StringBuilder sb = new StringBuilder();
+        sb.append("personsList object#"); sb.append(this.personsList);sb.append(" ");
+        if(this.personsList.isEmpty()) {
+            sb.append("is empty");
+            return sb.toString();
+        } else {
+            sb.append(this.personsList.size()); sb.append(" entries:\n");
+        }
+
+        int i = 0;
+        boolean first = true;
+        for(PersonValuesImpl personValues : this.personsList) {
+            if(first) first = false; else sb.append(", ");
+            sb.append(i++); sb.append(": "); sb.append(PKIHelper.personalValue2String(personValues));
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
     @Override
     public ASAPCertificate addAndSignPerson(
             CharSequence userID, CharSequence userName, PublicKey publicKey, long validSince)
@@ -169,11 +197,19 @@ public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
         }
 
         if(!personAlreadyExists) {
-            Log.writeLog(this, "going to add");
+            Log.writeLog(this, "going to add person " + userID + " | " + userName);
             // ok - add
             PersonValuesImpl newPersonValues =
                     new PersonValuesImpl(userID, userName, this.certificateStorage, this);
             this.personsList.add(newPersonValues);
+            this.save();
+            ////////////////////// debug
+            /*
+            Log.writeLog(this, "personsList " + this.personsList);
+            Log.writeLog(this, "personsList " + this.getPersonsListAsString());
+             */
+            ////////////////////// debug
+
         } else {
             Log.writeLog(this, "person already exists - don't change anything");
         }
@@ -348,16 +384,22 @@ public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
     //                                             persistence                                                    //
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    /**
-     * called from person values
-     */
-    void save() {
-        // nothing - should be overwritten
-        Log.writeLog(this, "save() should be overwritten by inheriting classes");
+    void saveMemento(byte[] memento) throws SharkException, IOException {
+        throw new SharkException("no implemented here but in derived class");
+    }
+
+    public void save() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            this.savetoStream(baos);
+            this.saveMemento(baos.toByteArray());
+        } catch (Throwable e) {
+            Log.writeLogErr(this, "cannot write memento: " + e.getLocalizedMessage());
+        }
     }
 
     @Override
-    public void store(OutputStream os) throws IOException {
+    public void savetoStream(OutputStream os) throws IOException {
         if(os == null) throw new IOException("cannot write in null stream");
         if(this.personsList == null || this.personsList.isEmpty()) {
             Log.writeLog(this, "person list is empty - nothing to store");
@@ -375,7 +417,7 @@ public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
     }
 
     @Override
-    public void load(InputStream is) throws IOException {
+    public void restoreFromStream(InputStream is) throws IOException {
         if(is == null) throw new IOException("cannot read from null stream");
 
         DataInputStream dis = new DataInputStream(is);

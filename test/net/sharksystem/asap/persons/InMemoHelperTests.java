@@ -122,7 +122,7 @@ public class InMemoHelperTests {
         // simulate storage
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         int expectedSize = personsStorage.getNumberOfPersons();
-        personsStorage.store(baos);
+        personsStorage.savetoStream(baos);
 
         // extract persistent storage
         byte[] persistentStorage = baos.toByteArray();
@@ -132,7 +132,7 @@ public class InMemoHelperTests {
         ASAPCertificateStore freshASAPCertificateStore = new SampleFullAsapPKIStorage(ALICE_ID, ALICE_NAME);
 
         // load
-        freshASAPCertificateStore.load(is);
+        freshASAPCertificateStore.restoreFromStream(is);
 
         // test
         Assert.assertEquals(expectedSize, freshASAPCertificateStore.getNumberOfPersons());

@@ -1,12 +1,17 @@
 package net.sharksystem.asap.persons;
 
+import net.sharksystem.SharkException;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPCryptoAlgorithms;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
+import net.sharksystem.fs.ExtraData;
+import net.sharksystem.utils.Log;
 
 import javax.crypto.SecretKey;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.security.PublicKey;
 import java.util.Collection;
 
@@ -17,6 +22,8 @@ public class FullAsapPKIStorage extends ASAPCertificateStoreImpl implements
         ASAPKeyStore, ASAPCertificateStore {
 
     private final ASAPKeyStore asapKeyStorage;
+    private ExtraData extraData;
+    private CharSequence mementoKey;
 
     public FullAsapPKIStorage(ASAPCertificateStorage certificateStorage,
                               ASAPKeyStore asapKeyStorage)
@@ -25,6 +32,26 @@ public class FullAsapPKIStorage extends ASAPCertificateStoreImpl implements
 
         super(certificateStorage, asapKeyStorage);
         this.asapKeyStorage = asapKeyStorage;
+    }
+
+    public void setExtraDataMementoStorage(CharSequence mementoKey, ExtraData extraData) {
+        this.mementoKey = mementoKey;
+        this.extraData = extraData;
+    }
+
+    public void restoreMemento(byte[] memento) throws IOException {
+        if(memento == null || memento.length == 0) return;
+        ByteArrayInputStream bais = new ByteArrayInputStream(memento);
+        this.restoreFromStream(bais);
+    }
+
+    @Override
+    void saveMemento(byte[] memento) throws SharkException, IOException {
+        if(memento == null || memento.length == 0) return;
+        if(this.extraData == null) {
+            Log.writeLog(this, "cannot write memento - extra data missing");
+        }
+        this.extraData.putExtra(this.mementoKey, memento);
     }
 
     public ASAPKeyStore getASAPBasicCryptoStorage() {

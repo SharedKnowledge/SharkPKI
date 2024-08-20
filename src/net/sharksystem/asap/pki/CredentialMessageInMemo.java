@@ -26,6 +26,7 @@ public class CredentialMessageInMemo implements CredentialMessage {
 
     public CharSequence getSubjectID() { return this.subjectID; }
     public CharSequence getSubjectName() { return this.subjectName; }
+    public void setSubjectName(CharSequence newName) { this.subjectName = newName; }
     public int getRandomInt() { return this.randomInt; }
     public long getValidSince() { return this.validSince; }
     public byte[] getExtraData() { return this.extraData; }

@@ -10,6 +10,8 @@ public interface CredentialMessage {
     /** subject - the entity that's wants to be certified */
     CharSequence getSubjectName();
 
+    void setSubjectName(CharSequence newName);
+
     /** subjects' public key */
     PublicKey getPublicKey();
 

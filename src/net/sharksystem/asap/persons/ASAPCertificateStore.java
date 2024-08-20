@@ -203,14 +203,14 @@ public interface ASAPCertificateStore {
      * @param os
      * @throws IOException
      */
-    void store(OutputStream os) throws IOException;
+    void savetoStream(OutputStream os) throws IOException;
 
     /**
      * Recreate this component from an external medium.
      * @param os
      * @throws IOException
      */
-    void load(InputStream os) throws IOException;
+    void restoreFromStream(InputStream os) throws IOException;
 
     CredentialMessage createCredentialMessage(byte[] extraData) throws ASAPSecurityException;
 

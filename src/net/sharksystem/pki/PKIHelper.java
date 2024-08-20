@@ -1,5 +1,7 @@
 package net.sharksystem.pki;
 
+import net.sharksystem.asap.persons.PersonValues;
+import net.sharksystem.asap.persons.PersonValuesImpl;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.utils.DateTimeHelper;
 
@@ -58,6 +60,25 @@ public class PKIHelper {
         sb.append("\nrandom number: ");
         sb.append(credentialMessage.getRandomInt());
         sb.append("\nTODO - add public key fingerprint (project SharPKI (net.sharksystem.pki.PKIHelper)");
+
+        return sb.toString();
+    }
+
+    public static String personalValue2String(PersonValues personValues) {
+        if(personValues == null) return "null";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("id: ");
+        sb.append(personValues.getUserID());
+        sb.append(" | ");
+        sb.append("name: ");
+        sb.append(personValues.getName());
+        sb.append(" | ");
+        sb.append("iA: ");
+        sb.append(personValues.getIdentityAssurance());
+        sb.append(" | ");
+        sb.append("sf: ");
+        sb.append(personValues.getSigningFailureRate());
 
         return sb.toString();
     }
