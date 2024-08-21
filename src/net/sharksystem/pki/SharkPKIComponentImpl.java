@@ -207,8 +207,14 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
 
             try {
                 this.asapPKIStorage.setExtraDataMementoStorage(SHARK_PKI_DATA_KEY, this.asapPeer.getExtraData());
-                this.asapPKIStorage.restoreMemento(this.asapPeer.getExtra(SHARK_PKI_DATA_KEY));
-                Log.writeLog(this, "restored memento");
+                try {
+                    byte[] memento = this.asapPeer.getExtra(SHARK_PKI_DATA_KEY);
+                    this.asapPKIStorage.restoreMemento(memento);
+                }
+                catch(SharkException se) {
+                    Log.writeLog(this, "no memento present - component was not used before");
+                }
+
             } catch (IOException e) {
                 throw new SharkException(e);
             }
