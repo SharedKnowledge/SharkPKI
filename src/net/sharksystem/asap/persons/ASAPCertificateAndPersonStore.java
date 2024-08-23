@@ -10,9 +10,10 @@ import java.io.OutputStream;
 import java.security.*;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
- * This storage provides several information and methods:
+ * This storage provides some information and methods:
  *
  * <ul>
  *     <li>A list of peers (actually real persons which are assumed to be owners of an encountered peer (device))</li>
@@ -30,7 +31,7 @@ import java.util.List;
  * One final thing: There is no addPerson() or addPeer method in this component. There is only one way to add
  * a peer (person) to th list: By creating a certificate or by receiving an existing certificate.
  */
-public interface ASAPCertificateStore {
+public interface ASAPCertificateAndPersonStore {
     String CREDENTIAL_APP_NAME = "SharkCredentials";
     CharSequence CREDENTIAL_URI = "asapShark://credential";
 
@@ -159,6 +160,8 @@ public interface ASAPCertificateStore {
     Collection<ASAPCertificate> getCertificatesByIssuer(CharSequence issuerID) throws ASAPSecurityException;
     ASAPCertificate getCertificateByIssuerAndSubject(CharSequence issuerID, CharSequence subjectID)
             throws ASAPSecurityException;
+
+    Set<ASAPCertificate> getAllCertificates();
 
     /**
      * Add a certificate to this storage. That method is used to store an already existing certificate. There are

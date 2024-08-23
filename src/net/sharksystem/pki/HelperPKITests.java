@@ -1,11 +1,10 @@
 package net.sharksystem.pki;
 
 import net.sharksystem.asap.ASAPException;
-import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
-import net.sharksystem.asap.persons.ASAPCertificateStore;
-import net.sharksystem.asap.persons.ASAPCertificateStoreImpl;
+import net.sharksystem.asap.persons.ASAPCertificateAndPersonStore;
+import net.sharksystem.asap.persons.ASAPCertificateAndPersonStoreImpl;
 import net.sharksystem.asap.pki.CredentialMessageInMemo;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
@@ -37,7 +36,7 @@ public class HelperPKITests {
         // very very unlikely, but better safe than sorry: example data must same id
         String idStart = randomString.substring(0, 3) + "_";
 
-        ASAPCertificateStore gloriaStorage = null, hassanStorage = null, irisStorage;
+        ASAPCertificateAndPersonStore gloriaStorage = null, hassanStorage = null, irisStorage;
 
         // Owner signs Francis ia(F): 10
         String francisID = getPeerID(idStart, FRANCIS_NAME);
@@ -49,7 +48,7 @@ public class HelperPKITests {
         ASAPKeyStore francisCryptoStorage = new InMemoASAPKeyStore(FRANCIS_NAME);
 
         // put certificates and keystore together and set up Francis' PKI
-        ASAPCertificateStore francisStorage = new ASAPCertificateStoreImpl(certificateStorage, francisCryptoStorage);
+        ASAPCertificateAndPersonStore francisStorage = new ASAPCertificateAndPersonStoreImpl(certificateStorage, francisCryptoStorage);
 
         // produce Francis' public key which isn't used but signed by target PKI
         asapPKI.acceptAndSignCredential(
@@ -59,7 +58,7 @@ public class HelperPKITests {
         String gloriaID = getPeerID(idStart,  GLORIA_NAME);
         certificateStorage = new InMemoAbstractCertificateStore(gloriaID, GLORIA_NAME);
         ASAPKeyStore gloriaCryptoStorage = new InMemoASAPKeyStore(GLORIA_NAME);
-        gloriaStorage = new ASAPCertificateStoreImpl(certificateStorage, gloriaCryptoStorage);
+        gloriaStorage = new ASAPCertificateAndPersonStoreImpl(certificateStorage, gloriaCryptoStorage);
         // francis signs gloria
         ASAPCertificate asapCertificate =
                 francisStorage.addAndSignPerson(gloriaID, GLORIA_NAME, gloriaStorage.getPublicKey(), now);
@@ -71,7 +70,7 @@ public class HelperPKITests {
         String hassanID = getPeerID(idStart, HASSAN_NAME);
         certificateStorage = new InMemoAbstractCertificateStore(hassanID, HASSAN_NAME);
         ASAPKeyStore hassanCryptoStorage = new InMemoASAPKeyStore(HASSAN_NAME);
-        hassanStorage = new ASAPCertificateStoreImpl(certificateStorage, hassanCryptoStorage);
+        hassanStorage = new ASAPCertificateAndPersonStoreImpl(certificateStorage, hassanCryptoStorage);
         // gloria signs hassan
         asapCertificate = gloriaStorage.addAndSignPerson(hassanID, HASSAN_NAME, hassanStorage.getPublicKey(), now);
 
@@ -82,7 +81,7 @@ public class HelperPKITests {
         String irisID = getPeerID(idStart, IRIS_NAME);
         certificateStorage = new InMemoAbstractCertificateStore(irisID, IRIS_NAME);
         ASAPKeyStore irisCryptoStorage = new InMemoASAPKeyStore(IRIS_NAME);
-        irisStorage = new ASAPCertificateStoreImpl(certificateStorage, irisCryptoStorage);
+        irisStorage = new ASAPCertificateAndPersonStoreImpl(certificateStorage, irisCryptoStorage);
         // hassan signs iris
         asapCertificate = hassanStorage.addAndSignPerson(irisID, IRIS_NAME, irisStorage.getPublicKey(), now);
         // store certificate(issuer: Hassan, subject: Iris)

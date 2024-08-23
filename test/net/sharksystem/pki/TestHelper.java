@@ -3,6 +3,7 @@ package net.sharksystem.pki;
 import net.sharksystem.SharkComponent;
 import net.sharksystem.SharkException;
 import net.sharksystem.SharkPeer;
+import net.sharksystem.SharkTestPeerFS;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
 

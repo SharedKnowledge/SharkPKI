@@ -2,7 +2,7 @@ package net.sharksystem.asap.pki;
 
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.persons.OtherPerson;
-import net.sharksystem.asap.persons.ASAPCertificateStore;
+import net.sharksystem.asap.persons.ASAPCertificateAndPersonStore;
 import net.sharksystem.utils.Log;
 
 import java.io.*;
@@ -12,13 +12,14 @@ import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.*;
 
-public abstract class AbstractCertificateStore implements ASAPCertificateStorage {
+
+public abstract class AbstractInMemoCertificateStore implements ASAPCertificateStorage {
     private final CharSequence ownerID;
     private final CharSequence ownerName;
 
     private Map<CharSequence, Set<ASAPCertificate>> certificatesBySubjectIDMap = null;
 
-    public AbstractCertificateStore(CharSequence ownerID, CharSequence ownerName) {
+    public AbstractInMemoCertificateStore(CharSequence ownerID, CharSequence ownerName) {
         this.ownerID = ownerID;
         this.ownerName = ownerName;
     }
@@ -87,6 +88,17 @@ public abstract class AbstractCertificateStore implements ASAPCertificateStorage
         return certSetIssuer;
     }
 
+    public Set<ASAPCertificate> getAllCertificates() {
+        this.checkCertificatesBySubjectIDMap();
+        Set<ASAPCertificate> allCerts = new HashSet<>();
+        for(Set<ASAPCertificate> certsFromSubject: this.certificatesBySubjectIDMap.values()) {
+            for(ASAPCertificate cert : certsFromSubject) {
+                allCerts.add(cert);
+            }
+        }
+        return allCerts;
+    }
+
     /**
      * @param issuerID
      * @param subjectID
@@ -117,7 +129,7 @@ public abstract class AbstractCertificateStore implements ASAPCertificateStorage
         // sync with external changes
         this.checkCertificatesBySubjectIDMap();
 
-        Collection<ASAPCertificate> newCerts = this.readReceivedCertificates(this.certificatesBySubjectIDMap);
+        Collection<ASAPCertificate> newCerts = this.readReceivedCertificatesFromExternalMemory(this.certificatesBySubjectIDMap);
         if(!newCerts.isEmpty()) {
             // reset identity assurance - is most likely changed
             this.userIdentityAssurance = null;
@@ -174,7 +186,7 @@ public abstract class AbstractCertificateStore implements ASAPCertificateStorage
     protected abstract void readCertificatesFromStorage(Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap);
 
     protected abstract Collection<ASAPCertificate>
-        readReceivedCertificates(Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap);
+    readReceivedCertificatesFromExternalMemory(Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap);
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //                                            identity assurance                                            //
@@ -235,7 +247,7 @@ public abstract class AbstractCertificateStore implements ASAPCertificateStorage
         return false;
     }
 
-    private IdentityAssurance getIdentityAssurance(CharSequence userID, ASAPCertificateStore asapPKI)
+    private IdentityAssurance getIdentityAssurance(CharSequence userID, ASAPCertificateAndPersonStore asapPKI)
             throws ASAPSecurityException {
         // general setup?
         if(this.userIdentityAssurance == null) {
@@ -256,17 +268,17 @@ public abstract class AbstractCertificateStore implements ASAPCertificateStorage
     }
 
     @Override
-    public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, ASAPCertificateStore asapPKI)
+    public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, ASAPCertificateAndPersonStore asapPKI)
             throws ASAPSecurityException {
 
         return this.getIdentityAssurance(userID, asapPKI).path;
     }
 
-    public int getIdentityAssurances(CharSequence userID, ASAPCertificateStore ASAPCertificateStore) throws ASAPSecurityException {
+    public int getIdentityAssurances(CharSequence userID, ASAPCertificateAndPersonStore ASAPCertificateStore) throws ASAPSecurityException {
         return this.getIdentityAssurance(userID, ASAPCertificateStore).getValue();
     }
 
-    private void setupIdentityAssurance(CharSequence userID, ASAPCertificateStore ASAPCertificateStore) throws ASAPSecurityException {
+    private void setupIdentityAssurance(CharSequence userID, ASAPCertificateAndPersonStore ASAPCertificateStore) throws ASAPSecurityException {
         Collection<ASAPCertificate> certificates = this.getCertificatesBySubjectID(userID);
         if (certificates == null || certificates.isEmpty()) {
             // we don't know anything about this person
@@ -342,7 +354,7 @@ public abstract class AbstractCertificateStore implements ASAPCertificateStorage
     private IdentityAssurance calculateIdentityProbability(
             List<CharSequence> idPath, CharSequence currentPersonID,
             ASAPCertificate currentCertificate, float accumulatedIdentityProbability,
-            ASAPCertificateStore ASAPCertificateStore)
+            ASAPCertificateAndPersonStore ASAPCertificateStore)
     {
         // are we in a circle?
         if (idPath.contains(currentPersonID)) return this.worstIdentityAssurance; // escape circle

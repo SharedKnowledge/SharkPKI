@@ -4,7 +4,7 @@ import net.sharksystem.*;
 import net.sharksystem.asap.*;
 import net.sharksystem.asap.crypto.*;
 import net.sharksystem.asap.persons.*;
-import net.sharksystem.asap.pki.ASAPAbstractCertificateStore;
+import net.sharksystem.asap.pki.ASAPStorageBasedCertificateStore;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import net.sharksystem.asap.pki.CredentialMessageInMemo;
@@ -38,7 +38,8 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     private boolean behaviourSendCredentialFirstEncounter = BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER_DEFAULT;
     private boolean certificateExpected = false;
 
-    public void setBehaviour(String behaviourName, boolean on) throws SharkUnknownBehaviourException, IOException, ASAPException {
+    public void setBehaviour(String behaviourName, boolean on)
+            throws SharkUnknownBehaviourException, ASAPException, IOException {
         this.checkStatus();
         switch(behaviourName) {
             case BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER: {
@@ -77,7 +78,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
 
         // add listener - even if null - it is handled as reset
         this.asapPeer.addASAPMessageReceivedListener(
-                ASAPCertificateStore.CREDENTIAL_APP_NAME, this);
+                ASAPCertificateAndPersonStore.CREDENTIAL_APP_NAME, this);
     }
 
     @Override
@@ -149,12 +150,12 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
 
             if (!found && this.behaviourSendCredentialFirstEncounter) {
                 Log.writeLog(this, this.asapPeer.getPeerID().toString(),
-                        "ask a peer to issue a certificate for me. other peer: " + peerID);
+            "encountered peer that has not yet issued a certificate. Send credential message to: " + peerID);
                 try {
                     Log.writeLog(this, "create credential message");
                     CredentialMessage credentialMessage = this.createCredentialMessage();
                     Log.writeLog(this, "credential message == " + credentialMessage);
-                    this.asapPeer.sendTransientASAPMessage(ASAPCertificateStore.CREDENTIAL_APP_NAME,
+                    this.asapPeer.sendTransientASAPMessage(ASAPCertificateAndPersonStore.CREDENTIAL_APP_NAME,
                             SharkPKIComponent.CREDENTIAL_URI,
                             credentialMessage.getMessageAsBytes());
                     Log.writeLog(this, "credential message sent");
@@ -174,8 +175,8 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static final String SHARK_PKI_DATA_KEY = "sharkPKIData";
-    private FullAsapPKIStorage asapPKIStorage = null;
-    private ASAPAbstractCertificateStore asapCertificateStorage;
+    private ASAPPKIStorage asapPKIStorage = null;
+    private ASAPStorageBasedCertificateStore asapCertificateStorage;
     private ASAPPeer asapPeer = null;
     private final ASAPKeyStore asapKeyStore;
 
@@ -196,14 +197,14 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
             ASAPStorage asapStorage = asapPeer.getASAPStorage(ASAPCertificateStorage.PKI_APP_NAME);
             CharSequence peerName = this.ownerName != null ? this.ownerName : asapPeer.getPeerID();
             this.asapCertificateStorage =
-                new ASAPAbstractCertificateStore(asapStorage, asapPeer.getPeerID(), peerName);
+                new ASAPStorageBasedCertificateStore(asapStorage, asapPeer.getPeerID(), peerName);
 
             /* // it is set during construction
             if(this.asapKeyStore == null) {
                 this.asapKeyStore = new InMemoASAPKeyStore(asapPeer.getPeerID());
             }
 */
-            this.asapPKIStorage = new FullAsapPKIStorage(this.asapCertificateStorage, this.asapKeyStore);
+            this.asapPKIStorage = new ASAPPKIStorage(this.asapCertificateStorage, this.asapKeyStore);
 
             try {
                 this.asapPKIStorage.setExtraDataMementoStorage(SHARK_PKI_DATA_KEY, this.asapPeer.getExtraData());
@@ -434,6 +435,11 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
         return this.asapPKIStorage.getCertificatesBySubject(subjectID);
     }
 
+    public Set<ASAPCertificate> getCertificates() {
+        this.checkStatus();
+        return this.asapPKIStorage.getAllCertificates();
+    }
+
     @Override
     public Collection<ASAPCertificate> getCertificatesByIssuer(CharSequence issuerID) throws ASAPSecurityException {
         this.checkStatus();
@@ -468,7 +474,6 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     @Override
     public CredentialMessage createCredentialMessage(byte[] extraData) throws ASAPSecurityException {
         this.checkStatus();
-        // TODO
         return this.asapPKIStorage.createCredentialMessage(extraData);
     }
 

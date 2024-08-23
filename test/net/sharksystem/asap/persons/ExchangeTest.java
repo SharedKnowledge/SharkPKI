@@ -13,7 +13,7 @@ import net.sharksystem.asap.engine.*;
 import net.sharksystem.asap.utils.ASAPPeerHandleConnectionThread;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
-import net.sharksystem.asap.pki.ASAPAbstractCertificateStore;
+import net.sharksystem.asap.pki.ASAPStorageBasedCertificateStore;
 import net.sharksystem.utils.Log;
 import org.junit.Assert;
 import org.junit.Test;
@@ -49,18 +49,18 @@ public class ExchangeTest {
                 ALICE_ID, ALICE_APP_FOLDER, ASAPCertificateStorage.PKI_APP_NAME);
 
         ASAPCertificateStorage asapAliceCertificateStorage =
-                new ASAPAbstractCertificateStore(aliceStorage, ALICE_ID, ALICE_NAME);
+                new ASAPStorageBasedCertificateStore(aliceStorage, ALICE_ID, ALICE_NAME);
         ASAPKeyStore aliceCryptoStorage = new InMemoASAPKeyStore(ALICE_ID);
-        ASAPCertificateStore aliceASAPCertificateStore = new ASAPCertificateStoreImpl(asapAliceCertificateStorage, aliceCryptoStorage);
+        ASAPCertificateAndPersonStore aliceASAPCertificateStore = new ASAPCertificateAndPersonStoreImpl(asapAliceCertificateStorage, aliceCryptoStorage);
 
         // setup bob
         ASAPInternalStorage bobStorage = ASAPEngineFS.getASAPStorage(
                 BOB_ID, BOB_APP_FOLDER, ASAPCertificateStorage.PKI_APP_NAME);
 
         ASAPCertificateStorage asapBobCertificateStorage =
-                new ASAPAbstractCertificateStore(bobStorage, BOB_ID, BOB_NAME);
+                new ASAPStorageBasedCertificateStore(bobStorage, BOB_ID, BOB_NAME);
         ASAPKeyStore bobCryptoStorage = new InMemoASAPKeyStore(BOB_ID);
-        ASAPCertificateStore bobASAPCertificateStore = new ASAPCertificateStoreImpl(asapBobCertificateStorage, bobCryptoStorage);
+        ASAPCertificateAndPersonStore bobASAPCertificateStore = new ASAPCertificateAndPersonStoreImpl(asapBobCertificateStorage, bobCryptoStorage);
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////
         //                                        prepare multi engines                                  //
@@ -68,7 +68,7 @@ public class ExchangeTest {
 
         Set<CharSequence> supportedFormats = new HashSet<>();
         supportedFormats.add(ASAPCertificateStorage.PKI_APP_NAME);
-        supportedFormats.add(ASAPCertificateStore.CREDENTIAL_APP_NAME);
+        supportedFormats.add(ASAPCertificateAndPersonStore.CREDENTIAL_APP_NAME);
 
         CredentialReceiver aliceListener = new CredentialReceiver(aliceASAPCertificateStore);
         ASAPInternalPeer alicePeer = ASAPInternalPeerFS.createASAPPeer(
@@ -125,8 +125,8 @@ public class ExchangeTest {
         CredentialMessage credentialMessage = aliceASAPCertificateStore.createCredentialMessage();
 
         // send it to bob - without traces in asap storages
-        alicePeer.sendTransientASAPAssimilateMessage(ASAPCertificateStore.CREDENTIAL_APP_NAME,
-                ASAPCertificateStore.CREDENTIAL_URI, credentialMessage.getMessageAsBytes());
+        alicePeer.sendTransientASAPAssimilateMessage(ASAPCertificateAndPersonStore.CREDENTIAL_APP_NAME,
+                ASAPCertificateAndPersonStore.CREDENTIAL_URI, credentialMessage.getMessageAsBytes());
 
         // wait until communication probably ends
         System.out.flush();
@@ -155,10 +155,10 @@ public class ExchangeTest {
 
     private class SignCredentialAndReply implements ASAPChunkAssimilatedListener {
         private final String folderName;
-        private final ASAPCertificateStore ASAPCertificateStore;
+        private final ASAPCertificateAndPersonStore ASAPCertificateStore;
         private ASAPInternalPeer asapPeer;
 
-        public SignCredentialAndReply(String folderName, ASAPCertificateStore ASAPCertificateStore) {
+        public SignCredentialAndReply(String folderName, ASAPCertificateAndPersonStore ASAPCertificateStore) {
             this.folderName = folderName;
             this.ASAPCertificateStore = ASAPCertificateStore;
         }
@@ -247,10 +247,10 @@ public class ExchangeTest {
     }
 
     private class CredentialReceiver implements ASAPChunkAssimilatedListener {
-        private final ASAPCertificateStore ASAPCertificateStore;
+        private final ASAPCertificateAndPersonStore ASAPCertificateStore;
         boolean received = false;
 
-        public CredentialReceiver(ASAPCertificateStore ASAPCertificateStore) {
+        public CredentialReceiver(ASAPCertificateAndPersonStore ASAPCertificateStore) {
             this.ASAPCertificateStore = ASAPCertificateStore;
         }
 

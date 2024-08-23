@@ -2,18 +2,16 @@ package net.sharksystem.pki;
 
 import net.sharksystem.ASAPFormats;
 import net.sharksystem.SharkComponent;
+import net.sharksystem.SharkUnknownBehaviourException;
 import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.persons.PersonValues;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
-import net.sharksystem.asap.persons.ASAPCertificateStore;
-import net.sharksystem.asap.persons.PersonValuesImpl;
+import net.sharksystem.asap.persons.ASAPCertificateAndPersonStore;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.security.*;
 import java.util.Collection;
 import java.util.List;
@@ -59,7 +57,7 @@ import java.util.Set;
 public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
     CharSequence CREDENTIAL_URI = "sn2://credential";
     String PKI_APP_NAME = ASAPCertificateStorage.PKI_APP_NAME;
-    String CREDENTIAL_APP_NAME = ASAPCertificateStore.CREDENTIAL_APP_NAME;
+    String CREDENTIAL_APP_NAME = ASAPCertificateAndPersonStore.CREDENTIAL_APP_NAME;
 
     /**
      * Peers can ask each other to sign their public keys. This process can be automated by setting this
@@ -74,6 +72,8 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * @see #createCredentialMessage()
      */
     String BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER = "certComponent_sendCredentialFirstEncounter";
+    void setBehaviour(String behaviourSendCredentialFirstEncounter, boolean on)
+            throws SharkUnknownBehaviourException, IOException, ASAPException;
 
     /**
      * Peers can send a credential message. This process can be automated by setting an flag. Anyway, your application
@@ -237,6 +237,12 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
             throws ASAPSecurityException;
 
     /**
+     * Gets all certificates
+     * @return
+     */
+    Set<ASAPCertificate> getCertificates();
+
+    /**
      * Add a certificate to this storage. That method is used to store an already existing certificate. There are
      * rare circumstances in which an application needs this method. Certificates are exchange automatically by this
      * component.
@@ -262,7 +268,7 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * another peer to ask for certification of those information. Use defined format and uri for that message.
      * @return message that can be sent
      * @throws ASAPSecurityException
-     * @see ASAPCertificateStore#CREDENTIAL_APP_NAME
+     * @see ASAPCertificateAndPersonStore#CREDENTIAL_APP_NAME
      * @see #CREDENTIAL_URI
      */
     CredentialMessage createCredentialMessage() throws ASAPSecurityException;

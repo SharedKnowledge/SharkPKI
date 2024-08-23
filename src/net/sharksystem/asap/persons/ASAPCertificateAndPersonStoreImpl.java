@@ -21,14 +21,14 @@ import java.util.*;
  * object. Person information are managed with this class. They can be seen as index of
  * certificates.
  */
-public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
+public class ASAPCertificateAndPersonStoreImpl implements ASAPCertificateAndPersonStore {
     private final ASAPCertificateStorage certificateStorage;
     private final ASAPKeyStore asapKeyStorage;
 
     // keep other persons - contact list in other words
     private List<PersonValuesImpl> personsList = new ArrayList<>();
 
-    public ASAPCertificateStoreImpl(ASAPCertificateStorage certificateStorage, ASAPKeyStore asapKeyStorage)
+    public ASAPCertificateAndPersonStoreImpl(ASAPCertificateStorage certificateStorage, ASAPKeyStore asapKeyStorage)
             throws ASAPSecurityException {
 
         this.certificateStorage = certificateStorage;
@@ -86,11 +86,6 @@ public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
     //////////////////////////////////////////////////////////////////////////////////////////////
 
     public PersonValuesImpl getPersonValues(CharSequence userID) throws ASAPSecurityException {
-        ///////////////// debug
-        Log.writeLog(this, "getPersonalValues of " + userID);
-        Log.writeLog(this, this.getPersonsListAsString());
-        ///////////////// debug
-
         for (PersonValuesImpl personValues : this.personsList) {
             if (personValues.getUserID().toString().equalsIgnoreCase(userID.toString())) {
                 return personValues;
@@ -318,6 +313,11 @@ public class ASAPCertificateStoreImpl implements ASAPCertificateStore {
             throws ASAPSecurityException {
 
         return this.certificateStorage.getCertificateByIssuerAndSubjectID(issuerID, subjectID);
+    }
+
+
+    public Set<ASAPCertificate> getAllCertificates() {
+        return this.certificateStorage.getAllCertificates();
     }
 
     public boolean verifyCertificate(ASAPCertificate asapCertificate) throws ASAPSecurityException {

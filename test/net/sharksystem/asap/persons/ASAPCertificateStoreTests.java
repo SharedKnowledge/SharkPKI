@@ -8,7 +8,7 @@ import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
 import net.sharksystem.asap.engine.ASAPEngine;
 import net.sharksystem.asap.engine.ASAPEngineFS;
-import net.sharksystem.asap.pki.ASAPAbstractCertificateStore;
+import net.sharksystem.asap.pki.ASAPStorageBasedCertificateStore;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateImpl;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
@@ -45,19 +45,19 @@ public class ASAPCertificateStoreTests {
         ASAPEngine aliceASAPStorage = ASAPEngineFS.getASAPStorage(
                 "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapAliceCertificateStorage =
-                new ASAPAbstractCertificateStore(aliceASAPStorage, ALICE_ID, ALICE_NAME);
+                new ASAPStorageBasedCertificateStore(aliceASAPStorage, ALICE_ID, ALICE_NAME);
 
         ASAPKeyStore aliceCryptoStorage = new InMemoASAPKeyStore(ALICE_ID);
-        ASAPCertificateStore aliceASAPCertificateStore = new ASAPCertificateStoreImpl(asapAliceCertificateStorage, aliceCryptoStorage);
+        ASAPCertificateAndPersonStore aliceASAPCertificateStore = new ASAPCertificateAndPersonStoreImpl(asapAliceCertificateStorage, aliceCryptoStorage);
 
         // setup bob
         ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
                 "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapBobCertificateStorage =
-                new ASAPAbstractCertificateStore(aliceASAPStorage, BOB_ID, BOB_NAME);
+                new ASAPStorageBasedCertificateStore(aliceASAPStorage, BOB_ID, BOB_NAME);
 
         ASAPKeyStore bobCryptoStorage = new InMemoASAPKeyStore(BOB_ID);
-        ASAPCertificateStore bobASAPCertificateStore = new ASAPCertificateStoreImpl(asapBobCertificateStorage, bobCryptoStorage);
+        ASAPCertificateAndPersonStore bobASAPCertificateStore = new ASAPCertificateAndPersonStoreImpl(asapBobCertificateStorage, bobCryptoStorage);
 
         // simulation - Bob must send its credentials in some way to Alice - assume that happened
         CharSequence bobID = bobASAPCertificateStore.getOwnerID();
@@ -78,19 +78,19 @@ public class ASAPCertificateStoreTests {
         ASAPEngine claraASAPStorage = ASAPEngineFS.getASAPStorage(
                 "Clara", ROOT_DIRECTORY_CLARA, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapClaraCertificateStorage =
-                new ASAPAbstractCertificateStore(claraASAPStorage, CLARA_ID, CLARA_NAME);
+                new ASAPStorageBasedCertificateStore(claraASAPStorage, CLARA_ID, CLARA_NAME);
 
         ASAPKeyStore claraCryptoStorage = new InMemoASAPKeyStore(CLARA_ID);
-        ASAPCertificateStore claraASAPCertificateStore = new ASAPCertificateStoreImpl(asapClaraCertificateStorage, claraCryptoStorage);
+        ASAPCertificateAndPersonStore claraASAPCertificateStore = new ASAPCertificateAndPersonStoreImpl(asapClaraCertificateStorage, claraCryptoStorage);
 
         // setup David
         ASAPEngine davidASAPStorage = ASAPEngineFS.getASAPStorage(
                 "Clara", ROOT_DIRECTORY_DAVID, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapDavidCertificateStorage =
-                new ASAPAbstractCertificateStore(davidASAPStorage, DAVID_ID, DAVID_NAME);
+                new ASAPStorageBasedCertificateStore(davidASAPStorage, DAVID_ID, DAVID_NAME);
 
         ASAPKeyStore davidCryptoStorage = new InMemoASAPKeyStore(DAVID_ID);
-        ASAPCertificateStore davidASAPCertificateStore = new ASAPCertificateStoreImpl(asapDavidCertificateStorage, davidCryptoStorage);
+        ASAPCertificateAndPersonStore davidASAPCertificateStore = new ASAPCertificateAndPersonStoreImpl(asapDavidCertificateStorage, davidCryptoStorage);
 
         // clara signs a certificate of david
         CharSequence davidID = davidASAPCertificateStore.getOwnerID();
@@ -148,17 +148,17 @@ public class ASAPCertificateStoreTests {
         ASAPEngine aliceASAPStorage = ASAPEngineFS.getASAPStorage(
                 "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapAliceCertificateStorage =
-                new ASAPAbstractCertificateStore(aliceASAPStorage, ALICE_ID, ALICE_NAME);
+                new ASAPStorageBasedCertificateStore(aliceASAPStorage, ALICE_ID, ALICE_NAME);
         ASAPKeyStore aliceCryptoStorage = new InMemoASAPKeyStore(ALICE_ID);
-        ASAPCertificateStore aliceASAPCertificateStore = new ASAPCertificateStoreImpl(asapAliceCertificateStorage, aliceCryptoStorage);
+        ASAPCertificateAndPersonStore aliceASAPCertificateStore = new ASAPCertificateAndPersonStoreImpl(asapAliceCertificateStorage, aliceCryptoStorage);
 
         // setup bob
         ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
                 "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapBobCertificateStorage =
-                new ASAPAbstractCertificateStore(aliceASAPStorage, BOB_ID, BOB_NAME);
+                new ASAPStorageBasedCertificateStore(aliceASAPStorage, BOB_ID, BOB_NAME);
         ASAPKeyStore bobCryptoStorage = new InMemoASAPKeyStore(BOB_ID);
-        ASAPCertificateStore bobASAPCertificateStore = new ASAPCertificateStoreImpl(asapBobCertificateStorage, bobCryptoStorage);
+        ASAPCertificateAndPersonStore bobASAPCertificateStore = new ASAPCertificateAndPersonStoreImpl(asapBobCertificateStorage, bobCryptoStorage);
 
         // simulation - Bob must send its credentials in some way to Alice - assume that happened
         CharSequence bobID = bobASAPCertificateStore.getOwnerID();
@@ -191,19 +191,19 @@ public class ASAPCertificateStoreTests {
         ASAPEngine aliceASAPStorage = ASAPEngineFS.getASAPStorage(
                 "Alice", ROOT_DIRECTORY_ALICE, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapAliceCertificateStorage =
-                new ASAPAbstractCertificateStore(aliceASAPStorage, ALICE_ID, ALICE_NAME);
+                new ASAPStorageBasedCertificateStore(aliceASAPStorage, ALICE_ID, ALICE_NAME);
         ASAPKeyStore aliceCryptoStorage = new InMemoASAPKeyStore(ALICE_ID);
-        ASAPCertificateStore aliceASAPCertificateStore =
-                new ASAPCertificateStoreImpl(asapAliceCertificateStorage, aliceCryptoStorage);
+        ASAPCertificateAndPersonStore aliceASAPCertificateStore =
+                new ASAPCertificateAndPersonStoreImpl(asapAliceCertificateStorage, aliceCryptoStorage);
 
         // setup bob
         ASAPEngine bobASAPStorage = ASAPEngineFS.getASAPStorage(
                 "Alice", ROOT_DIRECTORY_BOB, ASAPCertificateStorage.PKI_APP_NAME);
         ASAPCertificateStorage asapBobCertificateStorage =
-                new ASAPAbstractCertificateStore(aliceASAPStorage, BOB_ID, BOB_NAME);
+                new ASAPStorageBasedCertificateStore(aliceASAPStorage, BOB_ID, BOB_NAME);
         ASAPKeyStore bobCryptoStorage = new InMemoASAPKeyStore(BOB_ID);
-        ASAPCertificateStore bobASAPCertificateStore =
-                new ASAPCertificateStoreImpl(asapBobCertificateStorage, bobCryptoStorage);
+        ASAPCertificateAndPersonStore bobASAPCertificateStore =
+                new ASAPCertificateAndPersonStoreImpl(asapBobCertificateStorage, bobCryptoStorage);
 
         // simulation - Bob must send its credentials in some way to Alice - assume that happened
         CharSequence bobID = bobASAPCertificateStore.getOwnerID();

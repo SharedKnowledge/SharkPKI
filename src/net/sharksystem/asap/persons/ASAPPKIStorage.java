@@ -18,15 +18,15 @@ import java.util.Collection;
 /**
  * Class uses ASAP PKI to meet requirements of ASAPKeyStore
  */
-public class FullAsapPKIStorage extends ASAPCertificateStoreImpl implements
-        ASAPKeyStore, ASAPCertificateStore {
+public class ASAPPKIStorage extends ASAPCertificateAndPersonStoreImpl implements
+        ASAPKeyStore, ASAPCertificateAndPersonStore {
 
     private final ASAPKeyStore asapKeyStorage;
     private ExtraData extraData;
     private CharSequence mementoKey;
 
-    public FullAsapPKIStorage(ASAPCertificateStorage certificateStorage,
-                              ASAPKeyStore asapKeyStorage)
+    public ASAPPKIStorage(ASAPCertificateStorage certificateStorage,
+                          ASAPKeyStore asapKeyStorage)
 
             throws ASAPSecurityException {
 

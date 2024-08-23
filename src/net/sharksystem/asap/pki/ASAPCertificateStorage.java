@@ -1,11 +1,12 @@
 package net.sharksystem.asap.pki;
 
 import net.sharksystem.asap.ASAPSecurityException;
-import net.sharksystem.asap.persons.ASAPCertificateStore;
+import net.sharksystem.asap.persons.ASAPCertificateAndPersonStore;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 public interface ASAPCertificateStorage {
     String PKI_APP_NAME = "ASAPSharkCertificates";
@@ -22,6 +23,8 @@ public interface ASAPCertificateStorage {
      * @return collection of certificates signed by an issuer
      */
     Collection<ASAPCertificate> getCertificatesByIssuerID(CharSequence issuerID);
+
+    Set<ASAPCertificate> getAllCertificates();
 
     /**
      * @param issuerID
@@ -83,9 +86,9 @@ public interface ASAPCertificateStorage {
      */
     void dropInMemoCache();
 
-    int getIdentityAssurances(CharSequence userID, ASAPCertificateStore ASAPCertificateStore) throws ASAPSecurityException;
+    int getIdentityAssurances(CharSequence userID, ASAPCertificateAndPersonStore ASAPCertificateStore) throws ASAPSecurityException;
 
-    List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, ASAPCertificateStore ASAPCertificateStore)
+    List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, ASAPCertificateAndPersonStore ASAPCertificateStore)
             throws ASAPSecurityException;
 
     ASAPStorageAddress getASAPStorageAddress(byte[] serializedAddress) throws IOException;

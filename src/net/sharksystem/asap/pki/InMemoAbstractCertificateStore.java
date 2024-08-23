@@ -5,7 +5,7 @@ import net.sharksystem.asap.ASAP;
 import java.io.IOException;
 import java.util.*;
 
-public class InMemoAbstractCertificateStore extends AbstractCertificateStore {
+public class InMemoAbstractCertificateStore extends AbstractInMemoCertificateStore {
     Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap = new HashMap<>();
 
     public InMemoAbstractCertificateStore(CharSequence ownerID, CharSequence ownerName) {
@@ -47,7 +47,7 @@ public class InMemoAbstractCertificateStore extends AbstractCertificateStore {
     }
 
     @Override
-    protected Collection<ASAPCertificate> readReceivedCertificates(
+    protected Collection<ASAPCertificate> readReceivedCertificatesFromExternalMemory(
             Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap) {
         return new ArrayList<>();
     }

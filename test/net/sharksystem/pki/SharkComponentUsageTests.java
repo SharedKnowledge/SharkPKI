@@ -1,7 +1,6 @@
 package net.sharksystem.pki;
 
 import net.sharksystem.SharkException;
-import net.sharksystem.SharkPeer;
 import net.sharksystem.SharkTestPeerFS;
 import net.sharksystem.SharkUnknownBehaviourException;
 import net.sharksystem.asap.ASAPException;
@@ -10,6 +9,7 @@ import net.sharksystem.asap.persons.PersonValues;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.crypto.ASAPCryptoAlgorithms;
 import net.sharksystem.fs.FSUtils;
+import net.sharksystem.testhelper.SharkPKITesthelper;
 import net.sharksystem.utils.Log;
 import org.junit.Assert;
 import org.junit.Test;
@@ -61,12 +61,6 @@ public class SharkComponentUsageTests {
         }
     }
 
-    private SharkPKIComponent setupComponent(CharSequence peerID, SharkPeer sharkPeer)
-            throws SharkException {
-
-        return TestHelper.setupComponent(peerID, sharkPeer);
-    }
-
     SharkTestPeerFS aliceSharkPeer, bobSharkPeer;
     SharkPKIComponentImpl aliceComponent, bobComponent;
 
@@ -76,19 +70,20 @@ public class SharkComponentUsageTests {
          only use SharkPeer interface in your application and create a SharkPeerFS instance
          That's for testing only
          */
-        String folderName = net.sharksystem.utils.testsupport.TestHelper.getUniqueFolderName("pkiTest");
-        folderName = ROOT_DIRECTORY + folderName;
-        SharkTestPeerFS.removeFolder(folderName);
+        SharkPKITesthelper.incrementTestNumber();
+        String folderName = SharkPKITesthelper.getPKITestFolder(ROOT_DIRECTORY);
+        System.out.println("folderName == " + folderName);
 
         ///////// Alice
-        aliceSharkPeer = new SharkTestPeerFS(ALICE_NAME, folderName + "/" + ALICE_NAME);
-        // cast to use this undocumented setBehaviour feature
-        aliceComponent = (SharkPKIComponentImpl) this.setupComponent(ALICE_ID, aliceSharkPeer);
+        aliceSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(ALICE_NAME, folderName);
+        aliceComponent =
+                (SharkPKIComponentImpl) SharkPKITesthelper.setupPKIComponentPeerNotStarted(aliceSharkPeer, ALICE_ID);
         aliceSharkPeer.start(ALICE_ID);
 
         ////////////////////////////////////////// BOB ///////////////////////////////////////////////////////////
-        bobSharkPeer = new SharkTestPeerFS(BOB_NAME, folderName + "/" + BOB_NAME);
-        bobComponent = (SharkPKIComponentImpl) this.setupComponent(BOB_ID, bobSharkPeer);
+        bobSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(BOB_NAME, folderName);
+        bobComponent = (SharkPKIComponentImpl)
+                SharkPKITesthelper.setupPKIComponentPeerNotStarted(bobSharkPeer, BOB_ID);
         bobSharkPeer.start(BOB_ID);
 
         Thread.sleep(200);
@@ -105,7 +100,10 @@ public class SharkComponentUsageTests {
     @Test
     public void sendCredentialMessageExplicitAndExpectSignedCertificate() throws SharkException, ASAPException,
             IOException, InterruptedException, SharkUnknownBehaviourException {
+
         this.setUpAndStartAliceAndBob();
+        System.out.println("testNumber == " + SharkPKITesthelper.testNumber);
+
 
         // do not send credential message whenever a new peer is encountered
         aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, false);
@@ -135,20 +133,12 @@ public class SharkComponentUsageTests {
         Collection<ASAPCertificate> certificatesByIssuer = aliceComponent.getCertificatesByIssuer(BOB_ID);
         Assert.assertNotNull(certificatesByIssuer);
         Assert.assertEquals(1, certificatesByIssuer.size());
-    }
 
-
-    @Test
-    public void sendCredentialMessageExplicitAndExpectSignedCertificate_Complement1_CheckBobKnowsAlice()
-            throws SharkException, ASAPException, IOException, InterruptedException, SharkUnknownBehaviourException {
-        this.sendCredentialMessageExplicitAndExpectSignedCertificate();
-
-        // Bob should know Alice
         PersonValues alicePersonValues = bobComponent.getPersonValuesByID(ALICE_ID);
         Assert.assertNotNull(alicePersonValues);
         Assert.assertEquals(alicePersonValues.getSigningFailureRate(), DEFAULT_SIGNING_FAILURE_RATE);
-    }
 
+    }
 
     /**
      * Alice send her credential information to Bob and expects him to sign. Certificates issued by Bob must be
@@ -164,11 +154,14 @@ public class SharkComponentUsageTests {
      */
     @Test
     public void sendReceiveCredentialSignAndAddNewCertificate() throws SharkException, ASAPException,
-            IOException, InterruptedException {
+            IOException, InterruptedException, SharkUnknownBehaviourException {
         this.setUpAndStartAliceAndBob();
+        System.out.println("testNumber == " + SharkPKITesthelper.testNumber);
+
 
         // send credential message whenever a new peer is encountered - would not sign one (there is no listener)
-        // aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, true);
+        aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, true);
+        bobComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, true);
 
         /* Bob will not ask for a certificate but would issue but set a listener
          * usually - peers should do both - send and sign. This example splits those to parts for illustration
@@ -181,7 +174,7 @@ public class SharkComponentUsageTests {
         aliceSharkPeer.getASAPTestPeerFS().startEncounter(getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
 
         // give them moment to exchange data
-        Thread.sleep(200);
+        Thread.sleep(500);
         //Thread.sleep(Long.MAX_VALUE);
         System.out.println("slept a moment");
         /////////////////////////////////////////// Tests  /////////////////////////////////////////////////////////
@@ -194,12 +187,12 @@ public class SharkComponentUsageTests {
          */
 
         // Bob must have a certificate of Alice - he issued it by himself
-        Collection<ASAPCertificate> certificatesByIssuer = bobComponent.getCertificatesByIssuer(BOB_NAME);
+        Collection<ASAPCertificate> certificatesByIssuer = bobComponent.getCertificatesByIssuer(BOB_ID);
         Assert.assertNotNull(certificatesByIssuer);
         Assert.assertEquals(1, certificatesByIssuer.size());
 
         // Alice must have got one too - issued by Bob and automatically transmitted by certificate component
-        certificatesByIssuer = aliceComponent.getCertificatesByIssuer(BOB_NAME);
+        certificatesByIssuer = aliceComponent.getCertificatesByIssuer(BOB_ID);
         Assert.assertNotNull(certificatesByIssuer);
         Assert.assertEquals(1, certificatesByIssuer.size());
 
@@ -208,15 +201,15 @@ public class SharkComponentUsageTests {
         // non yet
 
         // some more usage examples
-        ASAPCertificate oneCertificate = aliceComponent.getCertificateByIssuerAndSubject(BOB_NAME, ALICE_NAME);
-        Collection<ASAPCertificate> collectionOfCerts = aliceComponent.getCertificatesByIssuer(BOB_NAME);
-        collectionOfCerts = aliceComponent.getCertificatesBySubject(ALICE_NAME);
+        ASAPCertificate oneCertificate = aliceComponent.getCertificateByIssuerAndSubject(BOB_ID, ALICE_ID);
+        Collection<ASAPCertificate> collectionOfCerts = aliceComponent.getCertificatesByIssuer(BOB_ID);
+        collectionOfCerts = aliceComponent.getCertificatesBySubject(ALICE_ID);
 
         ///////////////////////////////////////////// signing: Alice -> Bob
         byte[] message = "From Alice and signed".getBytes();
         byte[] signedMessage = ASAPCryptoAlgorithms.sign(message, aliceComponent);
 
-        boolean verified = ASAPCryptoAlgorithms.verify(message, signedMessage, ALICE_NAME, bobComponent);
+        boolean verified = ASAPCryptoAlgorithms.verify(message, signedMessage, ALICE_ID, bobComponent);
 
         String messageString = "From Alice, encrypted for Bob";
         // produce bytes
@@ -226,7 +219,7 @@ public class SharkComponentUsageTests {
         // produce encryption package: encrypt with new session key, encrypt session key with receivers public key
         byte[] encryptedMessagePackageBytes = ASAPCryptoAlgorithms.produceEncryptedMessagePackage(
                 messageBytes, // message that is encrypted
-                ALICE_NAME, // recipient id
+                ALICE_ID, // recipient id
                 bobComponent // key store sender
         );
 
@@ -251,27 +244,33 @@ public class SharkComponentUsageTests {
      */
     @Test
     public void sendCredentialMessageDuringEncounterAndChangeItWithNewKeyPair() throws SharkException, ASAPException,
-            IOException, InterruptedException {
+            IOException, InterruptedException, SharkUnknownBehaviourException {
         ////////////////////////////////////////// ALICE /////////////////////////////////////////////////////////
         /* it is a test - we use the test peer implementation
          only use SharkPeer interface in your application and create a SharkPeerFS instance
          That's for testing only
          */
-        FSUtils.removeFolder(ROOT_DIRECTORY);
-        SharkTestPeerFS aliceSharkPeer = new SharkTestPeerFS(ALICE_NAME, ALICE_FOLDER);
+//        SharkTestPeerFS aliceSharkPeer = new SharkTestPeerFS(ALICE_NAME, ALICE_FOLDER);
+//        SharkPKIComponent aliceComponent = this.setupComponent(ALICE_ID, aliceSharkPeer);
 
-        SharkPKIComponent aliceComponent = this.setupComponent(ALICE_ID, aliceSharkPeer);
+        SharkPKITesthelper.incrementTestNumber();
+        System.out.println("testNumber == " + SharkPKITesthelper.testNumber);
+        String folderName = SharkPKITesthelper.getPKITestFolder(ROOT_DIRECTORY);
+        System.out.println("folderName == " + folderName);
+
+        SharkTestPeerFS aliceSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(ALICE_NAME, folderName);
+        SharkPKIComponent aliceComponent = SharkPKITesthelper.setupPKIComponentPeerNotStarted(aliceSharkPeer, ALICE_ID);
 
         // lets starts peer and its components before doing anything else
         aliceSharkPeer.start(ALICE_ID);
 
         // send credential message whenever a new peer is encountered - would not sign one (there is no listener)
-        //aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, true);
+        aliceComponent.setBehaviour(SharkPKIComponent.BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER, true);
 
         ////////////////////////////////////////// BOB ///////////////////////////////////////////////////////////
-        FSUtils.removeFolder(BOB_FOLDER);
-        SharkTestPeerFS bobSharkPeer = new SharkTestPeerFS(BOB_NAME, BOB_FOLDER);
-        SharkPKIComponent bobComponent = this.setupComponent(BOB_ID, bobSharkPeer);
+
+        SharkTestPeerFS bobSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(BOB_NAME, folderName);
+        SharkPKIComponent bobComponent = SharkPKITesthelper.setupPKIComponentPeerNotStarted(bobSharkPeer, BOB_ID);
 
         // lets starts peer and its components before doing anything else
         bobSharkPeer.start(BOB_ID);
@@ -290,7 +289,7 @@ public class SharkComponentUsageTests {
         aliceSharkPeer.getASAPTestPeerFS().startEncounter(getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
 
         // give them moment to exchange data
-        Thread.sleep(1000);
+        Thread.sleep(200);
         //Thread.sleep(Long.MAX_VALUE);
         System.out.println("slept a moment");
         aliceSharkPeer.getASAPTestPeerFS().stopEncounter(bobSharkPeer.getASAPTestPeerFS());
@@ -311,7 +310,7 @@ public class SharkComponentUsageTests {
         aliceSharkPeer.getASAPTestPeerFS().startEncounter(getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
 
         // give them moment to exchange data
-        Thread.sleep(1000);
+        Thread.sleep(200);
         //Thread.sleep(Long.MAX_VALUE);
         System.out.println("slept a moment");
         aliceSharkPeer.getASAPTestPeerFS().stopEncounter(bobSharkPeer.getASAPTestPeerFS());
@@ -340,7 +339,7 @@ public class SharkComponentUsageTests {
         aliceSharkPeer.getASAPTestPeerFS().startEncounter(getPortNumber(), claraSharkPeer.getASAPTestPeerFS());
 
         // give them moment to exchange data
-        Thread.sleep(1000);
+        Thread.sleep(200);
         //Thread.sleep(Long.MAX_VALUE);
         System.out.println("slept a moment");
         aliceSharkPeer.getASAPTestPeerFS().stopEncounter(claraSharkPeer.getASAPTestPeerFS());
@@ -352,6 +351,10 @@ public class SharkComponentUsageTests {
 
         // bob and claras last received credentials are the same
         Assert.assertEquals(firstClaraCredential.getValidSince(), secondBobCredential.getValidSince());
+    }
+
+    private SharkPKIComponent setupComponent(String peerID, SharkTestPeerFS sharkPeer) throws SharkException {
+        return SharkPKITesthelper.setupPKIComponentPeerNotStarted(sharkPeer, peerID);
     }
 
     /**
@@ -377,22 +380,26 @@ public class SharkComponentUsageTests {
          only use SharkPeer interface in your application and create a SharkPeerFS instance
          That's for testing only
          */
-        SharkTestPeerFS.removeFolder(ROOT_DIRECTORY);
+        SharkPKITesthelper.incrementTestNumber();
+        System.out.println("testNumber == " + SharkPKITesthelper.testNumber);
 
-        SharkTestPeerFS aliceSharkPeer = new SharkTestPeerFS(ALICE_NAME, ALICE_FOLDER);
-        SharkPKIComponent alicePKI = this.setupComponent(ALICE_ID, aliceSharkPeer);
+        String folderName = SharkPKITesthelper.getPKITestFolder(ROOT_DIRECTORY);
+        System.out.println("folderName == " + folderName);
+
+        SharkTestPeerFS aliceSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(ALICE_NAME, folderName);
+        SharkPKIComponent alicePKI = SharkPKITesthelper.setupPKIComponentPeerNotStarted(aliceSharkPeer, ALICE_ID);
         // lets starts peer and its components before doing anything else
         aliceSharkPeer.start(ALICE_ID);
 
-        SharkTestPeerFS bobSharkPeer = new SharkTestPeerFS(BOB_NAME, BOB_FOLDER);
-        SharkPKIComponent bobPKI = this.setupComponent(BOB_ID, bobSharkPeer);
+        SharkTestPeerFS bobSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(BOB_NAME, folderName);
+        SharkPKIComponent bobPKI = SharkPKITesthelper.setupPKIComponentPeerNotStarted(bobSharkPeer, BOB_ID);
         // lets starts peer and its components before doing anything else
         bobSharkPeer.start(BOB_ID);
 
-        SharkTestPeerFS claraSharkPeer = new SharkTestPeerFS(CLARA_NAME, CLARA_FOLDER);
-        SharkPKIComponent claraPKI = this.setupComponent(CLARA_ID, claraSharkPeer);
+        SharkTestPeerFS claraSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(CLARA_NAME, folderName);
+        SharkPKIComponent claraPKI = SharkPKITesthelper.setupPKIComponentPeerNotStarted(claraSharkPeer, CLARA_ID);
         // lets starts peer and its components before doing anything else
-        claraSharkPeer.start(BOB_ID);
+        claraSharkPeer.start(CLARA_ID);
 
         CredentialMessage aliceCredentialMessage = alicePKI.createCredentialMessage(LOST_BYTES);
         CredentialMessage bobCredentialMessage = bobPKI.createCredentialMessage();

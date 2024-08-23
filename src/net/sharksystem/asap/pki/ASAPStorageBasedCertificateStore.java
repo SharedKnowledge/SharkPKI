@@ -10,11 +10,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 
-public class ASAPAbstractCertificateStore extends AbstractCertificateStore {
+public class ASAPStorageBasedCertificateStore extends AbstractInMemoCertificateStore {
 
     private final ASAPStorage asapStorage;
 
-    public ASAPAbstractCertificateStore(ASAPStorage asapStorage, CharSequence ownerID, CharSequence ownerName) {
+    public ASAPStorageBasedCertificateStore(ASAPStorage asapStorage, CharSequence ownerID, CharSequence ownerName) {
         super(ownerID, ownerName);
         this.asapStorage = asapStorage;
     }
@@ -76,6 +76,10 @@ public class ASAPAbstractCertificateStore extends AbstractCertificateStore {
         throw new ASAPException(text);
     }
 
+    /**
+     * Reads asap message from storage, extracts certificates and stores in memory
+     * @param certificatesByOwnerIDMap Map that is filled by this method.
+     */
     protected void readCertificatesFromStorage(Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap) {
         int era = this.asapStorage.getOldestEra();
         int thisEra = this.asapStorage.getEra();
@@ -117,10 +121,10 @@ public class ASAPAbstractCertificateStore extends AbstractCertificateStore {
         }
 
         // read received certificates
-        this.readReceivedCertificates(certificatesByOwnerIDMap);
+        this.readReceivedCertificatesFromExternalMemory(certificatesByOwnerIDMap);
     }
 
-    protected Collection<ASAPCertificate> readReceivedCertificates(
+    protected Collection<ASAPCertificate> readReceivedCertificatesFromExternalMemory(
             Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap) {
 
         Log.writeLog(this, "readReceivedCertificates");

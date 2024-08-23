@@ -14,10 +14,10 @@ public class PersonValuesImpl implements PersonValues {
     private int signingFailureRate;
 
     private final ASAPCertificateStorage certificateStorage;
-    private final ASAPCertificateStoreImpl personsStorage;
+    private final ASAPCertificateAndPersonStoreImpl personsStorage;
 
     public PersonValuesImpl(CharSequence id, CharSequence name, ASAPCertificateStorage certificateStorage,
-                            ASAPCertificateStoreImpl personsStorage) {
+                            ASAPCertificateAndPersonStoreImpl personsStorage) {
 
         this.id = id;
         this.name = name;
@@ -32,7 +32,7 @@ public class PersonValuesImpl implements PersonValues {
      * @param certificateStorage
      * @param personsStorage
      */
-    PersonValuesImpl(DataInputStream dis, ASAPCertificateStorage certificateStorage, ASAPCertificateStoreImpl personsStorage)
+    PersonValuesImpl(DataInputStream dis, ASAPCertificateStorage certificateStorage, ASAPCertificateAndPersonStoreImpl personsStorage)
             throws IOException {
 
         this.certificateStorage = certificateStorage;
