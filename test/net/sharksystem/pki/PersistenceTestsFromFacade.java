@@ -19,12 +19,10 @@ import java.util.Collection;
 import static net.sharksystem.testhelper.ASAPTesthelper.*;
 
 public class PersistenceTestsFromFacade {
-
     @Test
     public void fillPersistAndReloadFrom() throws SharkException, IOException {
         SharkPKITesthelper.incrementTestNumber();
         String folderName = SharkPKITesthelper.getPKITestFolder(ASAPTesthelper.ROOT_DIRECTORY_TESTS);
-        System.out.println("TEST RUNS IN FOLDER " + folderName);
 
         // ALICE
         SharkPeer aliceSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(ALICE_NAME, folderName);

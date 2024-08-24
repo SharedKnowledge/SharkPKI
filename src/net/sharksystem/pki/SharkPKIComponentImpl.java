@@ -203,18 +203,27 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
         this.asapPeer = asapPeer;
 
         try {
+            ////// set up pki complete with its subcomponents
+
+            // key management
             this.asapKeyStore = new InMemoASAPKeyStore(asapPeer.getPeerID());
             this.asapKeyStore.setMementoTarget(this.owner.getSharkPeerExtraData());
 
+            // hold messages - serialized certificates
             ASAPStorage asapStorage = asapPeer.getASAPStorage(ASAPCertificateStorage.PKI_APP_NAME);
             CharSequence peerName = this.ownerName != null ? this.ownerName : asapPeer.getPeerID();
+
+            // this object can interpret those messages as certificates; it requires no further persistence
             this.asapCertificateStorage =
                 new ASAPStorageBasedCertificateStore(asapStorage, asapPeer.getPeerID(), peerName);
 
+            // bind components together and add person values support
             this.asapPKIStorage = new ASAPPKIStorage(this.asapCertificateStorage, this.asapKeyStore);
 
+            // Save memento with shark peer (not asap peer)
+            this.asapPKIStorage.setMementoTarget(this.owner.getSharkPeerExtraData());
+
             try {
-                this.asapPKIStorage.setExtraDataMementoStorage(SHARK_PKI_DATA_KEY, this.asapPeer.getExtraData());
                 try {
                     byte[] memento = this.asapPeer.getExtra(SHARK_PKI_DATA_KEY);
                     this.asapPKIStorage.restoreMemento(memento);

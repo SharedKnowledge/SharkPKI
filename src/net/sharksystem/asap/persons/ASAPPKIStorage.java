@@ -22,8 +22,6 @@ public class ASAPPKIStorage extends ASAPCertificateAndPersonStoreImpl implements
         ASAPKeyStore, ASAPCertificateAndPersonStore {
 
     private final ASAPKeyStore asapKeyStorage;
-    private ExtraData extraData;
-    private CharSequence mementoKey;
 
     public ASAPPKIStorage(ASAPCertificateStorage certificateStorage,
           ASAPKeyStore asapKeyStorage) throws ASAPSecurityException {
@@ -32,24 +30,10 @@ public class ASAPPKIStorage extends ASAPCertificateAndPersonStoreImpl implements
         this.asapKeyStorage = asapKeyStorage;
     }
 
-    public void setExtraDataMementoStorage(CharSequence mementoKey, ExtraData extraData) {
-        this.mementoKey = mementoKey;
-        this.extraData = extraData;
-    }
-
     public void restoreMemento(byte[] memento) throws IOException {
         if(memento == null || memento.length == 0) return;
         ByteArrayInputStream bais = new ByteArrayInputStream(memento);
         this.restoreFromStream(bais);
-    }
-
-    @Override
-    void saveMemento(byte[] memento) throws SharkException, IOException {
-        if(memento == null || memento.length == 0) return;
-        if(this.extraData == null) {
-            Log.writeLog(this, "cannot write memento - extra data missing");
-        }
-        this.extraData.putExtra(this.mementoKey, memento);
     }
 
     public ASAPKeyStore getASAPBasicCryptoStorage() {

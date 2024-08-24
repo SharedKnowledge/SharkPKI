@@ -17,7 +17,9 @@ public class SharkPKITesthelper extends SharkPeerTestHelper {
     }
 
     public static String getPKITestFolder(CharSequence rootFolder) {
-        return rootFolder + "/" + ASAPTesthelper.getUniqueFolderName(PKI_COMPONENT_NAME);
+        String folderName = rootFolder + "/" + ASAPTesthelper.getUniqueFolderName(PKI_COMPONENT_NAME);
+        System.out.println("TEST RUNS IN FOLDER " + folderName);
+        return folderName;
     }
 
     public static SharkPKIComponent setupPKIComponentPeerNotStarted(SharkPeer sharkPeer, String asapPeerID)

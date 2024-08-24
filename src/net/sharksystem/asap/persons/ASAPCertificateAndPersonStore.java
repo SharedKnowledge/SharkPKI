@@ -2,6 +2,7 @@ package net.sharksystem.asap.persons;
 
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.pki.ASAPCertificate;
+import net.sharksystem.fs.ExtraData;
 import net.sharksystem.pki.CredentialMessage;
 
 import java.io.IOException;
@@ -201,20 +202,7 @@ public interface ASAPCertificateAndPersonStore {
      */
     boolean incorporateReceivedCertificates();
 
-    /**
-     * Store content of this component into an external medium.
-     * @param os
-     * @throws IOException
-     */
-    void savetoStream(OutputStream os) throws IOException;
-
-    /**
-     * Recreate this component from an external medium.
-     * @param os
-     * @throws IOException
-     */
-    void restoreFromStream(InputStream os) throws IOException;
-
     CredentialMessage createCredentialMessage(byte[] extraData) throws ASAPSecurityException;
 
+    void setMementoTarget(ExtraData extraData);
 }

@@ -8,6 +8,7 @@ import net.sharksystem.asap.pki.ASAPCertificateImpl;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import net.sharksystem.asap.pki.CredentialMessageInMemo;
 import net.sharksystem.asap.utils.DateTimeHelper;
+import net.sharksystem.fs.ExtraData;
 import net.sharksystem.pki.CredentialMessage;
 import net.sharksystem.pki.PKIHelper;
 import net.sharksystem.utils.Log;
@@ -22,6 +23,7 @@ import java.util.*;
  * certificates.
  */
 public class ASAPCertificateAndPersonStoreImpl implements ASAPCertificateAndPersonStore {
+    private static final CharSequence ASAP_PERSONS_STORAGE_MEMENTO_KEY = "asapPersonsInfoMemento";
     protected final ASAPCertificateStorage certificateStorage;
     private final ASAPKeyStore asapKeyStorage;
 
@@ -384,21 +386,42 @@ public class ASAPCertificateAndPersonStoreImpl implements ASAPCertificateAndPers
     //                                             persistence                                                    //
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    void saveMemento(byte[] memento) throws SharkException, IOException {
-        throw new SharkException("no implemented here but in derived class");
-    }
+    private ExtraData mementoExtraData;
 
-    public void save() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    public void setMementoTarget(ExtraData extraData) {
+        this.mementoExtraData = extraData;
         try {
-            this.savetoStream(baos);
-            this.saveMemento(baos.toByteArray());
-        } catch (Throwable e) {
-            Log.writeLogErr(this, "cannot write memento: " + e.getLocalizedMessage());
+            byte[] memento = this.mementoExtraData.getExtra(ASAP_PERSONS_STORAGE_MEMENTO_KEY);
+            this.restoreMemento(memento);
+        } catch (IOException | SharkException e) {
+            // no memento - okay
         }
     }
 
-    @Override
+    public void save() {
+        if(this.mementoExtraData != null) {
+            try {
+                this.mementoExtraData.putExtra(ASAP_PERSONS_STORAGE_MEMENTO_KEY, this.getMemento());
+            } catch (IOException | SharkException e) {
+                Log.writeLogErr(this, "cannot write memento: " + e.getLocalizedMessage());
+            }
+        } else {
+            Log.writeLog(this, "cannot write data - no persistent storage");
+        }
+
+    }
+
+    private void restoreMemento(byte[] memento) throws IOException {
+        ByteArrayInputStream bais = new ByteArrayInputStream(memento);
+        this.restoreFromStream(bais);
+    }
+
+    private byte[] getMemento() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        this.savetoStream(baos);
+        return baos.toByteArray();
+    }
+
     public void savetoStream(OutputStream os) throws IOException {
         if(os == null) throw new IOException("cannot write in null stream");
         if(this.personsList == null || this.personsList.isEmpty()) {
@@ -416,7 +439,6 @@ public class ASAPCertificateAndPersonStoreImpl implements ASAPCertificateAndPers
         }
     }
 
-    @Override
     public void restoreFromStream(InputStream is) throws IOException {
         if(is == null) throw new IOException("cannot read from null stream");
 

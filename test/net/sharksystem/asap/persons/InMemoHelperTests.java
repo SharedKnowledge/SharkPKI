@@ -129,7 +129,7 @@ public class InMemoHelperTests {
 
         // setup input
         InputStream is = new ByteArrayInputStream(persistentStorage);
-        ASAPCertificateAndPersonStore freshASAPCertificateStore = new SampleASAPPKIStorage(ALICE_ID, ALICE_NAME);
+        ASAPCertificateAndPersonStoreImpl freshASAPCertificateStore = new SampleASAPPKIStorage(ALICE_ID, ALICE_NAME);
 
         // load
         freshASAPCertificateStore.restoreFromStream(is);

@@ -144,7 +144,6 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * ways
      * @throws ASAPSecurityException
      * @see CredentialMessage
-     * @see #createCredentialMessage()
      */
     PublicKey getPublicKey() throws ASAPSecurityException;
 
