@@ -12,11 +12,6 @@ public class SharkPKIComponentFactory implements SharkComponentFactory {
     private ASAPKeyStore asapKeyStore;
     private SharkPKIComponentImpl instance = null;
 
-    public SharkPKIComponentFactory(ASAPKeyStore asapKeyStore)
-    {
-        this.asapKeyStore = asapKeyStore;
-    }
-
     @Override
     public SharkComponent getComponent(SharkPeer sharkPeer) throws SharkException {
         if(this.instance == null) {

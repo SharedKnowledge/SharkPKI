@@ -25,9 +25,8 @@ public class TestHelper {
     }
 
     public static SharkPKIComponent setupComponent(CharSequence peerID, SharkPeer sharkPeer) throws SharkException {
-        ASAPKeyStore asapKeyStore = new InMemoASAPKeyStore(peerID);
         // create a component factory
-        SharkPKIComponentFactory certificateComponentFactory = new SharkPKIComponentFactory(asapKeyStore);
+        SharkPKIComponentFactory certificateComponentFactory = new SharkPKIComponentFactory();
 
         // register this component with shark peer - note: we use interface SharkPeer
         sharkPeer.addComponent(certificateComponentFactory, SharkPKIComponent.class);

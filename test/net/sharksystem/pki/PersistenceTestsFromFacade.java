@@ -26,7 +26,8 @@ public class PersistenceTestsFromFacade {
 
         // ALICE
         SharkPeer aliceSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(ALICE_NAME, folderName);
-        SharkPKIComponentImpl alicePKIBackdoor = new SharkPKIComponentImpl(aliceSharkPeer);
+        SharkPKIComponentImpl alicePKIBackdoor = (SharkPKIComponentImpl)
+                new SharkPKIComponentFactory().getComponent(aliceSharkPeer);
         SharkPKIComponent alicePKI = alicePKIBackdoor;
 
         // BOB

@@ -42,7 +42,7 @@ public class SharkPKITesthelper extends SharkPeerTestHelper {
         // this store has no memory
         ASAPKeyStore asapKeyStore = new InMemoASAPKeyStore(asapPeerID);
         // create a component factory
-        SharkPKIComponentFactory pkiComponentFactory = new SharkPKIComponentFactory(asapKeyStore);
+        SharkPKIComponentFactory pkiComponentFactory = new SharkPKIComponentFactory();
 
         // register this component with shark peer - note: we use interface SharkPeer
         sharkPeer.addComponent(pkiComponentFactory, SharkPKIComponent.class);
