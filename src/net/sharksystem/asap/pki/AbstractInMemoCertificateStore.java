@@ -45,6 +45,7 @@ public abstract class AbstractInMemoCertificateStore implements ASAPCertificateS
     public void dropInMemoCache() {
         Log.writeLog(this, this.ownerName.toString(), "drop in memo cache");
         this.certificatesBySubjectIDMap = null;
+        this.userIdentityAssurance = null;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -274,11 +275,13 @@ public abstract class AbstractInMemoCertificateStore implements ASAPCertificateS
         return this.getIdentityAssurance(userID, asapPKI).path;
     }
 
-    public int getIdentityAssurances(CharSequence userID, ASAPCertificateAndPersonStore ASAPCertificateStore) throws ASAPSecurityException {
-        return this.getIdentityAssurance(userID, ASAPCertificateStore).getValue();
+    public int getIdentityAssurances(CharSequence userID, ASAPCertificateAndPersonStore asapPKI)
+            throws ASAPSecurityException {
+        return this.getIdentityAssurance(userID, asapPKI).getValue();
     }
 
-    private void setupIdentityAssurance(CharSequence userID, ASAPCertificateAndPersonStore ASAPCertificateStore) throws ASAPSecurityException {
+    private void setupIdentityAssurance(CharSequence userID, ASAPCertificateAndPersonStore asapPKI)
+            throws ASAPSecurityException {
         Collection<ASAPCertificate> certificates = this.getCertificatesBySubjectID(userID);
         if (certificates == null || certificates.isEmpty()) {
             // we don't know anything about this person
@@ -293,7 +296,7 @@ public abstract class AbstractInMemoCertificateStore implements ASAPCertificateS
                     // verify certificate
                     found = true;
                     try {
-                        if(certificate.verify(ASAPCertificateStore.getPublicKey())) {
+                        if(certificate.verify(asapPKI.getPublicKey())) {
                             ArrayList<CharSequence> directPath = new ArrayList<>();
                             directPath.add(this.ownerID);
                             this.userIdentityAssurance.put(userID,
@@ -327,7 +330,7 @@ public abstract class AbstractInMemoCertificateStore implements ASAPCertificateS
 
             // find a path and calculate best failure rate of it
             IdentityAssurance tmpIa = this.calculateIdentityProbability(new ArrayList<>(), // init chain
-                    userID, certificate, -1, ASAPCertificateStore);
+                    userID, certificate, -1, asapPKI);
 
             if(bestIa == null) bestIa = tmpIa; // first round
             else {

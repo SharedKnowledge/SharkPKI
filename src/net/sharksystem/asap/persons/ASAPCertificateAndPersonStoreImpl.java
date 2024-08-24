@@ -22,7 +22,7 @@ import java.util.*;
  * certificates.
  */
 public class ASAPCertificateAndPersonStoreImpl implements ASAPCertificateAndPersonStore {
-    private final ASAPCertificateStorage certificateStorage;
+    protected final ASAPCertificateStorage certificateStorage;
     private final ASAPKeyStore asapKeyStorage;
 
     // keep other persons - contact list in other words

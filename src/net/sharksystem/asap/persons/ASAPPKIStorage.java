@@ -26,9 +26,7 @@ public class ASAPPKIStorage extends ASAPCertificateAndPersonStoreImpl implements
     private CharSequence mementoKey;
 
     public ASAPPKIStorage(ASAPCertificateStorage certificateStorage,
-                          ASAPKeyStore asapKeyStorage)
-
-            throws ASAPSecurityException {
+          ASAPKeyStore asapKeyStorage) throws ASAPSecurityException {
 
         super(certificateStorage, asapKeyStorage);
         this.asapKeyStorage = asapKeyStorage;

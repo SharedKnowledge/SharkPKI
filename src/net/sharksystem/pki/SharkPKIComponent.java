@@ -69,7 +69,6 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * ASAPPeer and send a message. This component offers a method to produce a credential message.
      * <br/>
      * Default behaviour is off.
-     * @see #createCredentialMessage()
      */
     String BEHAVIOUR_SEND_CREDENTIAL_FIRST_ENCOUNTER = "certComponent_sendCredentialFirstEncounter";
     void setBehaviour(String behaviourSendCredentialFirstEncounter, boolean on)
@@ -266,12 +265,12 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
     /**
      * A credential message contains public key, peer id an name of this local peer. This message can be sent to
      * another peer to ask for certification of those information. Use defined format and uri for that message.
-     * @return message that can be sent
+     * @return message that can be sent.
      * @throws ASAPSecurityException
      * @see ASAPCertificateAndPersonStore#CREDENTIAL_APP_NAME
      * @see #CREDENTIAL_URI
      */
-    CredentialMessage createCredentialMessage() throws ASAPSecurityException;
+//    CredentialMessage createCredentialMessage() throws ASAPSecurityException;
 
     /**
      * Create a credential message including extra data. Those data are opaque to this
@@ -280,7 +279,7 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      * @return
      * @throws ASAPSecurityException
      */
-    CredentialMessage createCredentialMessage(byte[] extraData) throws ASAPSecurityException;
+//    CredentialMessage createCredentialMessage(byte[] extraData) throws ASAPSecurityException;
 
     /**
      * Send a credential message to all peers which are actually in the neighbourhood. This method

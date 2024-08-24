@@ -8,7 +8,6 @@ import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.persons.PersonValues;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.crypto.ASAPCryptoAlgorithms;
-import net.sharksystem.fs.FSUtils;
 import net.sharksystem.testhelper.SharkPKITesthelper;
 import net.sharksystem.utils.Log;
 import org.junit.Assert;
@@ -387,29 +386,32 @@ public class SharkComponentUsageTests {
         System.out.println("folderName == " + folderName);
 
         SharkTestPeerFS aliceSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(ALICE_NAME, folderName);
-        SharkPKIComponent alicePKI = SharkPKITesthelper.setupPKIComponentPeerNotStarted(aliceSharkPeer, ALICE_ID);
+        SharkPKIComponentImpl alicePKI =
+                (SharkPKIComponentImpl) SharkPKITesthelper.setupPKIComponentPeerNotStarted(aliceSharkPeer, ALICE_ID);
         // lets starts peer and its components before doing anything else
         aliceSharkPeer.start(ALICE_ID);
 
         SharkTestPeerFS bobSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(BOB_NAME, folderName);
-        SharkPKIComponent bobPKI = SharkPKITesthelper.setupPKIComponentPeerNotStarted(bobSharkPeer, BOB_ID);
+        SharkPKIComponentImpl bobPKI =
+                (SharkPKIComponentImpl) SharkPKITesthelper.setupPKIComponentPeerNotStarted(bobSharkPeer, BOB_ID);
         // lets starts peer and its components before doing anything else
         bobSharkPeer.start(BOB_ID);
 
         SharkTestPeerFS claraSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(CLARA_NAME, folderName);
-        SharkPKIComponent claraPKI = SharkPKITesthelper.setupPKIComponentPeerNotStarted(claraSharkPeer, CLARA_ID);
+        SharkPKIComponentImpl claraPKI =
+                (SharkPKIComponentImpl) SharkPKITesthelper.setupPKIComponentPeerNotStarted(claraSharkPeer, CLARA_ID);
         // lets starts peer and its components before doing anything else
         claraSharkPeer.start(CLARA_ID);
 
-        CredentialMessage aliceCredentialMessage = alicePKI.createCredentialMessage(LOST_BYTES);
-        CredentialMessage bobCredentialMessage = bobPKI.createCredentialMessage();
+        CredentialMessage aliceCredentialMessage = alicePKI.getASAPPKIStorage().createCredentialMessage(LOST_BYTES);
+        CredentialMessage bobCredentialMessage = bobPKI.getASAPPKIStorage().createCredentialMessage();
 
         // Alice and Bob exchange and accept credential messages and issue certificates
         ASAPCertificate aliceIssuedBobCert = alicePKI.acceptAndSignCredential(bobCredentialMessage);
         ASAPCertificate bobIssuedAliceCert = bobPKI.acceptAndSignCredential(aliceCredentialMessage);
 
         // Bob and Clara meet, accept credential messages and issue certificates
-        CredentialMessage claraCredentialMessage = claraPKI.createCredentialMessage();
+        CredentialMessage claraCredentialMessage = claraPKI.getASAPPKIStorage().createCredentialMessage();
         ASAPCertificate claraIssuedBobCert = claraPKI.acceptAndSignCredential(bobCredentialMessage);
         ASAPCertificate bobIssuedClaraCert = bobPKI.acceptAndSignCredential(claraCredentialMessage);
 
