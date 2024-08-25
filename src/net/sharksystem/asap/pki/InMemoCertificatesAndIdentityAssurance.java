@@ -1,8 +1,10 @@
 package net.sharksystem.asap.pki;
 
+import net.sharksystem.SharkException;
 import net.sharksystem.asap.ASAPSecurityException;
+import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.persons.OtherPerson;
-import net.sharksystem.asap.persons.ASAPCertificateAndPersonStore;
+import net.sharksystem.asap.persons.PersonInformationStore;
 import net.sharksystem.utils.Log;
 
 import java.io.*;
@@ -52,7 +54,7 @@ public abstract class InMemoCertificatesAndIdentityAssurance implements ASAPCert
     //                                       getter on certificate map                                         //
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private Map<CharSequence, Set<ASAPCertificate>> getCertsMapRestoreIfRequired() {
+    private Map<CharSequence, Set<ASAPCertificate>> getCertificatesMap() {
         if(this.certificatesBySubjectIDMap == null) {
             this.certificatesBySubjectIDMap = new HashMap<>();
             this.readCertificatesFromStorage(this.certificatesBySubjectIDMap);
@@ -61,14 +63,22 @@ public abstract class InMemoCertificatesAndIdentityAssurance implements ASAPCert
         return this.certificatesBySubjectIDMap;
     }
 
-    public PublicKey getPublicKey(CharSequence peerID) {
-        return null;
+    public PublicKey getPublicKey(CharSequence peerID) throws SharkException {
+        Collection<ASAPCertificate> certs = this.getCertificatesBySubjectID(peerID);
+        if(certs == null || certs.isEmpty())
+            throw new SharkException("no certificate issued for this peer found: " + peerID);
+
+        if(certs.size() > 1)
+            Log.writeLog(this,
+                    "more than one certificate issued for a peer, took randomly first one: " + peerID);
+
+        return certs.iterator().next().getPublicKey();
     }
 
     @Override
     public Collection<ASAPCertificate> getCertificatesBySubjectID(CharSequence subjectID) {
-        this.getCertsMapRestoreIfRequired();
-        Set<ASAPCertificate> asapCertificates = this.getCertsMapRestoreIfRequired().get(subjectID);
+        this.getCertificatesMap();
+        Set<ASAPCertificate> asapCertificates = this.getCertificatesMap().get(subjectID);
         if(asapCertificates == null) {
             asapCertificates = new HashSet<>();
         }
@@ -82,9 +92,9 @@ public abstract class InMemoCertificatesAndIdentityAssurance implements ASAPCert
 
     @Override
     public Collection<ASAPCertificate> getCertificatesByIssuerID(CharSequence issuerID) {
-        this.getCertsMapRestoreIfRequired();
+        this.getCertificatesMap();
         Set<ASAPCertificate> certSetIssuer = new HashSet<>();
-        for(Set<ASAPCertificate> certSet : this.getCertsMapRestoreIfRequired().values()) {
+        for(Set<ASAPCertificate> certSet : this.getCertificatesMap().values()) {
             for(ASAPCertificate cert : certSet) {
                 if(cert.getIssuerID().toString().equalsIgnoreCase(issuerID.toString())) {
                     certSetIssuer.add(cert);
@@ -96,9 +106,9 @@ public abstract class InMemoCertificatesAndIdentityAssurance implements ASAPCert
     }
 
     public Set<ASAPCertificate> getAllCertificates() {
-        this.getCertsMapRestoreIfRequired();
+        this.getCertificatesMap();
         Set<ASAPCertificate> allCerts = new HashSet<>();
-        for(Set<ASAPCertificate> certsFromSubject: this.getCertsMapRestoreIfRequired().values()) {
+        for(Set<ASAPCertificate> certsFromSubject: this.getCertificatesMap().values()) {
             for(ASAPCertificate cert : certsFromSubject) {
                 allCerts.add(cert);
             }
@@ -134,10 +144,10 @@ public abstract class InMemoCertificatesAndIdentityAssurance implements ASAPCert
 
     public Collection<ASAPCertificate> getNewReceivedCertificates() {
         // sync with external changes
-        this.getCertsMapRestoreIfRequired();
+        this.getCertificatesMap();
 
         Collection<ASAPCertificate> newCerts =
-                this.readReceivedCertificatesFromExternalMemory(this.getCertsMapRestoreIfRequired());
+                this.readReceivedCertificatesFromExternalMemory(this.getCertificatesMap());
         if(!newCerts.isEmpty()) {
             // reset identity assurance - is most likely changed
             this.userIdentityAssurance = null;
@@ -255,19 +265,20 @@ public abstract class InMemoCertificatesAndIdentityAssurance implements ASAPCert
         return false;
     }
 
-    private IdentityAssurance getIdentityAssurance(CharSequence userID, ASAPCertificateAndPersonStore asapPKI)
+    private IdentityAssurance getIdentityAssurance(
+        CharSequence userID, ASAPKeyStore asapKeyStore, PersonInformationStore personInformationStore)
             throws ASAPSecurityException {
         // general setup?
         if(this.userIdentityAssurance == null) {
             this.userIdentityAssurance = new HashMap<>();
-            this.setupIdentityAssurance(userID, asapPKI);
+            this.setupIdentityAssurance(userID, asapKeyStore, personInformationStore);
         }
 
         IdentityAssurance identityAssurance = this.userIdentityAssurance.get(userID);
         // setup individual user?
         if(identityAssurance == null) {
             // setup
-            this.setupIdentityAssurance(userID, asapPKI);
+            this.setupIdentityAssurance(userID, asapKeyStore, personInformationStore);
             // try again
             identityAssurance = this.userIdentityAssurance.get(userID);
         }
@@ -276,19 +287,23 @@ public abstract class InMemoCertificatesAndIdentityAssurance implements ASAPCert
     }
 
     @Override
-    public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, ASAPCertificateAndPersonStore asapPKI)
+    public List<CharSequence> getIdentityAssurancesCertificationPath(
+            CharSequence userID, ASAPKeyStore asapKeyStore, PersonInformationStore personInformationStore)
             throws ASAPSecurityException {
 
-        return this.getIdentityAssurance(userID, asapPKI).path;
+        return this.getIdentityAssurance(userID, asapKeyStore, personInformationStore).path;
     }
 
-    public int getIdentityAssurances(CharSequence userID, ASAPCertificateAndPersonStore asapPKI)
+    public int getIdentityAssurances(
+            CharSequence userID, ASAPKeyStore asapPKI, PersonInformationStore personInformationStore)
             throws ASAPSecurityException {
-        return this.getIdentityAssurance(userID, asapPKI).getValue();
+        return this.getIdentityAssurance(userID, asapPKI, personInformationStore).getValue();
     }
 
-    private void setupIdentityAssurance(CharSequence userID, ASAPCertificateAndPersonStore asapPKI)
+    private void setupIdentityAssurance(
+        CharSequence userID, ASAPKeyStore asapKeyStore, PersonInformationStore personInformationStore)
             throws ASAPSecurityException {
+
         Collection<ASAPCertificate> certificates = this.getCertificatesBySubjectID(userID);
         if (certificates == null || certificates.isEmpty()) {
             // we don't know anything about this person
@@ -303,7 +318,7 @@ public abstract class InMemoCertificatesAndIdentityAssurance implements ASAPCert
                     // verify certificate
                     found = true;
                     try {
-                        if(certificate.verify(asapPKI.getPublicKey())) {
+                        if(certificate.verify(asapKeyStore.getPublicKey())) {
                             ArrayList<CharSequence> directPath = new ArrayList<>();
                             directPath.add(this.ownerID);
                             this.userIdentityAssurance.put(userID,
@@ -336,8 +351,8 @@ public abstract class InMemoCertificatesAndIdentityAssurance implements ASAPCert
             // we have certificates but nothing issued by owner - we look for a certificated way from owner to userID
 
             // find a path and calculate best failure rate of it
-            IdentityAssurance tmpIa = this.calculateIdentityProbability(new ArrayList<>(), // init chain
-                    userID, certificate, -1, asapPKI);
+            IdentityAssurance tmpIa = this.calculateIdentityAssurance(new ArrayList<>(), // init chain
+                    userID, certificate, -1, asapKeyStore, personInformationStore);
 
             if(bestIa == null) bestIa = tmpIa; // first round
             else {
@@ -361,10 +376,10 @@ public abstract class InMemoCertificatesAndIdentityAssurance implements ASAPCert
      * <p>
      * We go backward in chain to - hopefully reach you
      */
-    private IdentityAssurance calculateIdentityProbability(
+    private IdentityAssurance calculateIdentityAssurance(
             List<CharSequence> idPath, CharSequence currentPersonID,
             ASAPCertificate currentCertificate, float accumulatedIdentityProbability,
-            ASAPCertificateAndPersonStore ASAPCertificateStore)
+            ASAPKeyStore keyStore, PersonInformationStore personInformationStore)
     {
         // are we in a circle?
         if (idPath.contains(currentPersonID)) return this.worstIdentityAssurance; // escape circle
@@ -373,11 +388,11 @@ public abstract class InMemoCertificatesAndIdentityAssurance implements ASAPCert
         idPath.add(currentPersonID);
 
         // if we have a certificate that is signed by app owner - we are done here.
-        if (currentCertificate.getIssuerID().toString().equalsIgnoreCase(this.ownerID.toString())) {
+        if (currentCertificate.getIssuerID().toString().equalsIgnoreCase(this.getOwnerID().toString())) {
             // we should be able to verify currentCertificate with owners public key
             PublicKey publicKey = null;
             try {
-                publicKey = ASAPCertificateStore.getPublicKey();
+                publicKey = keyStore.getPublicKey();
                 if(!this.verify(currentCertificate, publicKey)) {
                     return this.worstIdentityAssurance;
                 }
@@ -416,12 +431,12 @@ public abstract class InMemoCertificatesAndIdentityAssurance implements ASAPCert
             copyIDPath.addAll(idPath);
 
             // convert failure rate number to failure probability something between 0 and 1.
-            float failureProbability = ((float) ASAPCertificateStore.getSigningFailureRate(proceedingPersonID)) / 10;
+            float failureProbability = ((float) personInformationStore.getSigningFailureRate(proceedingPersonID)) / 10;
 
-            // OK. We have information about this person. Calculate assuranceLevel
+            // OK. We have information about this personInformationStore. Calculate assuranceLevel
             /*
             Only the owner is expected to make no failure when signing certificates. (That's an illusion but
-            we take it.) Any other person makes failure and associates public key with the wrong person.
+            we take it.) Any other personInformationStore makes failure and associates public key with the wrong personInformationStore.
 
             The probability of doing so is failureProbability.
 
@@ -451,11 +466,11 @@ public abstract class InMemoCertificatesAndIdentityAssurance implements ASAPCert
                 accumulatedIdentityProbability *= (1 - failureProbability);
             }
 
-            IdentityAssurance tmpIa = this.calculateIdentityProbability(copyIDPath,
+            IdentityAssurance tmpIa = this.calculateIdentityAssurance(copyIDPath,
                     proceedingCertificate.getSubjectID(),
                     proceedingCertificate,
                     accumulatedIdentityProbability,
-                    ASAPCertificateStore);
+                    keyStore, personInformationStore);
 
             if(bestIa == null) bestIa = tmpIa;
             else {

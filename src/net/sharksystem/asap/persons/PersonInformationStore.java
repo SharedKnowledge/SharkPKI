@@ -6,8 +6,6 @@ import net.sharksystem.fs.ExtraData;
 import net.sharksystem.pki.CredentialMessage;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.security.*;
 import java.util.Collection;
 import java.util.List;
@@ -32,7 +30,7 @@ import java.util.Set;
  * One final thing: There is no addPerson() or addPeer method in this component. There is only one way to add
  * a peer (person) to th list: By creating a certificate or by receiving an existing certificate.
  */
-public interface ASAPCertificateAndPersonStore {
+public interface PersonInformationStore {
     String CREDENTIAL_APP_NAME = "SharkCredentials";
     CharSequence CREDENTIAL_URI = "asapShark://credential";
 
@@ -53,7 +51,7 @@ public interface ASAPCertificateAndPersonStore {
      * information to anybody else. Even existence of this method could be seen as a security risc. It is your
      * app. It shall be safe. Persistent storage of key is the keystore which is platform specific.
      */
-    PrivateKey getPrivateKey() throws ASAPSecurityException;
+//    PrivateKey getPrivateKey() throws ASAPSecurityException;
 
     /**
      * @return Public Key. There is no need to exchange this key in order to produce a certificate. There are better
@@ -62,12 +60,12 @@ public interface ASAPCertificateAndPersonStore {
      * @see CredentialMessage
      * @see #createCredentialMessage()
      */
-    PublicKey getPublicKey() throws ASAPSecurityException;
+//    PublicKey getPublicKey() throws ASAPSecurityException;
 
     /**
      * @return time when key are created
      */
-    long getKeysCreationTime() throws ASAPSecurityException;
+//    long getKeysCreationTime() throws ASAPSecurityException;
 
     /**
      * Use this message if your application received a public key and has ensured senders' identity. This
@@ -85,8 +83,8 @@ public interface ASAPCertificateAndPersonStore {
      * @throws ASAPSecurityException
      * @throws IOException
      */
-    ASAPCertificate addAndSignPerson(CharSequence userID, CharSequence userName, PublicKey publicKey, long validSince)
-            throws ASAPSecurityException, IOException;
+//    ASAPCertificate addAndSignPerson(CharSequence userID, CharSequence userName, PublicKey publicKey, long validSince)
+//            throws ASAPSecurityException, IOException;
 
     /**
      * Set failure rate estimation of this local of the other peer.
@@ -168,7 +166,7 @@ public interface ASAPCertificateAndPersonStore {
      * Add a certificate to this storage. That method is used to store an already existing certificate. There are
      * rary circumstances in which an application needs this method. Certificates are exchange automatically by this
      * component. A new certificate can be produced by another method
-     * @see #addAndSignPerson(CharSequence, CharSequence, PublicKey, long)
+     * //@see #addAndSignPerson(CharSequence, CharSequence, PublicKey, long)
      * @param asapCertificate
      * @throws IOException
      * @throws ASAPSecurityException

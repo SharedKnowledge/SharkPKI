@@ -75,7 +75,8 @@ public class PKIHelper {
         sb.append(personValues.getName());
         sb.append(" | ");
         sb.append("iA: ");
-        sb.append(personValues.getIdentityAssurance());
+        //sb.append(personValues.getIdentityAssurance());
+        sb.append(" TODO ");
         sb.append(" | ");
         sb.append("sf: ");
         sb.append(personValues.getSigningFailureRate());

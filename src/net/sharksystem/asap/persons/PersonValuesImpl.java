@@ -14,10 +14,10 @@ public class PersonValuesImpl implements PersonValues {
     private int signingFailureRate;
 
     private final ASAPCertificateStorage certificateStorage;
-    private final ASAPCertificateAndPersonStoreImpl personsStorage;
+    private final PersonStoreImplAndCertsWrapper personsStorage;
 
     public PersonValuesImpl(CharSequence id, CharSequence name, ASAPCertificateStorage certificateStorage,
-                            ASAPCertificateAndPersonStoreImpl personsStorage) {
+                            PersonStoreImplAndCertsWrapper personsStorage) {
 
         this.id = id;
         this.name = name;
@@ -32,7 +32,7 @@ public class PersonValuesImpl implements PersonValues {
      * @param certificateStorage
      * @param personsStorage
      */
-    PersonValuesImpl(DataInputStream dis, ASAPCertificateStorage certificateStorage, ASAPCertificateAndPersonStoreImpl personsStorage)
+    PersonValuesImpl(DataInputStream dis, ASAPCertificateStorage certificateStorage, PersonStoreImplAndCertsWrapper personsStorage)
             throws IOException {
 
         this.certificateStorage = certificateStorage;
@@ -62,16 +62,6 @@ public class PersonValuesImpl implements PersonValues {
     public void setName(CharSequence name) {
         this.name = name;
         this.personsStorage.save();
-    }
-
-    @Override
-    public int getIdentityAssurance() {
-        try {
-            return this.certificateStorage.getIdentityAssurances(this.getUserID(), this.personsStorage);
-        } catch (ASAPSecurityException e) {
-            Log.writeLogErr(this, "cannot calculate identity assurance: " + e.getLocalizedMessage());
-            return OtherPerson.LOWEST_IDENTITY_ASSURANCE_LEVEL;
-        }
     }
 
     @Override

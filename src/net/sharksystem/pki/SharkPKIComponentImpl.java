@@ -4,13 +4,11 @@ import net.sharksystem.*;
 import net.sharksystem.asap.*;
 import net.sharksystem.asap.crypto.*;
 import net.sharksystem.asap.persons.*;
-import net.sharksystem.asap.pki.ASAPStorageBasedCertificates;
-import net.sharksystem.asap.pki.ASAPCertificate;
-import net.sharksystem.asap.pki.ASAPCertificateStorage;
-import net.sharksystem.asap.pki.CredentialMessageInMemo;
+import net.sharksystem.asap.persons.PersonInformationStore;
+import net.sharksystem.asap.pki.*;
+import net.sharksystem.fs.ExtraData;
 import net.sharksystem.utils.Log;
 
-import javax.crypto.SecretKey;
 import java.io.*;
 import java.security.*;
 import java.util.*;
@@ -28,7 +26,7 @@ import java.util.*;
  *
  */
 class SharkPKIComponentImpl extends AbstractSharkComponent
-        implements SharkComponent, ASAPKeyStore, SharkPKIComponent,
+        implements SharkComponent, SharkPKIComponent,
         ASAPMessageReceivedListener, ASAPEnvironmentChangesListener {
 
     private final SharkPeer owner;
@@ -64,8 +62,8 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     }
 
     @Override
-    public ASAPKeyStore getASAPKeyStore() {
-        return this.asapPKIStorage;
+    public net.sharksystem.asap.crypto.ASAPKeyStore getASAPKeyStore() {
+        return this.sharkPKIFacade.getASAPKeyStore();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +77,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
 
         // add listener - even if null - it is handled as reset
         this.asapPeer.addASAPMessageReceivedListener(
-                ASAPCertificateAndPersonStore.CREDENTIAL_APP_NAME, this);
+                PersonInformationStore.CREDENTIAL_APP_NAME, this);
     }
 
     @Override
@@ -155,9 +153,9 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
             "encountered peer that has not yet issued a certificate. Send credential message to: " + peerID);
                 try {
                     Log.writeLog(this, "create credential message");
-                    CredentialMessage credentialMessage = this.asapPKIStorage.createCredentialMessage();
+                    CredentialMessage credentialMessage = this.sharkPKIFacade.createCredentialMessage();
                     Log.writeLog(this, "credential message == " + credentialMessage);
-                    this.asapPeer.sendTransientASAPMessage(ASAPCertificateAndPersonStore.CREDENTIAL_APP_NAME,
+                    this.asapPeer.sendTransientASAPMessage(PersonInformationStore.CREDENTIAL_APP_NAME,
                             SharkPKIComponent.CREDENTIAL_URI,
                             credentialMessage.getMessageAsBytes());
                     Log.writeLog(this, "credential message sent");
@@ -177,7 +175,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static final String SHARK_PKI_DATA_KEY = "sharkPKIData";
-    private ASAPPKIStorage asapPKIStorage = null;
+    private SharkPKIFacade sharkPKIFacade = null;
     private ASAPStorageBasedCertificates asapCertificateStorage;
     private ASAPPeer asapPeer = null;
     private InMemoASAPKeyStore asapKeyStore;
@@ -186,8 +184,8 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
      * For debugging - get access to sub-component
      * @return
      */
-    ASAPPKIStorage getASAPPKIStorage() {
-        return this.asapPKIStorage;
+    SharkPKIFacade getInnerSharkPKIFacade() {
+        return this.sharkPKIFacade;
     }
 
     SharkPKIComponentImpl(SharkPeer owner) throws SharkException, IOException {
@@ -216,15 +214,16 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
                 new ASAPStorageBasedCertificates(asapStorage, asapPeer.getPeerID(), peerName);
 
             // bind components together and add person values support
-            this.asapPKIStorage = new ASAPPKIStorage(this.asapCertificateStorage, this.asapKeyStore);
+            this.sharkPKIFacade = new SharkPKIFacadeImpl(this.asapCertificateStorage, this.asapKeyStore);
 
-            // Save memento with shark peer (not asap peer)
-            this.asapPKIStorage.setMementoTarget(this.owner.getSharkPeerExtraData());
+            // Set memento with shark peer (not asap peer) - should trigger a restore from memento
+            this.sharkPKIFacade.setMementoTarget(this.owner.getSharkPeerExtraData());
 
+            /*
             try {
                 try {
                     byte[] memento = this.asapPeer.getExtra(SHARK_PKI_DATA_KEY);
-                    this.asapPKIStorage.restoreMemento(memento);
+                    this.sharkPKIFacade.restoreMemento(memento);
                 }
                 catch(SharkException se) {
                     Log.writeLog(this, "no memento present - component was not used before");
@@ -233,6 +232,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
             } catch (IOException e) {
                 throw new SharkException(e);
             }
+             */
 
             // get notified about new peer in the neighbourhood
             this.asapPeer.addASAPEnvironmentChangesListener(this);
@@ -245,7 +245,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     }
 
     private void checkStatus() throws SharkStatusException {
-        if(this.asapPKIStorage == null) {
+        if(this.sharkPKIFacade == null) {
             throw new SharkStatusException("ASAP peer not started component not yet initialized");
         }
 
@@ -261,23 +261,25 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     //                                               delegate                                                  //
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /*
     @Override
     public PublicKey getPublicKey(CharSequence charSequence) throws ASAPSecurityException {
         this.checkStatus();
-        return this.asapPKIStorage.getPublicKey(charSequence);
+        return this.sharkPKIFacade.getPublicKey(charSequence);
     }
 
     @Override
     public boolean isOwner(CharSequence charSequence) {
         this.checkStatus();
-        return this.asapPKIStorage.isOwner(charSequence);
+        return this.sharkPKIFacade.isOwner(charSequence);
     }
 
     @Override
     public CharSequence getOwner() {
         this.checkStatus();
-        return this.asapPKIStorage.getOwner();
+        return this.sharkPKIFacade.getOwner();
     }
+     */
 
     /**
      * Remove credential messages from outbox. It used
@@ -297,7 +299,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
      */
     private void sendCredentialMessage() throws ASAPException, IOException {
         Log.writeLog(this, "create credential message");
-        CredentialMessage credentialMessage = this.asapPKIStorage.createCredentialMessage();
+        CredentialMessage credentialMessage = this.sharkPKIFacade.createCredentialMessage();
         Log.writeLog(this, "credential message == " + credentialMessage);
         this.asapPeer.sendASAPMessage(
                 SharkPKIComponent.CREDENTIAL_APP_NAME,
@@ -309,7 +311,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     @Override
     public void createNewKeyPair() throws ASAPException, IOException {
         this.checkStatus();
-        this.asapPKIStorage.generateKeyPair();
+        this.sharkPKIFacade.generateKeyPair();
 
         if(this.behaviourSendCredentialFirstEncounter) {
             this.removeCredentialMessage();
@@ -327,33 +329,38 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     }
 
     @Override
+    public void setMementoTarget(ExtraData extraData) {
+        this.sharkPKIFacade.setMementoTarget(extraData);
+    }
+
+    @Override
     public CharSequence getOwnerID() {
         this.checkStatus();
-        return this.asapPKIStorage.getOwnerID();
+        return this.sharkPKIFacade.getOwnerID();
     }
 
     @Override
     public CharSequence getOwnerName() {
         this.checkStatus();
-        return this.asapPKIStorage.getOwnerName();
+        return this.sharkPKIFacade.getOwnerName();
     }
 
     @Override
     public PrivateKey getPrivateKey() throws ASAPSecurityException {
         this.checkStatus();
-        return this.asapPKIStorage.getPrivateKey();
+        return this.sharkPKIFacade.getPrivateKey();
     }
 
     @Override
     public PublicKey getPublicKey() throws ASAPSecurityException {
         this.checkStatus();
-        return this.asapPKIStorage.getPublicKey();
+        return this.sharkPKIFacade.getPublicKey();
     }
 
     @Override
     public long getKeysCreationTime() throws ASAPSecurityException {
         this.checkStatus();
-        return this.asapPKIStorage.getKeysCreationTime();
+        return this.sharkPKIFacade.getKeysCreationTime();
     }
 
     @Override
@@ -361,7 +368,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
             throws IOException, ASAPSecurityException {
 
         this.checkStatus();
-        ASAPCertificate asapCertificate = this.asapPKIStorage.addAndSignPerson(credentialMessage.getSubjectID(),
+        ASAPCertificate asapCertificate = this.sharkPKIFacade.addAndSignPerson(credentialMessage.getSubjectID(),
                 credentialMessage.getSubjectName(),
                 credentialMessage.getPublicKey(),
                 credentialMessage.getValidSince());
@@ -390,25 +397,25 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     @Override
     public void setSigningFailureRate(CharSequence personID, int failureRate) throws ASAPSecurityException {
         this.checkStatus();
-        this.asapPKIStorage.setSigningFailureRate(personID, failureRate);
+        this.sharkPKIFacade.setSigningFailureRate(personID, failureRate);
     }
 
     @Override
     public int getSigningFailureRate(CharSequence personID) {
         this.checkStatus();
-        return this.asapPKIStorage.getSigningFailureRate(personID);
+        return this.sharkPKIFacade.getSigningFailureRate(personID);
     }
 
     @Override
     public PersonValues getPersonValuesByPosition(int position) throws ASAPSecurityException {
         this.checkStatus();
-        return this.asapPKIStorage.getPersonValuesByPosition(position);
+        return this.sharkPKIFacade.getPersonValuesByPosition(position);
     }
 
     @Override
     public PersonValues getPersonValuesByID(CharSequence peerID) throws ASAPSecurityException {
         this.checkStatus();
-        return this.asapPKIStorage.getPersonValues(peerID);
+        return this.sharkPKIFacade.getPersonValues(peerID);
     }
 
     public Set<PersonValues> getPersonValuesByName(CharSequence peerName) throws ASAPException {
@@ -428,70 +435,50 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     @Override
     public int getNumberOfPersons() {
         this.checkStatus();
-        return this.asapPKIStorage.getNumberOfPersons();
+        return this.sharkPKIFacade.getNumberOfPersons();
     }
 
     @Override
     public int getIdentityAssurance(CharSequence userID) throws ASAPSecurityException {
         this.checkStatus();
-        return this.asapPKIStorage.getIdentityAssurance(userID);
+        return this.sharkPKIFacade.getIdentityAssurance(userID);
     }
 
     @Override
     public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID) throws ASAPSecurityException {
         this.checkStatus();
-        return this.asapPKIStorage.getIdentityAssurancesCertificationPath(userID);
+        return this.sharkPKIFacade.getIdentityAssurancesCertificationPath(userID);
     }
 
     @Override
     public Collection<ASAPCertificate> getCertificatesBySubject(CharSequence subjectID) throws ASAPSecurityException {
         this.checkStatus();
-        return this.asapPKIStorage.getCertificatesBySubject(subjectID);
+        return this.sharkPKIFacade.getCertificatesBySubject(subjectID);
     }
 
     public Set<ASAPCertificate> getCertificates() {
         this.checkStatus();
-        return this.asapPKIStorage.getAllCertificates();
+        return this.sharkPKIFacade.getAllCertificates();
     }
 
     @Override
     public Collection<ASAPCertificate> getCertificatesByIssuer(CharSequence issuerID) throws ASAPSecurityException {
         this.checkStatus();
-        return this.asapPKIStorage.getCertificatesByIssuer(issuerID);
+        return this.sharkPKIFacade.getCertificatesByIssuer(issuerID);
     }
 
     @Override
     public ASAPCertificate getCertificateByIssuerAndSubject(CharSequence issuerID, CharSequence subjectID) throws ASAPSecurityException {
         this.checkStatus();
-        return this.asapPKIStorage.getCertificateByIssuerAndSubject(issuerID, subjectID);
+        return this.sharkPKIFacade.getCertificateByIssuerAndSubject(issuerID, subjectID);
     }
 
     @Override
     public void addCertificate(ASAPCertificate asapCertificate) throws IOException, ASAPException {
         this.checkStatus();
-        this.asapPKIStorage.addCertificate(asapCertificate);
+        this.sharkPKIFacade.addCertificate(asapCertificate);
         this.saveMemento();
     }
-
-    @Override
-    public boolean verifyCertificate(ASAPCertificate asapCertificate) throws ASAPSecurityException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-        this.checkStatus();
-        return this.asapPKIStorage.verifyCertificate(asapCertificate);
-    }
-
-    /*
-    @Override
-    public CredentialMessage createCredentialMessage() throws ASAPSecurityException {
-        this.checkStatus();
-        return this.asapPKIStorage.createCredentialMessage();
-    }
-
-    @Override
-    public CredentialMessage createCredentialMessage(byte[] extraData) throws ASAPSecurityException {
-        this.checkStatus();
-        return this.asapPKIStorage.createCredentialMessage(extraData);
-    }
-     */
 
     @Override
     public void sendTransientCredentialMessage(CredentialMessage credentialMessage) throws ASAPException, IOException {
@@ -505,7 +492,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     @Override
     public void sendTransientCredentialMessage() throws ASAPException, IOException {
         this.checkStatus();
-        CredentialMessage credentialMessage = this.asapPKIStorage.createCredentialMessage();
+        CredentialMessage credentialMessage = this.sharkPKIFacade.createCredentialMessage();
         this.asapPeer.sendTransientASAPMessage(
                 SharkPKIComponent.CREDENTIAL_APP_NAME,
                 SharkPKIComponent.CREDENTIAL_URI,
@@ -514,7 +501,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
 
     public void sendTransientCredentialMessage(CharSequence peerID) throws ASAPException, IOException {
         this.checkStatus();
-        CredentialMessage credentialMessage = this.asapPKIStorage.createCredentialMessage();
+        CredentialMessage credentialMessage = this.sharkPKIFacade.createCredentialMessage();
         this.asapPeer.sendTransientASAPMessage(
                 peerID,
                 SharkPKIComponent.CREDENTIAL_APP_NAME,
@@ -523,42 +510,44 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     }
 
     public void saveMemento() {
-        this.asapPKIStorage.save();
+        this.sharkPKIFacade.save();
     }
 
+    /*
     @Override
     public String getAsymmetricEncryptionAlgorithm() {
         this.checkStatus();
-        return this.asapPKIStorage.getAsymmetricEncryptionAlgorithm();
+        return this.sharkPKIFacade.getAsymmetricEncryptionAlgorithm();
     }
 
     @Override
     public String getAsymmetricSigningAlgorithm() {
         this.checkStatus();
-        return this.asapPKIStorage.getAsymmetricSigningAlgorithm();
+        return this.sharkPKIFacade.getAsymmetricSigningAlgorithm();
     }
 
     @Override
     public SecretKey generateSymmetricKey() throws ASAPSecurityException {
         this.checkStatus();
-        return this.asapPKIStorage.generateSymmetricKey();
+        return this.sharkPKIFacade.generateSymmetricKey();
     }
 
     @Override
     public String getSymmetricEncryptionAlgorithm() {
         this.checkStatus();
-        return this.asapPKIStorage.getSymmetricEncryptionAlgorithm();
+        return this.sharkPKIFacade.getSymmetricEncryptionAlgorithm();
     }
 
     @Override
     public String getSymmetricKeyType() {
         this.checkStatus();
-        return this.asapPKIStorage.getSymmetricKeyType();
+        return this.sharkPKIFacade.getSymmetricKeyType();
     }
 
     @Override
     public int getSymmetricKeyLen() {
         this.checkStatus();
-        return this.asapPKIStorage.getSymmetricKeyLen();
+        return this.sharkPKIFacade.getSymmetricKeyLen();
     }
+     */
 }

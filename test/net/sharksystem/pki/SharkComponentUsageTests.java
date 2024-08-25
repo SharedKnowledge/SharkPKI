@@ -167,9 +167,9 @@ public class SharkComponentUsageTests {
 
         ///////////////////////////////////////////// signing: Alice -> Bob
         byte[] message = "From Alice and signed".getBytes();
-        byte[] signedMessage = ASAPCryptoAlgorithms.sign(message, aliceComponent);
+        byte[] signedMessage = ASAPCryptoAlgorithms.sign(message, aliceComponent.getASAPKeyStore());
 
-        boolean verified = ASAPCryptoAlgorithms.verify(message, signedMessage, ALICE_ID, bobComponent);
+        boolean verified = ASAPCryptoAlgorithms.verify(message, signedMessage, ALICE_ID, bobComponent.getASAPKeyStore());
 
         String messageString = "From Alice, encrypted for Bob";
         // produce bytes
@@ -180,7 +180,7 @@ public class SharkComponentUsageTests {
         byte[] encryptedMessagePackageBytes = ASAPCryptoAlgorithms.produceEncryptedMessagePackage(
                 messageBytes, // message that is encrypted
                 ALICE_ID, // recipient id
-                bobComponent // key store sender
+                bobComponent.getASAPKeyStore() // key store sender
         );
 
         // package is sent e.g. with ASAP
@@ -192,7 +192,7 @@ public class SharkComponentUsageTests {
 
         // decrypt message
         byte[] receivedMessageBytes =
-                ASAPCryptoAlgorithms.decryptPackage(receivedEncryptedPackage, aliceComponent);
+                ASAPCryptoAlgorithms.decryptPackage(receivedEncryptedPackage, aliceComponent.getASAPKeyStore());
 
         // must be the same
         Assert.assertArrayEquals(messageBytes, receivedMessageBytes);
@@ -365,15 +365,15 @@ public class SharkComponentUsageTests {
         // lets starts peer and its components before doing anything else
         claraSharkPeer.start(CLARA_ID);
 
-        CredentialMessage aliceCredentialMessage = alicePKI.getASAPPKIStorage().createCredentialMessage(LOST_BYTES);
-        CredentialMessage bobCredentialMessage = bobPKI.getASAPPKIStorage().createCredentialMessage();
+        CredentialMessage aliceCredentialMessage = alicePKI.getInnerSharkPKIFacade().createCredentialMessage();
+        CredentialMessage bobCredentialMessage = bobPKI.getInnerSharkPKIFacade().createCredentialMessage();
 
         // Alice and Bob exchange and accept credential messages and issue certificates
         ASAPCertificate aliceIssuedBobCert = alicePKI.acceptAndSignCredential(bobCredentialMessage);
         ASAPCertificate bobIssuedAliceCert = bobPKI.acceptAndSignCredential(aliceCredentialMessage);
 
         // Bob and Clara meet, accept credential messages and issue certificates
-        CredentialMessage claraCredentialMessage = claraPKI.getASAPPKIStorage().createCredentialMessage();
+        CredentialMessage claraCredentialMessage = claraPKI.getInnerSharkPKIFacade().createCredentialMessage();
         ASAPCertificate claraIssuedBobCert = claraPKI.acceptAndSignCredential(bobCredentialMessage);
         ASAPCertificate bobIssuedClaraCert = bobPKI.acceptAndSignCredential(claraCredentialMessage);
 

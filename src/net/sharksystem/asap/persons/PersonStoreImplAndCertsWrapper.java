@@ -22,17 +22,23 @@ import java.util.*;
  * object. Person information are managed with this class. They can be seen as index of
  * certificates.
  */
-public class ASAPCertificateAndPersonStoreImpl implements ASAPCertificateAndPersonStore {
+public class PersonStoreImplAndCertsWrapper implements PersonInformationStore {
     private static final CharSequence ASAP_PERSONS_STORAGE_MEMENTO_KEY = "asapPersonsInfoMemento";
     protected final ASAPCertificateStorage certificateStorage;
-    private final ASAPKeyStore asapKeyStorage;
+    private final net.sharksystem.asap.crypto.ASAPKeyStore asapKeyStorage;
 
     // keep other persons - contact list in other words
     private List<PersonValuesImpl> personsList = new ArrayList<>();
 
-    public ASAPCertificateAndPersonStoreImpl(
-            ASAPCertificateStorage certificateStorage, ASAPKeyStore asapKeyStorage)
-            throws ASAPSecurityException {
+    private ASAPCertificateStorage getCertsStorage() {
+        return this.certificateStorage;
+    }
+
+    private ASAPKeyStore getASAPKeyStore() {
+        return this.asapKeyStorage;
+    }
+
+    public PersonStoreImplAndCertsWrapper(ASAPCertificateStorage certificateStorage, net.sharksystem.asap.crypto.ASAPKeyStore asapKeyStorage) {
 
         this.certificateStorage = certificateStorage;
         this.asapKeyStorage = asapKeyStorage;
@@ -69,6 +75,10 @@ public class ASAPCertificateAndPersonStoreImpl implements ASAPCertificateAndPers
 
     public PublicKey getPublicKey() throws ASAPSecurityException {
         return this.asapKeyStorage.getPublicKey();
+    }
+
+    public PublicKey getPublicKey(CharSequence peerID) throws SharkException {
+        return this.certificateStorage.getPublicKey(peerID);
     }
 
     public PrivateKey getPrivateKey() throws ASAPSecurityException {
@@ -128,12 +138,13 @@ public class ASAPCertificateAndPersonStoreImpl implements ASAPCertificateAndPers
         return this.personsList.size();
     }
 
-    public int getIdentityAssurance(CharSequence userID) throws ASAPSecurityException {
-        // You are aware of yourself - I hope :)
-        if(this.isMe(userID)) return OtherPerson.HIGHEST_IDENTITY_ASSURANCE_LEVEL;
+    public int getIdentityAssurance(CharSequence peerID) throws ASAPSecurityException {
+        // It is us - we believe in ourselves
+        if(this.isMe(peerID)) return OtherPerson.HIGHEST_IDENTITY_ASSURANCE_LEVEL;
 
         try {
-            return this.getPersonValues(userID).getIdentityAssurance();
+            return this.getCertsStorage().getIdentityAssurances(peerID, this.getASAPKeyStore(), this);
+//            return this.getPersonValues(peerID).getIdentityAssurance();
         }
         catch(ASAPSecurityException e) {
             // not found - complete unreliable
@@ -141,11 +152,11 @@ public class ASAPCertificateAndPersonStoreImpl implements ASAPCertificateAndPers
         }
     }
 
+
     public List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID)
             throws ASAPSecurityException {
 
-        return this.certificateStorage.
-                getIdentityAssurancesCertificationPath(userID, this);
+        return this.certificateStorage.getIdentityAssurancesCertificationPath(userID, this.getASAPKeyStore(), this);
     }
 
     public CharSequence getOwnerID() {
@@ -173,7 +184,7 @@ public class ASAPCertificateAndPersonStoreImpl implements ASAPCertificateAndPers
         return sb.toString();
     }
 
-    @Override
+    //@Override
     public ASAPCertificate addAndSignPerson(
             CharSequence userID, CharSequence userName, PublicKey publicKey, long validSince)
             throws ASAPSecurityException, IOException {

@@ -17,8 +17,6 @@ public interface PersonValues {
 
     void setName(CharSequence name);
 
-    int getIdentityAssurance();
-
     int getSigningFailureRate();
 
     void setSigningFailureRate(int failureRate);

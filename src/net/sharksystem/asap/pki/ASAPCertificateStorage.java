@@ -1,9 +1,12 @@
 package net.sharksystem.asap.pki;
 
+import net.sharksystem.SharkException;
 import net.sharksystem.asap.ASAPSecurityException;
-import net.sharksystem.asap.persons.ASAPCertificateAndPersonStore;
+import net.sharksystem.asap.crypto.ASAPKeyStore;
+import net.sharksystem.asap.persons.PersonInformationStore;
 
 import java.io.IOException;
+import java.security.PublicKey;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -86,10 +89,20 @@ public interface ASAPCertificateStorage {
      */
     void dropInMemoCache();
 
-    int getIdentityAssurances(CharSequence userID, ASAPCertificateAndPersonStore ASAPCertificateStore) throws ASAPSecurityException;
+    int getIdentityAssurances(CharSequence userID, ASAPKeyStore keyStore, PersonInformationStore personInformationStore)
+            throws ASAPSecurityException;
 
-    List<CharSequence> getIdentityAssurancesCertificationPath(CharSequence userID, ASAPCertificateAndPersonStore ASAPCertificateStore)
+    List<CharSequence> getIdentityAssurancesCertificationPath(
+            CharSequence userID, ASAPKeyStore keyStore, PersonInformationStore personInformationStore)
             throws ASAPSecurityException;
 
     ASAPStorageAddress getASAPStorageAddress(byte[] serializedAddress) throws IOException;
+
+    /**
+     * Public key are disseminated with certificates. This method check, if we have got a certificate issued
+     * for this peer and returns the first it finds.
+     * @param peerID
+     * @return
+     */
+    PublicKey getPublicKey(CharSequence peerID) throws SharkException;
 }

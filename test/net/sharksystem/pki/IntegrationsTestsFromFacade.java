@@ -12,7 +12,9 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.security.PublicKey;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import static net.sharksystem.testhelper.ASAPTesthelper.*;
 
@@ -51,8 +53,8 @@ public class IntegrationsTestsFromFacade {
         System.out.println("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 
         ///////////// fill alice with some certificates
-        CredentialMessage bobCredentialMessage = bobPKIBackdoor.getASAPPKIStorage().createCredentialMessage();
-        CredentialMessage claraCredentialMessage = claraPKIBackdoor.getASAPPKIStorage().createCredentialMessage();
+        CredentialMessage bobCredentialMessage = bobPKIBackdoor.getInnerSharkPKIFacade().createCredentialMessage();
+        CredentialMessage claraCredentialMessage = claraPKIBackdoor.getInnerSharkPKIFacade().createCredentialMessage();
 
         alicePKI.acceptAndSignCredential(bobCredentialMessage);
         alicePKI.acceptAndSignCredential(claraCredentialMessage);
@@ -72,9 +74,9 @@ public class IntegrationsTestsFromFacade {
         Assert.assertNotNull(alicePersonValuesOfClara);
 
         // we should get a public key from both of them
-        PublicKey publicKeyBob = alicePKIBackdoor.getASAPPKIStorage().getPublicKey(BOB_ID);
+        PublicKey publicKeyBob = alicePKIBackdoor.getInnerSharkPKIFacade().getPublicKey(BOB_ID);
         Assert.assertNotNull(publicKeyBob);
-        PublicKey publicKeyClara = alicePKIBackdoor.getASAPPKIStorage().getPublicKey(CLARA_ID);
+        PublicKey publicKeyClara = alicePKIBackdoor.getInnerSharkPKIFacade().getPublicKey(CLARA_ID);
         Assert.assertNotNull(publicKeyClara);
 
         // kill alice and ...
@@ -101,9 +103,9 @@ public class IntegrationsTestsFromFacade {
         alicePersonValuesOfClara = alicePKI2.getPersonValuesByID(CLARA_ID);
         Assert.assertNotNull(alicePersonValuesOfClara);
 
-        publicKeyBob = alicePKIBackdoor2.getASAPPKIStorage().getPublicKey(BOB_ID);
+        publicKeyBob = alicePKIBackdoor2.getInnerSharkPKIFacade().getPublicKey(BOB_ID);
         Assert.assertNotNull(publicKeyBob);
-        publicKeyClara = alicePKIBackdoor2.getASAPPKIStorage().getPublicKey(CLARA_ID);
+        publicKeyClara = alicePKIBackdoor2.getInnerSharkPKIFacade().getPublicKey(CLARA_ID);
         Assert.assertNotNull(publicKeyClara);
 
         /*
@@ -170,13 +172,15 @@ public class IntegrationsTestsFromFacade {
 
         alicePKI.sendTransientCredentialMessage();
         Thread.sleep(200);
+        aliceSharkPeer.getASAPTestPeerFS().stopEncounter(bobSharkPeer.getASAPTestPeerFS());
+
+        Collection<ASAPCertificate> certAt_B_BA = bobPKI.getCertificatesByIssuer(BOB_ID);
+        Assert.assertEquals(1, certAt_B_BA.size()); // Bob got cert(B,A)
 
         Collection<ASAPCertificate> certAt_A_BA = alicePKI.getCertificatesByIssuer(BOB_ID);
-        Collection<ASAPCertificate> certAt_B_BA = bobPKI.getCertificatesBySubject(BOB_ID);
         Assert.assertNotNull(certAt_A_BA); Assert.assertNotNull(certAt_B_BA);
-        Assert.assertEquals(1, certAt_A_BA.size()); Assert.assertEquals(1, certAt_B_BA.size());
+        Assert.assertEquals(1, certAt_A_BA.size()); // Alice got cert(B,A)
 
-        aliceSharkPeer.getASAPTestPeerFS().stopEncounter(bobSharkPeer.getASAPTestPeerFS());
 
         //// Bob meets Clara; Clara receives cert(B,A) automatically; she cannot verify Alice
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
@@ -201,8 +205,108 @@ public class IntegrationsTestsFromFacade {
 
         Assert.assertNotNull(bobPKI.getCertificatesByIssuer(BOB_ID));
         claraIA_Alice = claraPKI.getIdentityAssurance(ALICE_ID);
-        Assert.assertEquals(5, claraIA_Alice);
+        int claraSigningFailureOfBob = claraPKI.getSigningFailureRate(BOB_ID);
+        // she meet Bob directly
+        int claraExpectedIA_Alice = claraSigningFailureOfBob;
+        Assert.assertEquals(claraExpectedIA_Alice, claraIA_Alice);
 
         // finally.. do we have doublets in certs? TODO
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+    //                                       more generic and complex                                    //
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    List<SharkTestPeerFS> sharkTestPeerList;
+    List<SharkPKIComponentImpl> sharkPKIComponentList;
+
+    static char getCharByInt(int i) {
+        return (char) ((int)'A' + i);
+    }
+
+    static final String getIDByInt(int i) { return "ID_" + getCharByInt(i);}
+    static final String getNameByInt(int i) { return "Name_" + getCharByInt(i);}
+
+    void setupPeerAndPKIList(int number, String folderName) throws SharkException {
+        if(this.sharkTestPeerList == null) this.sharkTestPeerList = new ArrayList<>();
+        if(this.sharkPKIComponentList == null) this.sharkPKIComponentList = new ArrayList<>();
+
+        for(int i = 0; i < number; i++) {
+            String peerID = getIDByInt(i);
+            String peerName = getNameByInt(i);
+
+            SharkTestPeerFS sharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(peerName, folderName);
+            SharkPKIComponentImpl sharkPKI = (SharkPKIComponentImpl)
+                    new SharkPKIComponentFactory().getComponent(sharkPeer);
+            sharkPeer.start(peerID);
+            sharkPKI.onStart(sharkPeer.getASAPPeer());
+            // peer would sign anything
+            sharkPKI.setSharkCredentialReceivedListener(new CredentialListenerSignsWithoutChecking(sharkPKI));
+            this.sharkTestPeerList.add(sharkPeer);
+            this.sharkPKIComponentList.add(sharkPKI);
+        }
+    }
+
+    void runEncounterSendCredentials(int indexA, int indexB)
+            throws SharkException, IOException, InterruptedException {
+
+        SharkTestPeerFS sharkPeerA = this.sharkTestPeerList.get(indexA);
+        SharkTestPeerFS sharkPeerB = this.sharkTestPeerList.get(indexB);
+
+        SharkPKIComponentImpl pkiA = this.sharkPKIComponentList.get(indexA);
+        SharkPKIComponentImpl pkiB = this.sharkPKIComponentList.get(indexB);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(">>>>>>>>>>>>>>>>>>>  ");
+        sb.append(getNameByInt(indexA));
+        sb.append(" <====>  ");
+        sb.append(getNameByInt(indexB));
+        sb.append("   <<<<<<<<<<<<<<<<<<<<  \n");
+
+        int port = ASAPTesthelper.getPortNumber();
+        System.out.println(sb.toString() + "on port: " + port);
+
+        sharkPeerA.getASAPTestPeerFS().startEncounter(port, sharkPeerB.getASAPTestPeerFS());
+        Thread.sleep(200);
+        // A sends credentials (to all connected peers!!) and expects certificate issued from B
+        pkiA.sendTransientCredentialMessage();
+        Thread.sleep(500);
+        // stop encounter
+        sharkPeerA.getASAPTestPeerFS().stopEncounter(sharkPeerB.getASAPTestPeerFS());
+        Thread.sleep(500);
+
+        // make some preliminary tests
+        Collection<ASAPCertificate> certs = pkiA.getCertificatesByIssuer(getIDByInt(indexB));
+        Assert.assertNotNull(certs); Assert.assertTrue(certs.size() > 0);
+        certs = pkiA.getCertificatesBySubject(getIDByInt(indexA));
+        Assert.assertNotNull(certs); Assert.assertTrue(certs.size() > 0);
+        certs = pkiB.getCertificatesByIssuer(getIDByInt(indexB));
+        Assert.assertNotNull(certs); Assert.assertTrue(certs.size() > 0);
+        certs = pkiA.getCertificatesBySubject(getIDByInt(indexA));
+        Assert.assertNotNull(certs); Assert.assertTrue(certs.size() > 0);
+        System.out.println(sb.toString() + "okay");
+    }
+
+    @Test
+    public void testChain() throws SharkException, IOException, InterruptedException {
+        SharkPKITesthelper.incrementTestNumber();
+        String folderName = SharkPKITesthelper.getPKITestFolder(ASAPTesthelper.ROOT_DIRECTORY_TESTS);
+        System.out.println("ASSUMED: TEST 'testPersistence' WORKS");
+
+        /*
+        this.setupPeerAndPKIList(2, folderName);
+        this.runEncounterSendCredentials(0, 1);
+         */
+
+        int maxPeerNumber = 6; // 5 works, 6 not..
+
+        // produce peers and pki
+        this.setupPeerAndPKIList(maxPeerNumber, folderName);
+
+        for(int i = 0; i < maxPeerNumber-1; i++) {
+            this.runEncounterSendCredentials(i, i+1);
+            Thread.sleep(500);
+        }
     }
 }

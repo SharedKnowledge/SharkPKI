@@ -8,8 +8,8 @@ import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.persons.PersonValues;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
-import net.sharksystem.asap.crypto.ASAPKeyStore;
-import net.sharksystem.asap.persons.ASAPCertificateAndPersonStore;
+import net.sharksystem.asap.persons.PersonInformationStore;
+import net.sharksystem.fs.ExtraData;
 
 import java.io.IOException;
 import java.security.*;
@@ -54,10 +54,10 @@ import java.util.Set;
  */
 
 @ASAPFormats(formats = {SharkPKIComponent.CREDENTIAL_APP_NAME, SharkPKIComponent.PKI_APP_NAME})
-public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
+public interface SharkPKIComponent extends SharkComponent {
     CharSequence CREDENTIAL_URI = "sn2://credential";
     String PKI_APP_NAME = ASAPCertificateStorage.PKI_APP_NAME;
-    String CREDENTIAL_APP_NAME = ASAPCertificateAndPersonStore.CREDENTIAL_APP_NAME;
+    String CREDENTIAL_APP_NAME = PersonInformationStore.CREDENTIAL_APP_NAME;
 
     /**
      * Peers can ask each other to sign their public keys. This process can be automated by setting this
@@ -91,7 +91,7 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      *
      * @return ASAP Keystore used by this instance
      */
-    ASAPKeyStore getASAPKeyStore();
+    net.sharksystem.asap.crypto.ASAPKeyStore getASAPKeyStore();
 
     /**
      * Use this method to issue a new certificate based on a received message.
@@ -251,22 +251,11 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
     void addCertificate(ASAPCertificate asapCertificate) throws IOException, ASAPException;
 
     /**
-     * It is assumed this certificate is issued by storage owner. This is verified with this method or not.
-     * That method is more for debugging purpose. It is used inside when re-reading certificates from external storage
-     * to prevent security breeches.
-     * class to assure thaty
-     * @param asapCertificate
-     * @throws IOException
-     * @throws ASAPSecurityException
-     */
-    boolean verifyCertificate(ASAPCertificate asapCertificate) throws ASAPSecurityException, NoSuchAlgorithmException, InvalidKeyException, SignatureException;
-
-    /**
      * A credential message contains public key, peer id an name of this local peer. This message can be sent to
      * another peer to ask for certification of those information. Use defined format and uri for that message.
      * @return message that can be sent.
      * @throws ASAPSecurityException
-     * @see ASAPCertificateAndPersonStore#CREDENTIAL_APP_NAME
+     * @see PersonInformationStore#CREDENTIAL_APP_NAME
      * @see #CREDENTIAL_URI
      */
 //    CredentialMessage createCredentialMessage() throws ASAPSecurityException;
@@ -312,4 +301,8 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
     void sendTransientCredentialMessage(CredentialMessage credentialMessage) throws ASAPException, IOException;
 
     void saveMemento();
+
+    void generateKeyPair() throws ASAPSecurityException;
+
+    void setMementoTarget(ExtraData extraData);
 }
