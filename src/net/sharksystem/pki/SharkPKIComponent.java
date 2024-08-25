@@ -5,6 +5,7 @@ import net.sharksystem.SharkComponent;
 import net.sharksystem.SharkUnknownBehaviourException;
 import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.ASAPSecurityException;
+import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.persons.PersonValues;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
@@ -91,7 +92,7 @@ public interface SharkPKIComponent extends SharkComponent {
      *
      * @return ASAP Keystore used by this instance
      */
-    net.sharksystem.asap.crypto.ASAPKeyStore getASAPKeyStore();
+    ASAPKeyStore getASAPKeyStore();
 
     /**
      * Use this method to issue a new certificate based on a received message.

@@ -26,7 +26,7 @@ import java.util.*;
  *
  */
 class SharkPKIComponentImpl extends AbstractSharkComponent
-        implements SharkComponent, SharkPKIComponent,
+        implements SharkComponent, SharkPKIComponent, SharkPKIDebugSupport,
         ASAPMessageReceivedListener, ASAPEnvironmentChangesListener {
 
     private final SharkPeer owner;
@@ -62,8 +62,8 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     }
 
     @Override
-    public net.sharksystem.asap.crypto.ASAPKeyStore getASAPKeyStore() {
-        return this.sharkPKIFacade.getASAPKeyStore();
+    public ASAPKeyStore getASAPKeyStore() {
+        return new ASAPKeyStoreWrapper(this.sharkPKIFacade.getASAPKeyStore(), this.sharkPKIFacade);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -511,6 +511,14 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
 
     public void saveMemento() {
         this.sharkPKIFacade.save();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //                             backdoors for easier debugging - nothing safety critical                  //
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public CredentialMessage createCredentialMessage() throws ASAPSecurityException {
+        return this.sharkPKIFacade.createCredentialMessage();
     }
 
     /*
