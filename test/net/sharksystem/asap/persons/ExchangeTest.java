@@ -13,7 +13,7 @@ import net.sharksystem.asap.engine.*;
 import net.sharksystem.asap.utils.ASAPPeerHandleConnectionThread;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
-import net.sharksystem.asap.pki.ASAPStorageBasedCertificateStore;
+import net.sharksystem.asap.pki.ASAPStorageBasedCertificates;
 import net.sharksystem.utils.Log;
 import org.junit.Assert;
 import org.junit.Test;
@@ -49,7 +49,7 @@ public class ExchangeTest {
                 ALICE_ID, ALICE_APP_FOLDER, ASAPCertificateStorage.PKI_APP_NAME);
 
         ASAPCertificateStorage asapAliceCertificateStorage =
-                new ASAPStorageBasedCertificateStore(aliceStorage, ALICE_ID, ALICE_NAME);
+                new ASAPStorageBasedCertificates(aliceStorage, ALICE_ID, ALICE_NAME);
         ASAPKeyStore aliceCryptoStorage = new InMemoASAPKeyStore(ALICE_ID);
         ASAPCertificateAndPersonStore aliceASAPCertificateStore = new ASAPCertificateAndPersonStoreImpl(asapAliceCertificateStorage, aliceCryptoStorage);
 
@@ -58,7 +58,7 @@ public class ExchangeTest {
                 BOB_ID, BOB_APP_FOLDER, ASAPCertificateStorage.PKI_APP_NAME);
 
         ASAPCertificateStorage asapBobCertificateStorage =
-                new ASAPStorageBasedCertificateStore(bobStorage, BOB_ID, BOB_NAME);
+                new ASAPStorageBasedCertificates(bobStorage, BOB_ID, BOB_NAME);
         ASAPKeyStore bobCryptoStorage = new InMemoASAPKeyStore(BOB_ID);
         ASAPCertificateAndPersonStore bobASAPCertificateStore = new ASAPCertificateAndPersonStoreImpl(asapBobCertificateStorage, bobCryptoStorage);
 

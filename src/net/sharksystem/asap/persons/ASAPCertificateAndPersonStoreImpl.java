@@ -30,7 +30,8 @@ public class ASAPCertificateAndPersonStoreImpl implements ASAPCertificateAndPers
     // keep other persons - contact list in other words
     private List<PersonValuesImpl> personsList = new ArrayList<>();
 
-    public ASAPCertificateAndPersonStoreImpl(ASAPCertificateStorage certificateStorage, ASAPKeyStore asapKeyStorage)
+    public ASAPCertificateAndPersonStoreImpl(
+            ASAPCertificateStorage certificateStorage, ASAPKeyStore asapKeyStorage)
             throws ASAPSecurityException {
 
         this.certificateStorage = certificateStorage;

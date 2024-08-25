@@ -2,11 +2,9 @@ package net.sharksystem.pki;
 
 import net.sharksystem.SharkException;
 import net.sharksystem.SharkPeer;
-import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
+import net.sharksystem.SharkTestPeerFS;
 import net.sharksystem.asap.persons.PersonValues;
 import net.sharksystem.asap.pki.ASAPCertificate;
-import net.sharksystem.fs.ExtraData;
-import net.sharksystem.fs.ExtraDataFS;
 import net.sharksystem.testhelper.ASAPTesthelper;
 import net.sharksystem.testhelper.SharkPKITesthelper;
 import org.junit.Assert;
@@ -18,9 +16,9 @@ import java.util.Collection;
 
 import static net.sharksystem.testhelper.ASAPTesthelper.*;
 
-public class PersistenceTestsFromFacade {
+public class IntegrationsTestsFromFacade {
     @Test
-    public void fillPersistAndReloadFrom() throws SharkException, IOException {
+    public void testPersistence() throws SharkException, IOException {
         SharkPKITesthelper.incrementTestNumber();
         String folderName = SharkPKITesthelper.getPKITestFolder(ASAPTesthelper.ROOT_DIRECTORY_TESTS);
 
@@ -119,5 +117,92 @@ public class PersistenceTestsFromFacade {
             this.tellUI("no keystore memento - must be new");
         }
          */
+    }
+
+    @Test
+    public void testIAWithRoutedMessages() throws SharkException, IOException, InterruptedException {
+        SharkPKITesthelper.incrementTestNumber();
+        String folderName = SharkPKITesthelper.getPKITestFolder(ASAPTesthelper.ROOT_DIRECTORY_TESTS);
+        System.out.println("ASSUMED: TEST 'testPersistence' WORKS");
+
+        // ALICE
+        SharkTestPeerFS aliceSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(ALICE_NAME, folderName);
+        SharkPKIComponentImpl alicePKIBackdoor = (SharkPKIComponentImpl)
+                new SharkPKIComponentFactory().getComponent(aliceSharkPeer);
+        SharkPKIComponent alicePKI = alicePKIBackdoor;
+
+        // BOB
+        SharkTestPeerFS bobSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(BOB_NAME, folderName);
+        SharkPKIComponentImpl bobPKIBackdoor = new SharkPKIComponentImpl(bobSharkPeer);
+        SharkPKIComponent bobPKI = bobPKIBackdoor;
+
+        // CLARA
+        SharkTestPeerFS claraSharkPeer = SharkPKITesthelper.setupSharkPeerDoNotStart(CLARA_NAME, folderName);
+        SharkPKIComponentImpl claraPKIBackdoor = new SharkPKIComponentImpl(claraSharkPeer);
+        SharkPKIComponent claraPKI = claraPKIBackdoor;
+
+        // start the system
+        aliceSharkPeer.start(ALICE_ID);
+        bobSharkPeer.start(BOB_ID);
+        claraSharkPeer.start(CLARA_ID);
+
+        // tell components
+        alicePKI.onStart(aliceSharkPeer.getASAPPeer());
+        bobPKI.onStart(bobSharkPeer.getASAPPeer());
+        // bob would sign anything
+        bobPKI.setSharkCredentialReceivedListener(new CredentialListenerSignsWithoutChecking(bobPKI));
+        claraPKI.onStart(claraSharkPeer.getASAPPeer());
+        // clara would sign anything
+        claraPKI.setSharkCredentialReceivedListener(new CredentialListenerSignsWithoutChecking(claraPKI));
+
+        //// Alice meets Bob; Bob issues a certificate for Alice
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>> start encounter Alice - Bob   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        aliceSharkPeer.getASAPTestPeerFS().startEncounter(ASAPTesthelper.getPortNumber(), bobSharkPeer.getASAPTestPeerFS());
+
+        // give them moment to exchange data
+        Thread.sleep(200);
+
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>  producing cert(B,A)  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+
+        alicePKI.sendTransientCredentialMessage();
+        Thread.sleep(200);
+
+        Collection<ASAPCertificate> certAt_A_BA = alicePKI.getCertificatesByIssuer(BOB_ID);
+        Collection<ASAPCertificate> certAt_B_BA = bobPKI.getCertificatesBySubject(BOB_ID);
+        Assert.assertNotNull(certAt_A_BA); Assert.assertNotNull(certAt_B_BA);
+        Assert.assertEquals(1, certAt_A_BA.size()); Assert.assertEquals(1, certAt_B_BA.size());
+
+        aliceSharkPeer.getASAPTestPeerFS().stopEncounter(bobSharkPeer.getASAPTestPeerFS());
+
+        //// Bob meets Clara; Clara receives cert(B,A) automatically; she cannot verify Alice
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>> start encounter Bob - Clara   >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        bobSharkPeer.getASAPTestPeerFS().startEncounter(ASAPTesthelper.getPortNumber(), claraSharkPeer.getASAPTestPeerFS());
+
+        Thread.sleep(200);
+        int claraIA_Alice = claraPKI.getIdentityAssurance(ALICE_ID);
+        Assert.assertEquals(0, claraIA_Alice);
+
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>  producing cert(C,B)  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+        System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+
+        Thread.sleep(200);
+        ////// Clara issues a certificate for Bob
+        bobPKI.sendTransientCredentialMessage();
+        Thread.sleep(200);
+        bobSharkPeer.getASAPTestPeerFS().stopEncounter(claraSharkPeer.getASAPTestPeerFS());
+        Thread.sleep(200);
+
+        Assert.assertNotNull(bobPKI.getCertificatesByIssuer(BOB_ID));
+        claraIA_Alice = claraPKI.getIdentityAssurance(ALICE_ID);
+        Assert.assertEquals(5, claraIA_Alice);
+
+        // finally.. do we have doublets in certs? TODO
     }
 }

@@ -4,12 +4,10 @@ import net.sharksystem.*;
 import net.sharksystem.asap.*;
 import net.sharksystem.asap.crypto.*;
 import net.sharksystem.asap.persons.*;
-import net.sharksystem.asap.pki.ASAPStorageBasedCertificateStore;
+import net.sharksystem.asap.pki.ASAPStorageBasedCertificates;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.pki.ASAPCertificateStorage;
 import net.sharksystem.asap.pki.CredentialMessageInMemo;
-import net.sharksystem.fs.ExtraData;
-import net.sharksystem.testhelper.ASAPTesthelper;
 import net.sharksystem.utils.Log;
 
 import javax.crypto.SecretKey;
@@ -180,7 +178,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
 
     public static final String SHARK_PKI_DATA_KEY = "sharkPKIData";
     private ASAPPKIStorage asapPKIStorage = null;
-    private ASAPStorageBasedCertificateStore asapCertificateStorage;
+    private ASAPStorageBasedCertificates asapCertificateStorage;
     private ASAPPeer asapPeer = null;
     private InMemoASAPKeyStore asapKeyStore;
 
@@ -215,7 +213,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
 
             // this object can interpret those messages as certificates; it requires no further persistence
             this.asapCertificateStorage =
-                new ASAPStorageBasedCertificateStore(asapStorage, asapPeer.getPeerID(), peerName);
+                new ASAPStorageBasedCertificates(asapStorage, asapPeer.getPeerID(), peerName);
 
             // bind components together and add person values support
             this.asapPKIStorage = new ASAPPKIStorage(this.asapCertificateStorage, this.asapKeyStore);
@@ -255,7 +253,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
             this.certificateExpected = false;
             // good chance that something was received
             this.asapCertificateStorage.dropInMemoCache();
-            this.asapPKIStorage.incorporateReceivedCertificates();
+            //this.asapPKIStorage.incorporateReceivedCertificates();
         }
     }
 
@@ -522,14 +520,6 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
                 SharkPKIComponent.CREDENTIAL_APP_NAME,
                 SharkPKIComponent.CREDENTIAL_URI,
                 credentialMessage.getMessageAsBytes());
-    }
-
-    @Override
-    public boolean syncNewReceivedCertificates() throws IOException, ASAPException {
-        this.checkStatus();
-        boolean retVal = this.asapPKIStorage.incorporateReceivedCertificates();
-        this.saveMemento();
-        return retVal;
     }
 
     public void saveMemento() {

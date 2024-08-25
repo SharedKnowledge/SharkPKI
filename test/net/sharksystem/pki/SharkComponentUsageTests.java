@@ -9,7 +9,6 @@ import net.sharksystem.asap.persons.PersonValues;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.crypto.ASAPCryptoAlgorithms;
 import net.sharksystem.testhelper.SharkPKITesthelper;
-import net.sharksystem.utils.Log;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -21,44 +20,6 @@ import static net.sharksystem.pki.TestConstants.*;
 import static net.sharksystem.pki.TestHelper.*;
 
 public class SharkComponentUsageTests {
-    private class CredentialListenerExample implements SharkCredentialReceivedListener {
-        private final SharkPKIComponent sharkPKIComponent;
-        public int numberOfEncounter = 0;
-        public CredentialMessage lastCredentialMessage;
-
-        public CredentialListenerExample(SharkPKIComponent sharkPKIComponent) {
-            this.sharkPKIComponent = sharkPKIComponent;
-        }
-
-        @Override
-        public void credentialReceived(CredentialMessage credentialMessage) {
-            Log.writeLog(this, this.sharkPKIComponent.getOwnerID(), "credential received:\n"
-                    + PKIHelper.credentialMessage2String(credentialMessage));
-            try {
-                /*
-                Absolutely not. No! Automatically signing a credential message which simply came along from an unknown
-                source is ridiculous. Never ever write an app like this. That's only for debugging. Only!
-                Don't even think things like: "Em, well, I just take is for a temporary solution, just to
-                illustrate that it works..." It works, alright. That is what this test is for.
-
-                Taking it as 'temporary' solution is most probably BS and you know that. Deal with security from the
-                beginning of your app development. Security is not anything you add 'sometimes later'. It is
-                part of your app philosophy or not.
-                You will make the world a better place by embracing security. :)
-
-                It is important: Users must ensure correct data. Human users must ensure that those data are valid and
-                the sending person is really who s/he claims to be.
-                 */
-                this.numberOfEncounter++;
-                this.lastCredentialMessage = credentialMessage;
-                Log.writeLog(this, this.sharkPKIComponent.getOwnerID(), ">>>>>>>>>> DO THE UNDOABLE - ISSUE CERTIFICATE WITHOUT CHECKING USER IDENTITY");
-                Log.writeLog(this, this.sharkPKIComponent.getOwnerID(), "going to issue a certificate");
-                this.sharkPKIComponent.acceptAndSignCredential(credentialMessage);
-            } catch (IOException | ASAPSecurityException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
     SharkTestPeerFS aliceSharkPeer, bobSharkPeer;
     SharkPKIComponentImpl aliceComponent, bobComponent;
@@ -112,7 +73,7 @@ public class SharkComponentUsageTests {
          * usually - peers should do both - send and sign. This example splits those to parts for illustration
          * and testing purposes
          */
-        bobComponent.setSharkCredentialReceivedListener(new CredentialListenerExample(bobComponent));
+        bobComponent.setSharkCredentialReceivedListener(new CredentialListenerSignsWithoutChecking(bobComponent));
 
         ///////////////////////////////// Encounter Alice - Bob ////////////////////////////////////////////////////
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start encounter >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
@@ -166,7 +127,7 @@ public class SharkComponentUsageTests {
          * usually - peers should do both - send and sign. This example splits those to parts for illustration
          * and testing purposes
          */
-        bobComponent.setSharkCredentialReceivedListener(new CredentialListenerExample(bobComponent));
+        bobComponent.setSharkCredentialReceivedListener(new CredentialListenerSignsWithoutChecking(bobComponent));
 
         ///////////////////////////////// Encounter Alice - Bob ////////////////////////////////////////////////////
         System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start encounter >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
@@ -278,7 +239,7 @@ public class SharkComponentUsageTests {
          * usually - peers should do both - send and sign. This example splits those to parts for illustration
          * and testing purposes
          */
-        CredentialListenerExample bobCredentialListener = new CredentialListenerExample(bobComponent);
+        CredentialListenerSignsWithoutChecking bobCredentialListener = new CredentialListenerSignsWithoutChecking(bobComponent);
         bobComponent.setSharkCredentialReceivedListener(bobCredentialListener);
 
         ///////////////////////////////// Encounter #1 Alice - Bob ////////////////////////////////////////////////////
@@ -329,7 +290,7 @@ public class SharkComponentUsageTests {
 
         // lets starts peer and its components before doing anything else
         claraSharkPeer.start(CLARA_ID);
-        CredentialListenerExample claraCredentialListener = new CredentialListenerExample(claraComponent);
+        CredentialListenerSignsWithoutChecking claraCredentialListener = new CredentialListenerSignsWithoutChecking(claraComponent);
         claraComponent.setSharkCredentialReceivedListener(claraCredentialListener);
 
         ///////////////////////////////// Encounter #3 Alice - Clara ////////////////////////////////////////////////////

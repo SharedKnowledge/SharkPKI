@@ -5,10 +5,10 @@ import net.sharksystem.asap.ASAP;
 import java.io.IOException;
 import java.util.*;
 
-public class InMemoAbstractCertificateStore extends AbstractInMemoCertificateStore {
+public class InMemoCertificates extends InMemoCertificatesAndIdentityAssurance {
     Map<CharSequence, Set<ASAPCertificate>> certificatesByOwnerIDMap = new HashMap<>();
 
-    public InMemoAbstractCertificateStore(CharSequence ownerID, CharSequence ownerName) {
+    public InMemoCertificates(CharSequence ownerID, CharSequence ownerName) {
         super(ownerID, ownerName);
     }
 

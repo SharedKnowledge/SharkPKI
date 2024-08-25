@@ -311,11 +311,5 @@ public interface SharkPKIComponent extends SharkComponent, ASAPKeyStore {
      */
     void sendTransientCredentialMessage(CredentialMessage credentialMessage) throws ASAPException, IOException;
 
-    /**
-     * Call this method if probably new certificates are received
-     * @return true if certificate of a new person received - time to call store.
-     */
-    boolean syncNewReceivedCertificates() throws IOException, ASAPException;
-
     void saveMemento();
 }

@@ -13,13 +13,13 @@ import java.security.SignatureException;
 import java.util.*;
 
 
-public abstract class AbstractInMemoCertificateStore implements ASAPCertificateStorage {
+public abstract class InMemoCertificatesAndIdentityAssurance implements ASAPCertificateStorage {
     private final CharSequence ownerID;
     private final CharSequence ownerName;
 
     private Map<CharSequence, Set<ASAPCertificate>> certificatesBySubjectIDMap = null;
 
-    public AbstractInMemoCertificateStore(CharSequence ownerID, CharSequence ownerName) {
+    public InMemoCertificatesAndIdentityAssurance(CharSequence ownerID, CharSequence ownerName) {
         this.ownerID = ownerID;
         this.ownerName = ownerName;
     }
@@ -45,24 +45,30 @@ public abstract class AbstractInMemoCertificateStore implements ASAPCertificateS
     public void dropInMemoCache() {
         Log.writeLog(this, this.ownerName.toString(), "drop in memo cache");
         this.certificatesBySubjectIDMap = null;
-        this.userIdentityAssurance = null;
+        this.syncIdentityAssurance();
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //                                       getter on certificate map                                         //
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void checkCertificatesBySubjectIDMap() {
+    private Map<CharSequence, Set<ASAPCertificate>> getCertsMapRestoreIfRequired() {
         if(this.certificatesBySubjectIDMap == null) {
             this.certificatesBySubjectIDMap = new HashMap<>();
             this.readCertificatesFromStorage(this.certificatesBySubjectIDMap);
         }
+
+        return this.certificatesBySubjectIDMap;
+    }
+
+    public PublicKey getPublicKey(CharSequence peerID) {
+        return null;
     }
 
     @Override
     public Collection<ASAPCertificate> getCertificatesBySubjectID(CharSequence subjectID) {
-        this.checkCertificatesBySubjectIDMap();
-        Set<ASAPCertificate> asapCertificates = this.certificatesBySubjectIDMap.get(subjectID);
+        this.getCertsMapRestoreIfRequired();
+        Set<ASAPCertificate> asapCertificates = this.getCertsMapRestoreIfRequired().get(subjectID);
         if(asapCertificates == null) {
             asapCertificates = new HashSet<>();
         }
@@ -76,9 +82,9 @@ public abstract class AbstractInMemoCertificateStore implements ASAPCertificateS
 
     @Override
     public Collection<ASAPCertificate> getCertificatesByIssuerID(CharSequence issuerID) {
-        this.checkCertificatesBySubjectIDMap();
+        this.getCertsMapRestoreIfRequired();
         Set<ASAPCertificate> certSetIssuer = new HashSet<>();
-        for(Set<ASAPCertificate> certSet : this.certificatesBySubjectIDMap.values()) {
+        for(Set<ASAPCertificate> certSet : this.getCertsMapRestoreIfRequired().values()) {
             for(ASAPCertificate cert : certSet) {
                 if(cert.getIssuerID().toString().equalsIgnoreCase(issuerID.toString())) {
                     certSetIssuer.add(cert);
@@ -90,9 +96,9 @@ public abstract class AbstractInMemoCertificateStore implements ASAPCertificateS
     }
 
     public Set<ASAPCertificate> getAllCertificates() {
-        this.checkCertificatesBySubjectIDMap();
+        this.getCertsMapRestoreIfRequired();
         Set<ASAPCertificate> allCerts = new HashSet<>();
-        for(Set<ASAPCertificate> certsFromSubject: this.certificatesBySubjectIDMap.values()) {
+        for(Set<ASAPCertificate> certsFromSubject: this.getCertsMapRestoreIfRequired().values()) {
             for(ASAPCertificate cert : certsFromSubject) {
                 allCerts.add(cert);
             }
@@ -128,9 +134,10 @@ public abstract class AbstractInMemoCertificateStore implements ASAPCertificateS
 
     public Collection<ASAPCertificate> getNewReceivedCertificates() {
         // sync with external changes
-        this.checkCertificatesBySubjectIDMap();
+        this.getCertsMapRestoreIfRequired();
 
-        Collection<ASAPCertificate> newCerts = this.readReceivedCertificatesFromExternalMemory(this.certificatesBySubjectIDMap);
+        Collection<ASAPCertificate> newCerts =
+                this.readReceivedCertificatesFromExternalMemory(this.getCertsMapRestoreIfRequired());
         if(!newCerts.isEmpty()) {
             // reset identity assurance - is most likely changed
             this.userIdentityAssurance = null;
@@ -252,7 +259,7 @@ public abstract class AbstractInMemoCertificateStore implements ASAPCertificateS
             throws ASAPSecurityException {
         // general setup?
         if(this.userIdentityAssurance == null) {
-            this.userIdentityAssurance = new HashMap<CharSequence, IdentityAssurance>();
+            this.userIdentityAssurance = new HashMap<>();
             this.setupIdentityAssurance(userID, asapPKI);
         }
 

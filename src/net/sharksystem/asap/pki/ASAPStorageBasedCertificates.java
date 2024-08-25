@@ -10,11 +10,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 
-public class ASAPStorageBasedCertificateStore extends AbstractInMemoCertificateStore {
+public class ASAPStorageBasedCertificates extends InMemoCertificatesAndIdentityAssurance {
 
     private final ASAPStorage asapStorage;
 
-    public ASAPStorageBasedCertificateStore(ASAPStorage asapStorage, CharSequence ownerID, CharSequence ownerName) {
+    public ASAPStorageBasedCertificates(ASAPStorage asapStorage, CharSequence ownerID, CharSequence ownerName) {
         super(ownerID, ownerName);
         this.asapStorage = asapStorage;
     }
