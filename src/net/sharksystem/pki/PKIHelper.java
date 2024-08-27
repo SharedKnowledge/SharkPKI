@@ -1,10 +1,12 @@
 package net.sharksystem.pki;
 
+import net.sharksystem.asap.crypto.ASAPCryptoAlgorithms;
 import net.sharksystem.asap.persons.PersonValues;
 import net.sharksystem.asap.persons.PersonValuesImpl;
 import net.sharksystem.asap.pki.ASAPCertificate;
 import net.sharksystem.asap.utils.DateTimeHelper;
 
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -59,7 +61,13 @@ public class PKIHelper {
         sb.append(DateTimeHelper.long2DateString(credentialMessage.getValidSince()));
         sb.append("\nrandom number: ");
         sb.append(credentialMessage.getRandomInt());
-        sb.append("\nTODO - add public key fingerprint (project SharPKI (net.sharksystem.pki.PKIHelper)");
+        sb.append("\npublic key fingerprint: ");
+        sb.append("public key finger print: ");
+        try {
+            sb.append(ASAPCryptoAlgorithms.getFingerprint(credentialMessage.getPublicKey()));
+        } catch (NoSuchAlgorithmException e) {
+            sb.append(e.getLocalizedMessage());
+        }
 
         return sb.toString();
     }
