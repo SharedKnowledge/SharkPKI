@@ -62,7 +62,6 @@ public class PKIHelper {
         sb.append("\nrandom number: ");
         sb.append(credentialMessage.getRandomInt());
         sb.append("\npublic key fingerprint: ");
-        sb.append("public key finger print: ");
         try {
             sb.append(ASAPCryptoAlgorithms.getFingerprint(credentialMessage.getPublicKey()));
         } catch (NoSuchAlgorithmException e) {
