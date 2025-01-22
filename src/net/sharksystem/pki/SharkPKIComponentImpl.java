@@ -124,7 +124,6 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
                 Log.writeLog(this, "could not create credential message from asap message " +
                         "- seems to be a bug - check serialization of credential messaging");
             }
-
         }
     }
 
@@ -424,7 +423,8 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
         Set<PersonValues> personValuesSet = new HashSet<>();
         for(int i = 0; i < this.getNumberOfPersons(); i++) {
             PersonValues personValuesByPosition = this.getPersonValuesByPosition(i);
-            if(peerName.toString().equalsIgnoreCase(personValuesByPosition.toString())) {
+            CharSequence personName = personValuesByPosition.getName();
+            if(peerName.toString().equalsIgnoreCase(personName.toString())) {
                 personValuesSet.add(personValuesByPosition);
             }
         }
