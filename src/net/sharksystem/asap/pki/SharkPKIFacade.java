@@ -1,6 +1,7 @@
 package net.sharksystem.asap.pki;
 
 import net.sharksystem.SharkException;
+import net.sharksystem.asap.ASAPEncounterConnectionType;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.persons.PersonValues;
@@ -79,7 +80,10 @@ public interface SharkPKIFacade {
      * @param validSince
      * @return
      */
-    ASAPCertificate addAndSignPerson(CharSequence subjectID, CharSequence subjectName, PublicKey publicKey, long validSince) throws ASAPSecurityException, IOException;
+    ASAPCertificate addAndSignPerson(
+            CharSequence subjectID, CharSequence subjectName,
+            PublicKey publicKey, long validSince,
+            ASAPEncounterConnectionType encounterType) throws ASAPSecurityException, IOException;
 
     void setSigningFailureRate(CharSequence personID, int failureRate) throws ASAPSecurityException;
 

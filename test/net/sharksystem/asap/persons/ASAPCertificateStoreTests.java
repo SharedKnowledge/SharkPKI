@@ -1,5 +1,6 @@
 package net.sharksystem.asap.persons;
 
+import net.sharksystem.asap.ASAPEncounterConnectionType;
 import net.sharksystem.asap.pki.*;
 import net.sharksystem.fs.FSUtils;
 import net.sharksystem.pki.TestConstants;
@@ -61,7 +62,7 @@ public class ASAPCertificateStoreTests {
         PublicKey bobPublicKey = bobCryptoStorage.getPublicKey();
 
         // alice signs a certificate of bob
-        ASAPCertificate asapCertificate = aliceSharkPKIFacade.addAndSignPerson(bobID, bobName, bobPublicKey, now);
+        ASAPCertificate asapCertificate = aliceSharkPKIFacade.addAndSignPerson(bobID, bobName, bobPublicKey, now, ASAPEncounterConnectionType.UNKNOWN);
 
         // Alice could (and should) send it back to Bob - not tested here
         byte[] bytes = asapCertificate.asBytes();
@@ -93,7 +94,7 @@ public class ASAPCertificateStoreTests {
         asapCertificate = claraASAPCertificateStore.addAndSignPerson(
                 davidID,
                 davidASAPCertificateStore.getOwnerName(),
-                davidCryptoStorage.getPublicKey(), now);
+                davidCryptoStorage.getPublicKey(), now, ASAPEncounterConnectionType.UNKNOWN);
 
         // add to alice certification storage
         aliceSharkPKIFacade.addCertificate(asapCertificate);
@@ -111,7 +112,7 @@ public class ASAPCertificateStoreTests {
         asapCertificate = bobASAPCertificateStore.addAndSignPerson(
                 claraID,
                 claraASAPCertificateStore.getOwnerName(),
-                claraASAPCertificateStore.getPublicKey(), now);
+                claraASAPCertificateStore.getPublicKey(), now, ASAPEncounterConnectionType.UNKNOWN);
 
         // add to alice certification storage
         aliceSharkPKIFacade.addCertificate(asapCertificate);
@@ -210,7 +211,7 @@ public class ASAPCertificateStoreTests {
         PrivateKey alicePrivateKey = aliceCryptoStorage.getPrivateKey();
 
         // alice signs a certificate of bob
-        ASAPCertificate asapCertificate = aliceSharkPKI.addAndSignPerson(bobID, bobName, bobPublicKey, now);
+        ASAPCertificate asapCertificate = aliceSharkPKI.addAndSignPerson(bobID, bobName, bobPublicKey, now, ASAPEncounterConnectionType.UNKNOWN);
 
         // verify
         Assert.assertTrue(asapCertificate.verify(alicePublicKey));

@@ -1,5 +1,7 @@
 package net.sharksystem.asap.pki;
 
+import net.sharksystem.asap.ASAPEncounterConnectionType;
+
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -35,6 +37,8 @@ public interface ASAPCertificate {
     ASAPStorageAddress getASAPStorageAddress();
 
     PublicKey getPublicKey();
+
+    ASAPEncounterConnectionType getConnectionTypeCredentialsReceived();
 
     boolean isIdentical(ASAPCertificate asapCertificate);
 }

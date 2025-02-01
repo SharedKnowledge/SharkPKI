@@ -1,5 +1,8 @@
 package net.sharksystem.asap.pki;
 
+import net.sharksystem.asap.ASAPEncounterConnectionType;
+import net.sharksystem.asap.ASAPException;
+import net.sharksystem.asap.utils.ASAPSerialization;
 import net.sharksystem.asap.utils.DateTimeHelper;
 import net.sharksystem.utils.Log;
 
@@ -21,6 +24,21 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     private long validSince;
     private long validUntil;
     private String signingAlgorithm;
+    private final ASAPEncounterConnectionType connectionTypeCredentialsReceived;
+
+    public static ASAPCertificateImpl produceCertificate(
+            CharSequence issuerID, CharSequence issuerName,
+            PrivateKey privateKey,
+            CharSequence subjectID, CharSequence subjectName,
+            PublicKey publicKey,
+            long validSince,
+            CharSequence signingAlgorithm)
+            throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
+
+        return produceCertificate(issuerID, issuerName, privateKey, subjectID, subjectName,
+                publicKey, validSince, signingAlgorithm, ASAPEncounterConnectionType.UNKNOWN);
+
+    }
 
     /**
      * Create fresh certificate for owner and sign it now with signers private key.
@@ -42,7 +60,8 @@ public class ASAPCertificateImpl implements ASAPCertificate {
             CharSequence subjectID, CharSequence subjectName,
             PublicKey publicKey,
             long validSince,
-            CharSequence signingAlgorithm)
+            CharSequence signingAlgorithm,
+            ASAPEncounterConnectionType connectionTypeCredentialsReceived)
                 throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
 
         // must be in the past to avoid key not yet valid exception
@@ -74,7 +93,7 @@ public class ASAPCertificateImpl implements ASAPCertificate {
 
         ASAPCertificateImpl asapCertificate = new ASAPCertificateImpl(
                 issuerID, issuerName, subjectID, subjectName, publicKey, since.getTimeInMillis(),
-                until.getTimeInMillis(), signingAlgorithm);
+                until.getTimeInMillis(), signingAlgorithm, connectionTypeCredentialsReceived);
 
         asapCertificate.sign(privateKey);
 
@@ -85,7 +104,8 @@ public class ASAPCertificateImpl implements ASAPCertificate {
                                 CharSequence issuerName,
                                 CharSequence subjectID, CharSequence subjectName,
                                 PublicKey publicKey, long validSince, long validUntil,
-                                CharSequence signingAlgorithm) {
+                                CharSequence signingAlgorithm,
+                                ASAPEncounterConnectionType connectionTypeCredentialsReceived) {
         this.issuerID = issuerID;
         this.issuerName = issuerName;
         this.subjectID = subjectID;
@@ -96,6 +116,8 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         this.validUntil = validUntil;
 
         this.signingAlgorithm = signingAlgorithm.toString();
+
+        this.connectionTypeCredentialsReceived = connectionTypeCredentialsReceived;
     }
 
     void setASAPStorageAddress(ASAPStorageAddress asapStorageAddress) {
@@ -141,11 +163,12 @@ public class ASAPCertificateImpl implements ASAPCertificate {
 
     public static ASAPCertificateImpl produceCertificateFromBytes(
             byte[] serializedMessage)
-                throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, ASAPException {
 
         ByteArrayInputStream bais = new ByteArrayInputStream(serializedMessage);
         DataInputStream dis = new DataInputStream(bais);
 
+        /*
         String signerID = dis.readUTF();
         String signerName = dis.readUTF();
         String ownerID = dis.readUTF();
@@ -153,6 +176,17 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         long validSince = dis.readLong();
         long validUntil = dis.readLong();
         String signingAlgorithm = dis.readUTF();
+        byte encounterTypeCredentialsReceivedByte = dis.readByte();
+         */
+        String signerID = ASAPSerialization.readCharSequenceParameter(bais);
+        String signerName = ASAPSerialization.readCharSequenceParameter(bais);
+        String ownerID = ASAPSerialization.readCharSequenceParameter(bais);
+        String ownerName = ASAPSerialization.readCharSequenceParameter(bais);
+        long validSince = ASAPSerialization.readLongParameter(bais);
+        long validUntil = ASAPSerialization.readLongParameter(bais);
+        String signingAlgorithm = ASAPSerialization.readCharSequenceParameter(bais);
+        ASAPEncounterConnectionType encounterTypeCredentialsReceived = ASAPSerialization.readEncounterConnectionType(bais);
+
 
         // read public key
         PublicKey pubKey = KeyHelper.readPublicKeyFromStream(dis);
@@ -162,7 +196,9 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         dis.read(signatureBytes);
 
         ASAPCertificateImpl asapCertificate = new ASAPCertificateImpl(
-                signerID, signerName, ownerID, ownerName, pubKey, validSince, validUntil, signingAlgorithm);
+                signerID, signerName, ownerID, ownerName, pubKey,
+                validSince, validUntil, signingAlgorithm, encounterTypeCredentialsReceived
+                );
 
         asapCertificate.signatureBytes = signatureBytes;
 
@@ -171,7 +207,7 @@ public class ASAPCertificateImpl implements ASAPCertificate {
 
     public static ASAPCertificateImpl produceCertificateFromByteArray(
             byte[] serializedMessage, ASAPStorageAddress asapStorageAddress)
-            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException, ASAPException {
 
         ASAPCertificateImpl asapCertificate = ASAPCertificateImpl.produceCertificateFromBytes(serializedMessage);
 
@@ -183,13 +219,14 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     private byte[] getAnythingButSignatur() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream daos = new DataOutputStream(baos);
-        this.fillWithAnythingButSignature(daos);
+        this.serializeAnythingButSignature(daos);
         return baos.toByteArray();
     }
 
-    private void fillWithAnythingButSignature(DataOutputStream dos) {
+    private void serializeAnythingButSignature(DataOutputStream dos) {
         // create byte array that is to be signed
         try {
+            /*
             dos.writeUTF(this.issuerID.toString());
             dos.writeUTF(this.issuerName.toString());
             dos.writeUTF(this.subjectID.toString());
@@ -198,6 +235,17 @@ public class ASAPCertificateImpl implements ASAPCertificate {
             dos.writeLong(this.validSince);
             dos.writeLong(this.validUntil);
             dos.writeUTF(this.signingAlgorithm);
+             */
+            ASAPSerialization.writeCharSequenceParameter(this.issuerID, dos);
+            ASAPSerialization.writeCharSequenceParameter(this.issuerName, dos);
+            ASAPSerialization.writeCharSequenceParameter(this.subjectID, dos);
+            ASAPSerialization.writeCharSequenceParameter(this.subjectName, dos);
+
+            ASAPSerialization.writeLongParameter(this.validSince, dos);
+            ASAPSerialization.writeLongParameter(this.validUntil, dos);
+            ASAPSerialization.writeCharSequenceParameter(this.signingAlgorithm, dos);
+
+            ASAPSerialization.writeEncounterConnectionType(this.connectionTypeCredentialsReceived, dos);
 
             // public key serialization
             KeyHelper.writePublicKeyToStream(this.publicKey, dos);
@@ -219,7 +267,7 @@ public class ASAPCertificateImpl implements ASAPCertificate {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream daos = new DataOutputStream(baos);
 
-        this.fillWithAnythingButSignature(daos);
+        this.serializeAnythingButSignature(daos);
 
         try {
             daos.writeInt(this.signatureBytes.length);
@@ -265,12 +313,18 @@ public class ASAPCertificateImpl implements ASAPCertificate {
     public PublicKey getPublicKey() { return this.publicKey; }
 
     @Override
+    public ASAPEncounterConnectionType getConnectionTypeCredentialsReceived() {
+        return this.connectionTypeCredentialsReceived;
+    }
+
+    @Override
     public boolean isIdentical(ASAPCertificate cert) {
         return this.getSubjectID().toString().equalsIgnoreCase(cert.getSubjectID().toString())
                 && this.getIssuerID().toString().equalsIgnoreCase(cert.getIssuerID().toString())
                 && this.getValidSince().getTimeInMillis() == cert.getValidSince().getTimeInMillis()
                 && this.getValidUntil().getTimeInMillis() == cert.getValidUntil().getTimeInMillis()
-                && this.getPublicKey().toString().equalsIgnoreCase(cert.getPublicKey().toString()
-        );
+                && this.getPublicKey().toString().equalsIgnoreCase(cert.getPublicKey().toString())
+                && this.getConnectionTypeCredentialsReceived() == cert.getConnectionTypeCredentialsReceived()
+        ;
     }
 }

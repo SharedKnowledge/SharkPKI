@@ -1,5 +1,6 @@
 package net.sharksystem.pki;
 
+import net.sharksystem.asap.ASAPEncounterConnectionType;
 import net.sharksystem.asap.ASAPException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.crypto.InMemoASAPKeyStore;
@@ -64,7 +65,7 @@ public class HelperPKITests {
         gloriaStorage = new SharkPKIFacadeImpl(certificateStorage, gloriaCryptoStorage);
         // francis signs gloria
         ASAPCertificate asapCertificate =
-                francisStorage.addAndSignPerson(gloriaID, GLORIA_NAME, gloriaCryptoStorage.getPublicKey(), now);
+                francisStorage.addAndSignPerson(gloriaID, GLORIA_NAME, gloriaCryptoStorage.getPublicKey(), now, ASAPEncounterConnectionType.UNKNOWN);
 
         // store certificate(issuer: Francis, subject: Gloria)
         asapPKI.addCertificate(asapCertificate);
@@ -75,7 +76,7 @@ public class HelperPKITests {
         ASAPKeyStore hassanCryptoStorage = new InMemoASAPKeyStore(HASSAN_NAME);
         hassanPKI = new SharkPKIFacadeImpl(certificateStorage, hassanCryptoStorage);
         // gloria signs hassan
-        asapCertificate = gloriaStorage.addAndSignPerson(hassanID, HASSAN_NAME, hassanPKI.getPublicKey(), now);
+        asapCertificate = gloriaStorage.addAndSignPerson(hassanID, HASSAN_NAME, hassanPKI.getPublicKey(), now, ASAPEncounterConnectionType.UNKNOWN);
 
         // store certificate(issuer: Gloria, subject: Hassan)
         asapPKI.addCertificate(asapCertificate);
@@ -86,7 +87,7 @@ public class HelperPKITests {
         ASAPKeyStore irisKeyStore = new InMemoASAPKeyStore(IRIS_NAME);
         irisStorage = new PersonStoreImplAndCertsWrapper(certificateStorage, irisKeyStore);
         // hassan signs iris
-        asapCertificate = hassanPKI.addAndSignPerson(irisID, IRIS_NAME, irisKeyStore.getPublicKey(), now);
+        asapCertificate = hassanPKI.addAndSignPerson(irisID, IRIS_NAME, irisKeyStore.getPublicKey(), now, ASAPEncounterConnectionType.UNKNOWN);
         // store certificate(issuer: Hassan, subject: Iris)
         asapPKI.addCertificate(asapCertificate);
 

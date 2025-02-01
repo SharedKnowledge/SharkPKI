@@ -91,8 +91,13 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
                 this.certificateReceived(asapMessages);
                 return;
             case SharkPKIComponent.CREDENTIAL_APP_NAME:
+                ASAPEncounterConnectionType encounterConnectionType = ASAPEncounterConnectionType.UNKNOWN; // default
+                if(asapHops != null) {
+                    // get last hop
+                    encounterConnectionType = asapHops.get(asapHops.size() - 1).getConnectionType();
+                }
                 //Log.writeLog(this, "credential received - handle");
-                this.credentialReceived(asapMessages);
+                this.credentialReceived(asapMessages, encounterConnectionType);
                 break;
         }
     }
@@ -100,10 +105,11 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
     private void certificateReceived(ASAPMessages asapMessages) throws IOException {
         Log.writeLog(this, "certificate received - sync in memo certificate storage with asap storage");
         this.asapCertificateStorage.dropInMemoCache();
-        // TODO - sync identity assurance
+        // should we sync identity assurance??
     }
 
-    private void credentialReceived(ASAPMessages asapMessages) throws IOException {
+    private void credentialReceived(ASAPMessages asapMessages,
+                        ASAPEncounterConnectionType encounterConnectionType) throws IOException {
         if(this.credentialReceivedListener == null) {
             Log.writeLog(this, "received message but no listener - give up");
             return;
@@ -118,7 +124,8 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
         Iterator<byte[]> messages = asapMessages.getMessages();
         while (messages.hasNext()) {
             try {
-                CredentialMessageInMemo credentialMessage = new CredentialMessageInMemo(messages.next());
+                CredentialMessageInMemo credentialMessage =
+                        new CredentialMessageInMemo(messages.next(), encounterConnectionType);
                 this.credentialReceivedListener.credentialReceived(credentialMessage);
             } catch (ASAPException e) {
                 Log.writeLog(this, "could not create credential message from asap message " +
@@ -370,7 +377,8 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
         ASAPCertificate asapCertificate = this.sharkPKIFacade.addAndSignPerson(credentialMessage.getSubjectID(),
                 credentialMessage.getSubjectName(),
                 credentialMessage.getPublicKey(),
-                credentialMessage.getValidSince());
+                credentialMessage.getValidSince(),
+                credentialMessage.getConnectionTypeCredentialReceived());
 
         this.asapCertificateStorage.dropInMemoCache();
 

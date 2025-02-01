@@ -1,6 +1,7 @@
 package net.sharksystem.asap.persons;
 
 import net.sharksystem.SharkException;
+import net.sharksystem.asap.ASAPEncounterConnectionType;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.pki.ASAPCertificate;
@@ -186,7 +187,8 @@ public class PersonStoreImplAndCertsWrapper implements PersonInformationStore {
 
     //@Override
     public ASAPCertificate addAndSignPerson(
-            CharSequence userID, CharSequence userName, PublicKey publicKey, long validSince)
+            CharSequence userID, CharSequence userName, PublicKey publicKey, long validSince,
+            ASAPEncounterConnectionType encounterType)
             throws ASAPSecurityException, IOException {
 
         Log.writeLog(this, "entered addAndSignPerson");
@@ -249,7 +251,8 @@ public class PersonStoreImplAndCertsWrapper implements PersonInformationStore {
                     userName,
                     publicKey,
                     validSince,
-                    this.asapKeyStorage.getAsymmetricSigningAlgorithm());
+                    this.asapKeyStorage.getAsymmetricSigningAlgorithm(),
+                    encounterType);
 
             // make it persistent
             Log.writeLog(this, "store certificate");

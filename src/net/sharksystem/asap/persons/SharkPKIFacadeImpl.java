@@ -1,6 +1,7 @@
 package net.sharksystem.asap.persons;
 
 import net.sharksystem.SharkException;
+import net.sharksystem.asap.ASAPEncounterConnectionType;
 import net.sharksystem.asap.ASAPSecurityException;
 import net.sharksystem.asap.crypto.ASAPKeyStore;
 import net.sharksystem.asap.pki.ASAPCertificate;
@@ -117,8 +118,8 @@ public class SharkPKIFacadeImpl implements SharkPKIFacade /* implements ASAPCert
     }
 
     @Override
-    public ASAPCertificate addAndSignPerson(CharSequence subjectID, CharSequence subjectName, PublicKey publicKey, long validSince) throws ASAPSecurityException, IOException {
-        return this.personStoreAndCertsWrapper.addAndSignPerson(subjectID, subjectName, publicKey, validSince);
+    public ASAPCertificate addAndSignPerson(CharSequence subjectID, CharSequence subjectName, PublicKey publicKey, long validSince, ASAPEncounterConnectionType encounterType) throws ASAPSecurityException, IOException {
+        return this.personStoreAndCertsWrapper.addAndSignPerson(subjectID, subjectName, publicKey, validSince, encounterType);
     }
 
     @Override

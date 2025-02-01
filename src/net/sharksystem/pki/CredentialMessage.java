@@ -1,5 +1,7 @@
 package net.sharksystem.pki;
 
+import net.sharksystem.asap.ASAPEncounterConnectionType;
+
 import java.io.IOException;
 import java.security.PublicKey;
 
@@ -21,11 +23,14 @@ public interface CredentialMessage {
     // serialize the whole message
     byte[] getMessageAsBytes() throws IOException;
 
-    /** a random int - can be used to ensure some safety, not further semantics */
-    int getRandomInt();
-
     /**
      * @return extra data set by application - can be null
      */
     byte[] getExtraData();
+
+    /**
+     *
+     * @return connection over which those credentials are received
+     */
+    ASAPEncounterConnectionType getConnectionTypeCredentialReceived();
 }

@@ -181,7 +181,8 @@ public class ExchangeTest {
                             credential.getSubjectID(),
                             credential.getSubjectName(),
                             credential.getPublicKey(),
-                            credential.getValidSince());
+                            credential.getValidSince(),
+                            ASAPEncounterConnectionType.UNKNOWN);
 
                     // return newly created certificate
                     Log.writeLog(this, "try to get asap engine for "
@@ -218,7 +219,7 @@ public class ExchangeTest {
                             credential.getSubjectID(),
                             credential.getSubjectName(),
                             credential.getPublicKey(),
-                            credential.getValidSince());
+                            credential.getValidSince(), ASAPEncounterConnectionType.UNKNOWN);
 
                     // return newly created certificate
                     Log.writeLog(this, "try to get asap engine for "

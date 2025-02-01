@@ -50,6 +50,8 @@ public class PKIHelper {
     }
 
     public static String credentialMessage2String(CredentialMessage credentialMessage) {
+        return credentialMessage.toString();
+        /*
         StringBuilder sb = new StringBuilder();
         sb.append("send from potential subject: ");
         sb.append("id: ");
@@ -69,6 +71,7 @@ public class PKIHelper {
         }
 
         return sb.toString();
+         */
     }
 
     public static String personalValue2String(PersonValues personValues) {
