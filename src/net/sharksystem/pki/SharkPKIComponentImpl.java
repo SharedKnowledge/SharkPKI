@@ -207,6 +207,7 @@ class SharkPKIComponentImpl extends AbstractSharkComponent
         try {
             ////// set up pki complete with its subcomponents
 
+            // TODO - take keystore instance from ASAPPeer - do NOT create a new instance!!
             // key management
             this.asapKeyStore = new InMemoASAPKeyStore(asapPeer.getPeerID());
             this.asapKeyStore.setMementoTarget(this.owner.getSharkPeerExtraData());
